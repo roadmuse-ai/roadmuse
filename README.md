@@ -1,6 +1,6 @@
 # Roadmuse
 
-![Roadmap](./roadmap.jpg)
+![Roadmap](./docs/assets/roadmap.jpg)
 
 Roadmuse is a product and engineering initiative aimed at building an intelligent navigation and travel planning experience. This repository contains strategic documentation, architecture notes, and implementation planning for the project.
 
