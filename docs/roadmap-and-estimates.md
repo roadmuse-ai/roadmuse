@@ -1,5 +1,7 @@
 # RoadMuse Estimates and 6-Hour/Week Roadmap
 
+![RoadMuse MVP Roadmap](assets/roadmuse-mvp-roadmap.png)
+
 ## Assumptions
 
 - Start date: **Saturday, June 20, 2026**.
