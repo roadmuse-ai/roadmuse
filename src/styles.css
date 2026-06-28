@@ -26,6 +26,31 @@ body {
 .app-shell__header {
   padding: 1rem 0.5rem 0.75rem;
   border-bottom: 1px solid #e2e8f0;
+  max-width: 34rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app-shell__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.app-shell__brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.app-shell__logo {
+  width: 4rem;
+  height: 4rem;
+  align-self: stretch;
+  border-radius: 0.5rem;
+  object-fit: contain;
 }
 
 .app-shell__header h1 {
