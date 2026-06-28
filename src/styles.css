@@ -30,7 +30,7 @@ body {
 
 .app-shell__brand {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0.6rem;
 }
 
@@ -41,8 +41,9 @@ body {
 }
 
 .app-shell__logo {
-  width: 2rem;
-  height: 2rem;
+  width: 4rem;
+  height: 4rem;
+  align-self: stretch;
   border-radius: 0.5rem;
   object-fit: contain;
 }
