@@ -16,9 +16,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  lint-test-build:
-    name: Lint, test, and build
+  checks:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: Lint
+            command: make lint
+            publish_pages: false
+          - name: Test
+            command: make test
+            publish_pages: false
+          - name: Build
+            command: npm run build:pages
+            publish_pages: true
 
     steps:
       - name: Checkout
@@ -33,28 +45,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
-
-      - name: Build for GitHub Pages
-        run: npm run build:pages
+      - name: Run ${{ matrix.name }}
+        run: ${{ matrix.command }}
 
       - name: Configure GitHub Pages
+        if: ${{ matrix.publish_pages }}
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: Upload GitHub Pages artifact
+        if: ${{ matrix.publish_pages }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
     name: Deploy to GitHub Pages
-    needs: lint-test-build
+    needs: checks
     runs-on: ubuntu-latest
     environment:
       name: github-pages
