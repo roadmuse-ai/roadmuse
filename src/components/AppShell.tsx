@@ -15,9 +15,11 @@ export function AppShell({ children }: AppShellProps) {
             src={`${import.meta.env.BASE_URL}roadmuse-logo.png`}
             alt="RoadMuse logo"
           />
-          <h1>RoadMuse</h1>
+          <div className="app-shell__brand-text">
+            <h1>RoadMuse</h1>
+            <p>AI-assisted route planning for modern road trips</p>
+          </div>
         </div>
-        <p>AI-assisted route planning for modern road trips</p>
       </header>
 
       <main className="app-shell__content">{children}</main>
