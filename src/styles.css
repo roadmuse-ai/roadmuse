@@ -26,23 +26,22 @@ body {
 .app-shell__header {
   padding: 1rem 0.5rem 0.75rem;
   border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  max-width: 34rem;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .app-shell__brand {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.6rem;
 }
 
 .app-shell__brand-text {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.25rem;
 }
 
