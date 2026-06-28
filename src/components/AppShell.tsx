@@ -10,15 +10,15 @@ export function AppShell({ children }: AppShellProps) {
     <div className="app-shell">
       <header className="app-shell__header">
         <div className="app-shell__brand">
+          <div className="app-shell__brand-text">
+            <h1>RoadMuse</h1>
+            <p>AI-assisted route planning for modern road trips</p>
+          </div>
           <img
             className="app-shell__logo"
             src={`${import.meta.env.BASE_URL}roadmuse-logo.png`}
             alt="RoadMuse logo"
           />
-          <div className="app-shell__brand-text">
-            <h1>RoadMuse</h1>
-            <p>AI-assisted route planning for modern road trips</p>
-          </div>
         </div>
       </header>
 
