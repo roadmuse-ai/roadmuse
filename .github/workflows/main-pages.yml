@@ -8,11 +8,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: main-checks-and-pages-build
   cancel-in-progress: false
 
 jobs:
@@ -42,25 +40,8 @@ jobs:
       - name: Build for GitHub Pages
         run: npm run build:pages
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Upload GitHub Pages build artifact
+        uses: actions/upload-artifact@v4
         with:
-          enablement: true
-
-      - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
+          name: github-pages-build
           path: dist
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: lint-test-build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
