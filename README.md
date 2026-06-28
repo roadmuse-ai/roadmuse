@@ -25,10 +25,34 @@ This repository is primarily documented in the `docs/` folder. Key references in
 
 1. Read the documentation in `docs/` to understand the project vision, requirements, and architecture.
 2. Use the planning and roadmap files to align implementation priorities.
+3. Start the frontend with `npm install` then `npm run dev` (see below).
+
+### Frontend app
+
+This repository now includes a lightweight React + TypeScript + Vite app scaffold for Issue #2.
+
+- Run `npm install` to install frontend dependencies.
+- Run `npm run dev` to start the local app.
+- Run `npm run build` to verify the shell builds successfully.
+
+The app currently includes:
+
+- A mobile-first route shell.
+- Browser routing for Main, Config, and Help pages.
+- A fixed bottom navigation shared across screens.
+
+### Developer commands
+
+- `make install` — install dependencies.
+- `make install-hooks` — install the repo pre-commit hook (one-time setup).
+- `make run` — start the Vite dev server.
+- `make lint` — run lint/type-check (`tsc --noEmit`).
+- `make test` — run tests/build check (`npm run build`).
 
 ## Repository Structure
 
 - `docs/` — project documentation and planning artifacts
+- `src/` — React app source for the current frontend shell
 
 ## Contribution
 

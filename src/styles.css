@@ -1,0 +1,117 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem 4.75rem;
+}
+
+.app-shell__header {
+  padding: 1rem 0.5rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.app-shell__header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.app-shell__header p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.app-shell__content {
+  flex: 1;
+  max-width: 34rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0.75rem;
+  margin: 0 auto;
+  max-width: 36rem;
+  padding: 0 0.75rem;
+}
+
+.bottom-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #ffffff;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+}
+
+.bottom-nav__link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  color: #334155;
+  padding: 0.75rem 0.25rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.bottom-nav__link.active {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+section {
+  padding: 1rem 0.25rem 0;
+}
+
+.card {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #ffffff;
+  margin: 1rem 0;
+}
+
+.card--primary {
+  width: 100%;
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.list {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.list li + li {
+  margin-top: 0.5rem;
+}
