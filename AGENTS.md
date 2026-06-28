@@ -8,7 +8,7 @@ Use this file as the source of truth for future changes in this repository.
 2. Use one of these patterns:
    - `feat/<N>-<DESCRIPTION>` for feature work
    - `fix/<N>-<DESCRIPTION>` for fixes
-3. `N` is the ticket number.
+3. `N` is the ticket number. It can be skipped if there is no associated issue.
 4. `<DESCRIPTION>` is a short kebab-case summary (lowercase, hyphen-separated).
 
 ### Branch examples
