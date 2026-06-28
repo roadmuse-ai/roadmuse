@@ -13,4 +13,8 @@ install-hooks:
 install:
 	npm install
 
-.PHONY: run lint test install install-hooks
+reset:
+	git fetch origin main
+	git checkout -B main origin/main
+
+.PHONY: run lint test install install-hooks reset
