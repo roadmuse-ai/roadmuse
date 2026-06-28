@@ -1,7 +1,6 @@
 export function ConfigScreen() {
   return (
     <section>
-      <h2>Config</h2>
       <p>Saved places, navigator selection, and preference controls will live here.</p>
       <ul className="list">
         <li>Preferred navigator</li>

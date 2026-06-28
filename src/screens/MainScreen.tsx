@@ -1,7 +1,6 @@
 export function MainScreen() {
   return (
     <section>
-      <h2>Main</h2>
       <p>RoadMuse currently supports route planning requests, navigator handoff, and local settings.</p>
       <button className="card card--primary" type="button">
         Start planning a route
