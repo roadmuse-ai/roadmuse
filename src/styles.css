@@ -34,8 +34,8 @@ body {
 .app-shell__brand {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.6rem;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .app-shell__brand-text {
