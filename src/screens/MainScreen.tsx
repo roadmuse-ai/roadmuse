@@ -6,7 +6,7 @@ export function MainScreen() {
   return (
     <section>
       <div className="card">
-        <h2>Current settings</h2>
+        <h3 className="settings-title">Current settings</h3>
         <dl className="settings-summary">
           <div>
             <dt>Preferred navigator</dt>
