@@ -6,7 +6,6 @@ export function ConfigScreen() {
 
   return (
     <section>
-      <h2>Configuration</h2>
       <form className="config-form" onSubmit={(event) => event.preventDefault()}>
         <label className="form-field">
           <span>Preferred navigator</span>
