@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   type NavigatorId,
+  type SavedPlace,
   type RoadMuseSettings,
   defaultSettings,
   loadSettings,
@@ -18,6 +19,9 @@ import {
 interface SettingsContextValue {
   settings: RoadMuseSettings;
   setPreferredNavigator: (navigatorId: NavigatorId) => void;
+  addSavedPlace: (place: Omit<SavedPlace, "id">) => void;
+  updateSavedPlace: (id: string, updates: Partial<SavedPlace>) => void;
+  removeSavedPlace: (id: string) => void;
   resetSettings: () => void;
 }
 
@@ -38,6 +42,35 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((current) => ({ ...current, preferredNavigator: navigatorId }));
   }, []);
 
+  const addSavedPlace = useCallback((place: Omit<SavedPlace, "id">) => {
+    setSettings((current) => ({
+      ...current,
+      savedPlaces: [
+        ...current.savedPlaces,
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          ...place,
+        },
+      ],
+    }));
+  }, []);
+
+  const updateSavedPlace = useCallback((id: string, updates: Partial<SavedPlace>) => {
+    setSettings((current) => ({
+      ...current,
+      savedPlaces: current.savedPlaces.map((entry) =>
+        entry.id === id ? { ...entry, ...updates, id: entry.id } : entry,
+      ),
+    }));
+  }, []);
+
+  const removeSavedPlace = useCallback((id: string) => {
+    setSettings((current) => ({
+      ...current,
+      savedPlaces: current.savedPlaces.filter((entry) => entry.id !== id),
+    }));
+  }, []);
+
   const resetSettings = useCallback(() => {
     setSettings(defaultSettings);
   }, []);
@@ -46,9 +79,19 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     () => ({
       settings,
       setPreferredNavigator,
+      addSavedPlace,
+      updateSavedPlace,
+      removeSavedPlace,
       resetSettings,
     }),
-    [settings, setPreferredNavigator, resetSettings],
+    [
+      settings,
+      setPreferredNavigator,
+      addSavedPlace,
+      updateSavedPlace,
+      removeSavedPlace,
+      resetSettings,
+    ],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

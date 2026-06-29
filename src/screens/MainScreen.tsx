@@ -12,6 +12,14 @@ export function MainScreen() {
             <dt>Preferred navigator</dt>
             <dd>{navigatorLabels[settings.preferredNavigator]}</dd>
           </div>
+          <div>
+            <dt>Saved places</dt>
+            <dd>
+              {settings.savedPlaces.length === 0
+                ? "None yet"
+                : settings.savedPlaces.map((place) => place.label).join(", ")}
+            </dd>
+          </div>
         </dl>
       </div>
       <button className="card card--primary" type="button">
