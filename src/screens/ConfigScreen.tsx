@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
 import { type NavigatorId, navigatorIds, navigatorLabels } from "../data/settings";
 
@@ -25,7 +26,7 @@ export function ConfigScreen() {
         </label>
       </form>
       <p className="form-note">
-        Edits are saved automatically in your browser&apos;s local storage.
+        Not sure which navigator to use? Review the <Link to="/help/navigator-comparison">Navigator Comparison</Link>.
       </p>
     </section>
   );
