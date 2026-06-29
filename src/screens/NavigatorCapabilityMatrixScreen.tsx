@@ -14,7 +14,7 @@ export function NavigatorCapabilityMatrixScreen() {
         <Link to="/help">Help</Link> → Navigator Comparison
       </p>
 
-      <h3>Navigator capability matrix</h3>
+      <h3>Navigator Capability Matrix</h3>
       <p className="matrix-note">
         This matrix is a capability guide based on current navigator deep-link behavior.
         Exact behavior can vary by app version and platform.
@@ -57,7 +57,7 @@ export function NavigatorCapabilityMatrixScreen() {
         <span className="matrix-legend-item">⚪ Tool-dependent</span>
       </div>
 
-      <h3>Capability meanings</h3>
+      <h3>Capability Meanings</h3>
       <ul className="list">
         {capabilityDescriptions.map((item) => (
           <li key={item.name}>
@@ -66,7 +66,7 @@ export function NavigatorCapabilityMatrixScreen() {
         ))}
       </ul>
 
-      <h3>Provider notes</h3>
+      <h3>Provider Notes</h3>
       <ul className="list">
         {providerMatrix.map((provider) => (
           <li key={`${provider.provider}-note`}>

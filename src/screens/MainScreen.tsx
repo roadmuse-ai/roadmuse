@@ -6,11 +6,19 @@ export function MainScreen() {
   return (
     <section>
       <div className="card">
-        <h3 className="settings-title">Current settings</h3>
+        <h3 className="settings-title">Current Settings</h3>
         <dl className="settings-summary">
           <div>
-            <dt>Preferred navigator</dt>
+            <dt>Preferred Navigator</dt>
             <dd>{navigatorLabels[settings.preferredNavigator]}</dd>
+          </div>
+          <div>
+            <dt>Saved Places</dt>
+            <dd>
+              {settings.savedPlaces.length === 0
+                ? "None yet"
+                : settings.savedPlaces.map((place) => place.label).join(", ")}
+            </dd>
           </div>
         </dl>
       </div>
