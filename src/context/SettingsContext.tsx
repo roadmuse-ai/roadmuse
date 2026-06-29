@@ -10,7 +10,6 @@ import {
 import {
   type NavigatorId,
   type RoadMuseSettings,
-  type SavedPlaceKey,
   defaultSettings,
   loadSettings,
   saveSettings,
@@ -19,7 +18,6 @@ import {
 interface SettingsContextValue {
   settings: RoadMuseSettings;
   setPreferredNavigator: (navigatorId: NavigatorId) => void;
-  setSavedPlace: (key: SavedPlaceKey, value: string) => void;
   resetSettings: () => void;
 }
 
@@ -40,16 +38,6 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setSettings((current) => ({ ...current, preferredNavigator: navigatorId }));
   }, []);
 
-  const setSavedPlace = useCallback((key: SavedPlaceKey, value: string) => {
-    setSettings((current) => ({
-      ...current,
-      savedPlaces: {
-        ...current.savedPlaces,
-        [key]: value,
-      },
-    }));
-  }, []);
-
   const resetSettings = useCallback(() => {
     setSettings(defaultSettings);
   }, []);
@@ -58,10 +46,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     () => ({
       settings,
       setPreferredNavigator,
-      setSavedPlace,
       resetSettings,
     }),
-    [settings, setPreferredNavigator, setSavedPlace, resetSettings],
+    [settings, setPreferredNavigator, resetSettings],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

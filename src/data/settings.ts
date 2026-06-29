@@ -20,35 +20,16 @@ export const navigatorLabels: Record<NavigatorId, string> = {
   "gpx-export": "GPX Export",
 };
 
-export type SavedPlaceKey = "home" | "work";
-
 export interface RoadMuseSettings {
   preferredNavigator: NavigatorId;
-  savedPlaces: Record<SavedPlaceKey, string>;
 }
 
 export const defaultSettings: RoadMuseSettings = {
   preferredNavigator: "google-maps",
-  savedPlaces: {
-    home: "",
-    work: "",
-  },
 };
 
 const isNavigatorId = (value: unknown): value is NavigatorId => {
   return typeof value === "string" && (navigatorIds as readonly string[]).includes(value);
-};
-
-const isSavedPlaces = (value: unknown): value is Record<SavedPlaceKey, string> => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const parsed = value as Partial<Record<SavedPlaceKey, unknown>>;
-  return (
-    typeof parsed.home === "string" &&
-    typeof parsed.work === "string"
-  );
 };
 
 export function loadSettings(): RoadMuseSettings {
@@ -63,10 +44,7 @@ export function loadSettings(): RoadMuseSettings {
     }
 
     const parsed = JSON.parse(raw) as Partial<RoadMuseSettings>;
-    if (
-      isNavigatorId(parsed.preferredNavigator) &&
-      isSavedPlaces(parsed.savedPlaces)
-    ) {
+    if (isNavigatorId(parsed.preferredNavigator)) {
       return parsed as RoadMuseSettings;
     }
   } catch {

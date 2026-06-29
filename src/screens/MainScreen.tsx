@@ -13,14 +13,6 @@ export function MainScreen() {
             <dt>Preferred navigator</dt>
             <dd>{navigatorLabels[settings.preferredNavigator]}</dd>
           </div>
-          <div>
-            <dt>Saved Home</dt>
-            <dd>{settings.savedPlaces.home || "Not set"}</dd>
-          </div>
-          <div>
-            <dt>Saved Work</dt>
-            <dd>{settings.savedPlaces.work || "Not set"}</dd>
-          </div>
         </dl>
       </div>
       <button className="card card--primary" type="button">
