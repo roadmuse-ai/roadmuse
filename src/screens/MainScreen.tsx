@@ -5,7 +5,6 @@ export function MainScreen() {
   const { settings } = useSettings();
   return (
     <section>
-      <p>RoadMuse currently supports route planning requests, navigator handoff, and local settings.</p>
       <div className="card">
         <h2>Current settings</h2>
         <dl className="settings-summary">
