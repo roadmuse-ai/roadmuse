@@ -38,5 +38,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Sync backend dependencies
+        run: uv sync --frozen
+        working-directory: backend
+
       - name: Run ${{ matrix.name }}
         run: ${{ matrix.command }}
