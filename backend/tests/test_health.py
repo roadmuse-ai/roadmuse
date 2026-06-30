@@ -2,9 +2,12 @@
 
 from fastapi.testclient import TestClient
 
+from app.config import Settings
 from app.main import create_app
 
-client = TestClient(create_app())
+# Inject explicit settings so tests don't depend on the developer's env or .env file.
+test_settings = Settings(app_name="RoadMuse Backend", environment="test")
+client = TestClient(create_app(test_settings))
 
 
 def test_health_returns_ok() -> None:

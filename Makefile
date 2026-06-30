@@ -2,7 +2,7 @@ run:
 	npm run dev
 
 run-backend:
-	cd backend && uv run uvicorn app.main:app --reload
+	cd backend && uv run python -m app
 
 lint:
 	npm run lint
