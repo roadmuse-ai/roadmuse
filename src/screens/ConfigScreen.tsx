@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PreferenceCard } from "../components/PreferenceCard";
 import { useSettings } from "../context/SettingsContext";
 import {
   type NavigatorId,
@@ -52,6 +53,9 @@ export function ConfigScreen() {
     addSavedPlace,
     updateSavedPlace,
     removeSavedPlace,
+    addPreference,
+    updatePreference,
+    removePreference,
   } = useSettings();
 
   const emptyDraft: SavedPlaceDraft = {
@@ -204,6 +208,29 @@ export function ConfigScreen() {
           onClick={openAddPlace}
         >
           Add Place
+        </button>
+      </section>
+
+      <section className="preferences">
+        <h3 className="settings-title">Route Preferences</h3>
+        <p className="form-note">
+          Describe how you like to drive in plain English. Disabled preferences are
+          excluded from route planning.
+        </p>
+
+        <ul className="preferences__list" aria-label="Route preferences list">
+          {settings.preferences.map((preference) => (
+            <PreferenceCard
+              key={preference.id}
+              preference={preference}
+              onUpdate={updatePreference}
+              onRemove={removePreference}
+            />
+          ))}
+        </ul>
+
+        <button className="card card--secondary" type="button" onClick={addPreference}>
+          Add Preference
         </button>
       </section>
 

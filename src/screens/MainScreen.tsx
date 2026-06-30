@@ -1,8 +1,11 @@
+import { getEnabledPreferences } from "../data/preferences";
 import { navigatorLabels } from "../data/settings";
 import { useSettings } from "../context/SettingsContext";
 
 export function MainScreen() {
   const { settings } = useSettings();
+  const activePreferences = getEnabledPreferences(settings.preferences);
+
   return (
     <section>
       <div className="card">
@@ -18,6 +21,14 @@ export function MainScreen() {
               {settings.savedPlaces.length === 0
                 ? "None yet"
                 : settings.savedPlaces.map((place) => place.label).join(", ")}
+            </dd>
+          </div>
+          <div>
+            <dt>Active Preferences</dt>
+            <dd>
+              {activePreferences.length === 0
+                ? "None yet"
+                : activePreferences.map((preference) => preference.text).join("; ")}
             </dd>
           </div>
         </dl>
