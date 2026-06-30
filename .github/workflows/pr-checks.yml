@@ -33,7 +33,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          working-directory: backend
+          cache-dependency-glob: "backend/uv.lock"
 
       - name: Install dependencies
         run: npm ci
