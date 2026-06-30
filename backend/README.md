@@ -19,11 +19,11 @@ uv sync
 ## Run
 
 ```bash
-uv run python -m app
+uv run uvicorn app.main:app --reload
 ```
 
-This reads `ROADMUSE_HOST` / `ROADMUSE_PORT` from the environment (see
-[`.env.example`](.env.example)) and starts Uvicorn with reload enabled.
+Or via `make run-backend` from the repo root, which honors the `ROADMUSE_HOST`
+and `ROADMUSE_PORT` shell environment variables (defaults: `127.0.0.1:8000`).
 
 - Health check: http://127.0.0.1:8000/health
 - OpenAPI docs: http://127.0.0.1:8000/docs

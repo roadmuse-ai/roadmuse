@@ -19,8 +19,6 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     environment: str = "development"
     cors_origins: list[str] = ["http://localhost:5173"]
-    host: str = "127.0.0.1"
-    port: int = 8000
 
 
 @lru_cache

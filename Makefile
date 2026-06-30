@@ -2,7 +2,7 @@ run:
 	npm run dev
 
 run-backend:
-	cd backend && uv run python -m app
+	cd backend && uv run uvicorn app.main:app --reload --host $${ROADMUSE_HOST:-127.0.0.1} --port $${ROADMUSE_PORT:-8000}
 
 lint:
 	npm run lint
