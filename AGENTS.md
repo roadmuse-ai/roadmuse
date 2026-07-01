@@ -22,8 +22,9 @@ Before finishing a task, ensure all of the following are done:
 
 1. Run lint.
 2. Run tests.
-3. Commit the change.
-4. Push to remote.
+3. Ensure test coverage is 80% or higher.
+4. Commit the change.
+5. Push to remote.
 
 Add the issue ID in the commit message: `Commit message first line (#<N>)`.
 
