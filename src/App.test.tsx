@@ -57,6 +57,8 @@ describe("App", () => {
     renderApp("/missing");
 
     expect(screen.getByRole("heading", { name: "Current Settings" })).toBeInTheDocument();
-    expect(screen.getByText("None yet")).toBeInTheDocument();
+    expect(screen.getByText("Saved Places")).toBeInTheDocument();
+    expect(screen.getByText("Active Preferences")).toBeInTheDocument();
+    expect(screen.getAllByText("None yet")).toHaveLength(2);
   });
 });
