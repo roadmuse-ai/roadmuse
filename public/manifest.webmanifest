@@ -1,7 +1,7 @@
 {
   "name": "RoadMuse",
   "short_name": "RoadMuse",
-  "description": "AI-assisted route planning for modern road trips.",
+  "description": "AI route planning for smarter road trips.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
