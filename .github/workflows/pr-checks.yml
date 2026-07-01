@@ -14,7 +14,7 @@ jobs:
         include:
           - name: Lint
             command: make lint
-          - name: Test
+          - name: Test and Coverage
             command: make test
           - name: Build
             command: npm run build

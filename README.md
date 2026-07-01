@@ -47,7 +47,7 @@ The app currently includes:
 - `make install-hooks` — install the repo pre-commit hook (one-time setup).
 - `make run` — start the Vite dev server.
 - `make lint` — run lint/type-check (`tsc --noEmit`).
-- `make test` — run tests/build check (`npm run build`).
+- `make test` — run unit tests with coverage; the shared threshold is 80% minimum.
 
 ## Repository Structure
 

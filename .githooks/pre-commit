@@ -5,7 +5,7 @@ if command -v make >/dev/null 2>&1; then
   echo "Running lint..."
   make lint
 
-  echo "Running test..."
+  echo "Running tests with coverage threshold >= 80%..."
   make test
 else
   echo "make is required for pre-commit checks" >&2

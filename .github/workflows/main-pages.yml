@@ -25,7 +25,7 @@ jobs:
           - name: Lint
             command: make lint
             publish_pages: false
-          - name: Test
+          - name: Test and Coverage
             command: make test
             publish_pages: false
           - name: Build

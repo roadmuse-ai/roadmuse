@@ -304,12 +304,6 @@ export function ConfigScreen() {
                 className="card card--secondary"
                 type="button"
                 onClick={savePlace}
-                disabled={
-                  !isNonEmpty(draft.label) ||
-                  !isNonEmpty(draft.address) ||
-                  !isNumericOrEmpty(draft.latitude) ||
-                  !isNumericOrEmpty(draft.longitude)
-                }
               >
                 Save
               </button>
