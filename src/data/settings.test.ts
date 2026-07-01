@@ -105,6 +105,48 @@ describe("settings persistence", () => {
     });
   });
 
+  it("normalizes saved preferences and filters invalid entries", () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        preferredNavigator: "google-maps",
+        savedPlaces: [],
+        preferences: [
+          {
+            id: "valid",
+            text: "Avoid tolls",
+            enabled: true,
+            validationStatus: "supported",
+          },
+          null,
+          {
+            id: 1,
+            text: "Bad id",
+            enabled: true,
+            validationStatus: "supported",
+          },
+          {
+            id: "bad-explanation",
+            text: "Prefer scenic routes",
+            enabled: true,
+            validationStatus: "supported",
+            validationExplanation: 123,
+          },
+        ],
+      }),
+    );
+
+    expect(loadSettings().preferences).toEqual([
+      {
+        id: "valid",
+        text: "Avoid tolls",
+        enabled: true,
+        validationStatus: "supported",
+        validationExplanation: undefined,
+      },
+    ]);
+  });
+
   it("falls back when navigator or saved places data is invalid", () => {
     window.localStorage.setItem(
       storageKey,

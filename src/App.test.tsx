@@ -31,6 +31,20 @@ describe("App", () => {
           { id: "home", label: "Home", address: "123 Main St" },
           { id: "work", label: "Work", address: "456 Center Ave" },
         ],
+        preferences: [
+          {
+            id: "pref-1",
+            text: "Avoid tolls",
+            enabled: true,
+            validationStatus: "supported",
+          },
+          {
+            id: "pref-2",
+            text: "Prefer scenic routes",
+            enabled: false,
+            validationStatus: "supported",
+          },
+        ],
       }),
     );
 
@@ -39,6 +53,8 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "RoadMuse" })).toBeInTheDocument();
     expect(screen.getByText("Apple Maps")).toBeInTheDocument();
     expect(screen.getByText("Home, Work")).toBeInTheDocument();
+    expect(screen.getByText("Avoid tolls")).toBeInTheDocument();
+    expect(screen.queryByText("Prefer scenic routes")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start planning a route" })).toBeInTheDocument();
   });
 

@@ -11,16 +11,25 @@ function SettingsHarness() {
     addSavedPlace,
     updateSavedPlace,
     removeSavedPlace,
+    addPreference,
+    updatePreference,
+    removePreference,
     resetSettings,
   } = useSettings();
 
   const firstPlaceId = settings.savedPlaces[0]?.id ?? "";
+  const firstPreferenceId = settings.preferences[0]?.id ?? "";
 
   return (
     <div>
       <p data-testid="navigator">{settings.preferredNavigator}</p>
       <p data-testid="saved-places">
         {settings.savedPlaces.map((place) => `${place.label}:${place.address}`).join("|")}
+      </p>
+      <p data-testid="preferences">
+        {settings.preferences
+          .map((preference) => `${preference.text}:${preference.enabled ? "on" : "off"}`)
+          .join("|")}
       </p>
       <button type="button" onClick={() => setPreferredNavigator("apple-maps")}>
         Set Apple
@@ -63,6 +72,29 @@ function SettingsHarness() {
       </button>
       <button type="button" onClick={() => removeSavedPlace(firstPlaceId)}>
         Remove First
+      </button>
+      <button type="button" onClick={addPreference}>
+        Add Preference
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          updatePreference(firstPreferenceId, {
+            text: "Avoid tolls",
+            validationStatus: "supported",
+          })
+        }
+      >
+        Update Preference
+      </button>
+      <button
+        type="button"
+        onClick={() => updatePreference(firstPreferenceId, { enabled: false })}
+      >
+        Disable Preference
+      </button>
+      <button type="button" onClick={() => removePreference(firstPreferenceId)}>
+        Remove Preference
       </button>
       <button type="button" onClick={resetSettings}>
         Reset
@@ -129,6 +161,18 @@ describe("SettingsProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove First" }));
     expect(screen.getByTestId("saved-places")).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole("button", { name: "Add Preference" }));
+    expect(screen.getByTestId("preferences")).toHaveTextContent(":on");
+
+    await user.click(screen.getByRole("button", { name: "Update Preference" }));
+    expect(screen.getByTestId("preferences")).toHaveTextContent("Avoid tolls:on");
+
+    await user.click(screen.getByRole("button", { name: "Disable Preference" }));
+    expect(screen.getByTestId("preferences")).toHaveTextContent("Avoid tolls:off");
+
+    await user.click(screen.getByRole("button", { name: "Remove Preference" }));
+    expect(screen.getByTestId("preferences")).toBeEmptyDOMElement();
 
     await user.click(screen.getByRole("button", { name: "Reset" }));
     expect(screen.getByTestId("navigator")).toHaveTextContent(
