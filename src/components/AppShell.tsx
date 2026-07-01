@@ -12,7 +12,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="app-shell__brand">
           <div className="app-shell__brand-text">
             <h1>RoadMuse</h1>
-            <p>AI-assisted route planning for modern road trips</p>
+            <p>AI route planning for smarter road trips</p>
           </div>
           <img
             className="app-shell__logo"

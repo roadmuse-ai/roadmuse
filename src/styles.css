@@ -44,6 +44,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
+  min-width: 0;
 }
 
 .app-shell__logo {
@@ -63,6 +64,7 @@ body {
   margin: 0.35rem 0 0;
   color: #475569;
   font-size: 0.92rem;
+  white-space: nowrap;
 }
 
 .app-shell__content {
