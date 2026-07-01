@@ -111,4 +111,40 @@ describe("ConfigScreen", () => {
 
     expect(screen.getByText("Label and address are required.")).toBeInTheDocument();
   });
+
+  it("adds, validates, disables, and removes route preferences", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    await user.click(screen.getByRole("button", { name: "Add Preference" }));
+
+    await user.type(screen.getByLabelText("Preference text"), "Avoid tolls");
+    await vi.advanceTimersByTimeAsync(450);
+
+    await waitFor(() => {
+      expect(screen.getByText("Supported")).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Enable preference: Avoid tolls" }),
+    );
+    expect(screen.getByText("Disabled")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Remove preference: Avoid tolls" }),
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Preference text")).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        preferences: [],
+      });
+    });
+
+    vi.useRealTimers();
+  });
 });

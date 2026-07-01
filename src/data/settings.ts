@@ -1,3 +1,9 @@
+import {
+  type TextPreference,
+  isTextPreference,
+  normalizeTextPreference,
+} from "./preferences";
+
 export const storageKey = "roadmuse-settings-v1";
 
 export const navigatorIds = [
@@ -23,11 +29,13 @@ export const navigatorLabels: Record<NavigatorId, string> = {
 export interface RoadMuseSettings {
   preferredNavigator: NavigatorId;
   savedPlaces: SavedPlace[];
+  preferences: TextPreference[];
 }
 
 export const defaultSettings: RoadMuseSettings = {
   preferredNavigator: "google-maps",
   savedPlaces: [],
+  preferences: [],
 };
 
 export interface SavedPlace {
@@ -88,6 +96,7 @@ export function loadSettings(): RoadMuseSettings {
 
     const parsed = JSON.parse(raw) as Partial<RoadMuseSettings> & {
       savedPlaces?: unknown;
+      preferences?: unknown;
     };
 
     const preferredNavigator = isNavigatorId(parsed.preferredNavigator)
@@ -98,9 +107,14 @@ export function loadSettings(): RoadMuseSettings {
       ? parsed.savedPlaces.filter(isSavedPlace).map(normalizeSavedPlace)
       : defaultSettings.savedPlaces;
 
+    const preferences = Array.isArray(parsed.preferences)
+      ? parsed.preferences.filter(isTextPreference).map(normalizeTextPreference)
+      : defaultSettings.preferences;
+
     return {
       preferredNavigator,
       savedPlaces,
+      preferences,
     };
   } catch {
     // Swallow malformed data and fall back to defaults.
