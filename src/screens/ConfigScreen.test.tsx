@@ -102,6 +102,32 @@ describe("ConfigScreen", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("selects and persists the theme mode", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    const autoOption = screen.getByRole("radio", { name: "Auto" });
+    expect(autoOption).toBeChecked();
+
+    await user.click(screen.getByRole("radio", { name: "Dark" }));
+
+    expect(screen.getByRole("radio", { name: "Dark" })).toBeChecked();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        themeMode: "dark",
+      });
+    });
+
+    await user.click(screen.getByRole("radio", { name: "Light" }));
+
+    expect(screen.getByRole("radio", { name: "Light" })).toBeChecked();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        themeMode: "light",
+      });
+    });
+  });
+
   it("shows required-field validation errors", async () => {
     const user = userEvent.setup();
     renderConfigScreen();

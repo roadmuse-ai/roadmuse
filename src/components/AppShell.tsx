@@ -1,4 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { useSettings } from "../context/SettingsContext";
+import { useEffectiveTheme } from "../hooks/useEffectiveTheme";
 import { BottomNav } from "./BottomNav";
 
 interface AppShellProps {
@@ -6,6 +8,15 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const { settings } = useSettings();
+  const effectiveTheme = useEffectiveTheme(settings.themeMode);
+
+  useEffect(() => {
+    // Set on <html> so fixed overlays and native controls follow the theme too.
+    document.documentElement.dataset.theme = effectiveTheme;
+    document.documentElement.style.colorScheme = effectiveTheme;
+  }, [effectiveTheme]);
+
   return (
     <div className="app-shell">
       <header className="app-shell__header">

@@ -3,6 +3,7 @@ import {
   isTextPreference,
   normalizeTextPreference,
 } from "./preferences";
+import { type ThemeMode, isThemeMode } from "./theme";
 
 export const storageKey = "roadmuse-settings-v1";
 
@@ -30,12 +31,14 @@ export interface RoadMuseSettings {
   preferredNavigator: NavigatorId;
   savedPlaces: SavedPlace[];
   preferences: TextPreference[];
+  themeMode: ThemeMode;
 }
 
 export const defaultSettings: RoadMuseSettings = {
   preferredNavigator: "google-maps",
   savedPlaces: [],
   preferences: [],
+  themeMode: "auto",
 };
 
 export interface SavedPlace {
@@ -111,10 +114,15 @@ export function loadSettings(): RoadMuseSettings {
       ? parsed.preferences.filter(isTextPreference).map(normalizeTextPreference)
       : defaultSettings.preferences;
 
+    const themeMode = isThemeMode(parsed.themeMode)
+      ? parsed.themeMode
+      : defaultSettings.themeMode;
+
     return {
       preferredNavigator,
       savedPlaces,
       preferences,
+      themeMode,
     };
   } catch {
     // Swallow malformed data and fall back to defaults.

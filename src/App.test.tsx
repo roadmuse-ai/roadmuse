@@ -77,4 +77,25 @@ describe("App", () => {
     expect(screen.getByText("Active Preferences")).toBeInTheDocument();
     expect(screen.getAllByText("None yet")).toHaveLength(2);
   });
+
+  it("applies the saved theme mode to the document", async () => {
+    window.localStorage.setItem(storageKey, JSON.stringify({ themeMode: "dark" }));
+
+    renderApp("/config");
+
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(screen.getByRole("radio", { name: "Dark" })).toBeChecked();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("radio", { name: "Light" }));
+
+    expect(document.documentElement.dataset.theme).toBe("light");
+  });
+
+  it("defaults to auto theme mode resolved as light without system dark preference", () => {
+    renderApp("/config");
+
+    expect(screen.getByRole("radio", { name: "Auto" })).toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe("light");
+  });
 });
