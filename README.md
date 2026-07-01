@@ -41,12 +41,23 @@ The app currently includes:
 - Browser routing for Main, Config, and Help pages.
 - A fixed bottom navigation shared across screens.
 
+### Backend app
+
+The repository includes a FastAPI backend skeleton under `backend/` (Issue #10).
+It provides the app factory, CORS, env-based config, a `/health` endpoint, and
+OpenAPI docs. See [backend/README.md](backend/README.md) for details.
+
+- Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
+- Run `cd backend && uv sync` to install backend dependencies (or `make install`).
+- Run `make run-backend` to start the API at http://127.0.0.1:8000 (`/health`, `/docs`).
+
 ### Developer commands
 
-- `make install` — install dependencies.
+- `make install` — install frontend and backend dependencies.
 - `make install-hooks` — install the repo pre-commit hook (one-time setup).
 - `make run` — start the Vite dev server.
-- `make lint` — run lint/type-check (`tsc --noEmit`).
+- `make run-backend` — start the FastAPI dev server.
+- `make lint` — run lint/type-check (frontend `tsc --noEmit`; backend `ruff` + `mypy`).
 - `make test` — run unit tests with coverage; the shared threshold is 80% minimum.
 
 ## Repository Structure
