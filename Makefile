@@ -12,6 +12,9 @@ test:
 	npm run test
 	cd backend && uv run pytest
 
+test-watch:
+	npm run test:watch
+
 install-hooks:
 	mkdir -p .git/hooks && ln -sf ../.githooks/pre-commit .git/hooks/pre-commit
 
@@ -23,4 +26,4 @@ reset:
 	git fetch origin main
 	git checkout -B main origin/main
 
-.PHONY: run run-backend lint test install install-hooks reset
+.PHONY: run run-backend lint test test-watch  install install-hooks reset

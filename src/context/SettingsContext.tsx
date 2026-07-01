@@ -15,6 +15,7 @@ import {
   loadSettings,
   saveSettings,
 } from "../data/settings";
+import { type TextPreference, createEmptyPreference } from "../data/preferences";
 
 interface SettingsContextValue {
   settings: RoadMuseSettings;
@@ -22,6 +23,9 @@ interface SettingsContextValue {
   addSavedPlace: (place: Omit<SavedPlace, "id">) => void;
   updateSavedPlace: (id: string, updates: Partial<SavedPlace>) => void;
   removeSavedPlace: (id: string) => void;
+  addPreference: () => void;
+  updatePreference: (id: string, updates: Partial<TextPreference>) => void;
+  removePreference: (id: string) => void;
   resetSettings: () => void;
 }
 
@@ -71,6 +75,29 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, []);
 
+  const addPreference = useCallback(() => {
+    setSettings((current) => ({
+      ...current,
+      preferences: [...current.preferences, createEmptyPreference()],
+    }));
+  }, []);
+
+  const updatePreference = useCallback((id: string, updates: Partial<TextPreference>) => {
+    setSettings((current) => ({
+      ...current,
+      preferences: current.preferences.map((entry) =>
+        entry.id === id ? { ...entry, ...updates, id: entry.id } : entry,
+      ),
+    }));
+  }, []);
+
+  const removePreference = useCallback((id: string) => {
+    setSettings((current) => ({
+      ...current,
+      preferences: current.preferences.filter((entry) => entry.id !== id),
+    }));
+  }, []);
+
   const resetSettings = useCallback(() => {
     setSettings(defaultSettings);
   }, []);
@@ -82,6 +109,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       addSavedPlace,
       updateSavedPlace,
       removeSavedPlace,
+      addPreference,
+      updatePreference,
+      removePreference,
       resetSettings,
     }),
     [
@@ -90,6 +120,9 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       addSavedPlace,
       updateSavedPlace,
       removeSavedPlace,
+      addPreference,
+      updatePreference,
+      removePreference,
       resetSettings,
     ],
   );

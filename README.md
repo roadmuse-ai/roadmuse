@@ -58,7 +58,7 @@ OpenAPI docs. See [backend/README.md](backend/README.md) for details.
 - `make run` — start the Vite dev server.
 - `make run-backend` — start the FastAPI dev server.
 - `make lint` — run lint/type-check (frontend `tsc --noEmit`; backend `ruff` + `mypy`).
-- `make test` — run tests/build check (frontend `npm run build`; backend `pytest`).
+- `make test` — run unit tests with coverage; the shared threshold is 80% minimum.
 
 ## Repository Structure
 
