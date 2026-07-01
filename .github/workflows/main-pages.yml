@@ -49,13 +49,13 @@ jobs:
         run: ${{ matrix.command }}
 
       - name: Configure GitHub Pages
-        if: ${{ matrix.publish_pages && github.ref == 'refs/heads/main' }}
+        if: ${{ matrix.publish_pages }}
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: Upload GitHub Pages artifact
-        if: ${{ matrix.publish_pages && github.ref == 'refs/heads/main' }}
+        if: ${{ matrix.publish_pages }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
@@ -63,7 +63,6 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: checks
-    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
