@@ -97,48 +97,11 @@ export function createEmptyPreference(): TextPreference {
 }
 
 /**
- * Temporary client-side fallback until PreferenceValidationAgent (#13) is available.
+ * Temporary placeholder until PreferenceValidationAgent (#13) validates via the backend.
  */
-export function validatePreferenceLocally(text: string): PreferenceValidationResult {
-  const normalized = text.trim().toLowerCase();
-
-  if (/avoid\s+tolls?/.test(normalized)) {
-    return {
-      status: "supported",
-      explanation: "RoadMuse can apply toll avoidance during Valhalla routing.",
-    };
-  }
-
-  if (/waze/.test(normalized) && /(exact|geometry|preserve|valhalla)/.test(normalized)) {
-    return {
-      status: "unsupported",
-      explanation: "Waze cannot preserve exact Valhalla route geometry.",
-    };
-  }
-
-  if (/when driving from|from .+ to /.test(normalized)) {
-    return {
-      status: "needs-route-context",
-      explanation: "This preference applies only when origin and destination match the saved context.",
-    };
-  }
-
-  if (/\bexit\s+\d+\b/.test(normalized) && !/from .+ to /.test(normalized)) {
-    return {
-      status: "needs-clarification",
-      explanation: "Specify which trip or corridor this exit preference applies to.",
-    };
-  }
-
-  if (/poorly lit|unpaved|scenic|ferry|highway|unlit/.test(normalized)) {
-    return {
-      status: "partially-supported",
-      explanation: "RoadMuse can attempt this preference, but coverage depends on routing data.",
-    };
-  }
-
+export function validatePreferenceLocally(_text: string): PreferenceValidationResult {
   return {
-    status: "partially-supported",
-    explanation: "RoadMuse will review this preference during route planning.",
+    status: "supported",
+    explanation: "Preference saved. Full validation will run once the backend is connected.",
   };
 }
