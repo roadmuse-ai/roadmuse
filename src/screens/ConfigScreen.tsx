@@ -9,6 +9,7 @@ import {
   navigatorLabels,
   type SavedPlace,
 } from "../data/settings";
+import { type ThemeMode, themeModeLabels, themeModes } from "../data/theme";
 
 type SavedPlaceDraft = {
   label: string;
@@ -50,6 +51,7 @@ export function ConfigScreen() {
   const {
     settings,
     setPreferredNavigator,
+    setThemeMode,
     addSavedPlace,
     updateSavedPlace,
     removeSavedPlace,
@@ -129,6 +131,36 @@ export function ConfigScreen() {
 
   return (
     <section>
+      <section className="config-section">
+        <h3 className="settings-title">Theme</h3>
+        <p className="form-note">
+          Auto follows your device's light or dark appearance.
+        </p>
+        <div
+          className="theme-toggle"
+          role="radiogroup"
+          aria-label="Theme mode"
+        >
+          {themeModes.map((mode) => (
+            <label
+              key={mode}
+              className={`theme-toggle__option${
+                settings.themeMode === mode ? " theme-toggle__option--active" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="theme-mode"
+                value={mode}
+                checked={settings.themeMode === mode}
+                onChange={() => setThemeMode(mode as ThemeMode)}
+              />
+              <span>{themeModeLabels[mode]}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
       <section className="config-section">
         <h3 className="settings-title">Preferred Navigator</h3>
         <p className="form-note">

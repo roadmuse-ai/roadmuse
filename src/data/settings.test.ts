@@ -102,6 +102,7 @@ describe("settings persistence", () => {
         },
       ],
       preferences: [],
+      themeMode: "auto",
     });
   });
 
@@ -159,6 +160,23 @@ describe("settings persistence", () => {
     expect(loadSettings()).toEqual(defaultSettings);
   });
 
+  it("persists valid theme modes and falls back to auto on invalid values", () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({ themeMode: "dark" }),
+    );
+    expect(loadSettings().themeMode).toBe("dark");
+
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({ themeMode: "sepia" }),
+    );
+    expect(loadSettings().themeMode).toBe("auto");
+
+    window.localStorage.setItem(storageKey, JSON.stringify({}));
+    expect(loadSettings().themeMode).toBe("auto");
+  });
+
   it("saves settings to local storage", () => {
     const settings: RoadMuseSettings = {
       preferredNavigator: "here-wego",
@@ -172,6 +190,7 @@ describe("settings persistence", () => {
         },
       ],
       preferences: [],
+      themeMode: "dark",
     };
 
     saveSettings(settings);
