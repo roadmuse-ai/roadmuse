@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { promptDraftStorageKey } from "./data/promptDraft";
 import { storageKey } from "./data/settings";
 import App from "./App";
 
@@ -90,6 +91,27 @@ describe("App", () => {
     await user.click(screen.getByRole("radio", { name: "Light" }));
 
     expect(document.documentElement.dataset.theme).toBe("light");
+  });
+
+  it("shows a loaded prompt draft on the main screen and clears it", async () => {
+    window.localStorage.setItem(promptDraftStorageKey, "Take me home.");
+
+    renderApp("/");
+
+    expect(screen.getByRole("heading", { name: "Draft Prompt" })).toBeInTheDocument();
+    expect(screen.getByText("“Take me home.”")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Clear draft" }));
+
+    expect(screen.queryByRole("heading", { name: "Draft Prompt" })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(promptDraftStorageKey)).toBeNull();
+  });
+
+  it("does not show a draft card without a stored draft", () => {
+    renderApp("/");
+
+    expect(screen.queryByRole("heading", { name: "Draft Prompt" })).not.toBeInTheDocument();
   });
 
   it("defaults to auto theme mode resolved as light without system dark preference", () => {

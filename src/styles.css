@@ -673,3 +673,115 @@ section {
   color: var(--badge-neutral-text);
   background: var(--badge-neutral-bg);
 }
+
+.help-intro {
+  margin: 0.6rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.prompt-category__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+.prompt-category__count {
+  color: var(--badge-neutral-text);
+  background: var(--badge-neutral-bg);
+  border-radius: 999px;
+  padding: 0.12rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.prompt-category__description {
+  margin: 0.6rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.prompt-category__note {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.prompt-list {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.prompt-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.55rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--color-surface-muted);
+}
+
+.prompt-list__text {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.prompt-list__actions {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.prompt-list__button {
+  border: 1px solid var(--color-border);
+  border-radius: 0.45rem;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.prompt-list__button--primary {
+  background: var(--color-accent-bg);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent-bg);
+}
+
+.prompt-draft__text {
+  margin: 0.6rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.prompt-draft__hint {
+  margin: 0.4rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.prompt-draft__clear {
+  margin-top: 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.45rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--color-button-secondary-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}
