@@ -1,29 +1,38 @@
-run:
-	npm run dev
+UV_CACHE_DIR ?= $(CURDIR)/.cache/uv
+export UV_CACHE_DIR
+
+run-spa:
+	cd spa && npm run dev
 
 run-backend:
 	cd backend && uv run uvicorn app.main:app --reload --host $${ROADMUSE_HOST:-127.0.0.1} --port $${ROADMUSE_PORT:-8000}
 
+build-spa:
+	cd spa && npm run build
+
+build-pages:
+	cd spa && npm run build:pages
+
 lint:
-	npm run lint
+	cd spa && npm run lint
 	cd backend && uv run ruff check . && uv run mypy
 
 test:
-	npm run test
+	cd spa && npm run test
 	cd backend && uv run pytest
 
 test-watch:
-	npm run test:watch
+	cd spa && npm run test:watch
 
 install-hooks:
 	mkdir -p .git/hooks && ln -sf ../.githooks/pre-commit .git/hooks/pre-commit
 
 install:
-	npm install
+	cd spa && npm install
 	cd backend && uv sync
 
 reset:
 	git fetch origin main
 	git checkout -B main origin/main
 
-.PHONY: run run-backend lint test test-watch  install install-hooks reset
+.PHONY: run-spa run-backend build-spa build-pages lint test test-watch install install-hooks reset

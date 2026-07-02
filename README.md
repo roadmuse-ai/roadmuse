@@ -25,15 +25,15 @@ This repository is primarily documented in the `docs/` folder. Key references in
 
 1. Read the documentation in `docs/` to understand the project vision, requirements, and architecture.
 2. Use the planning and roadmap files to align implementation priorities.
-3. Start the frontend with `npm install` then `npm run dev` (see below).
+3. Start the frontend with `make install` then `make run-spa` (see below).
 
 ### Frontend app
 
-This repository now includes a lightweight React + TypeScript + Vite app scaffold for Issue #2.
+This repository now includes a lightweight React + TypeScript + Vite SPA under `spa/`.
 
-- Run `npm install` to install frontend dependencies.
-- Run `npm run dev` to start the local app.
-- Run `npm run build` to verify the shell builds successfully.
+- Run `make install` to install frontend and backend dependencies.
+- Run `make run-spa` to start the local SPA.
+- Run `cd spa && npm run build` or `make build-spa` to verify the SPA builds successfully.
 
 The app currently includes:
 
@@ -53,17 +53,20 @@ OpenAPI docs. See [backend/README.md](backend/README.md) for details.
 
 ### Developer commands
 
-- `make install` — install frontend and backend dependencies.
+- `make install` — install SPA and backend dependencies.
 - `make install-hooks` — install the repo pre-commit hook (one-time setup).
-- `make run` — start the Vite dev server.
+- `make run-spa` — start the Vite dev server for the SPA.
 - `make run-backend` — start the FastAPI dev server.
-- `make lint` — run lint/type-check (frontend `tsc --noEmit`; backend `ruff` + `mypy`).
+- `make build-spa` — build the SPA for local verification.
+- `make build-pages` — build the SPA for GitHub Pages.
+- `make lint` — run lint/type-check (SPA `tsc --noEmit`; backend `ruff` + `mypy`).
 - `make test` — run unit tests with coverage; the shared threshold is 80% minimum.
 
 ## Repository Structure
 
 - `docs/` — project documentation and planning artifacts
-- `src/` — React app source for the current frontend shell
+- `spa/` — React + TypeScript + Vite SPA source, assets, and Node package files
+- `backend/` — FastAPI backend skeleton
 
 ## Contribution
 

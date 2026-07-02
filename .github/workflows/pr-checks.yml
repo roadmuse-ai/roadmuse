@@ -17,7 +17,7 @@ jobs:
           - name: Test and Coverage
             command: make test
           - name: Build
-            command: npm run build
+            command: make build-spa
 
     steps:
       - name: Checkout
@@ -28,6 +28,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: spa/package-lock.json
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
@@ -37,6 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        working-directory: spa
 
       - name: Sync backend dependencies
         run: uv sync --frozen
