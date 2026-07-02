@@ -11,7 +11,7 @@ __pycache__/
 .ruff_cache/
 
 /.cache/
-/.vite/
+.vite/
 
 *.log
 *.tmp
