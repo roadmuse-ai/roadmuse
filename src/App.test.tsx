@@ -51,6 +51,7 @@ describe("App", () => {
     renderApp("/");
 
     expect(screen.getByRole("heading", { name: "RoadMuse" })).toBeInTheDocument();
+    expect(screen.getByText("AI route planning for smarter road trips")).toBeInTheDocument();
     expect(screen.getByText("Apple Maps")).toBeInTheDocument();
     expect(screen.getByText("Home, Work")).toBeInTheDocument();
     expect(screen.getByText("Avoid tolls")).toBeInTheDocument();
