@@ -503,9 +503,9 @@ button.card--secondary:active,
 
 .theme-toggle__option--active,
 .location-mode-toggle__option--active {
-  background: transparent;
+  background: var(--control-fill-bg);
   color: var(--control-fill-text);
-  box-shadow: none;
+  box-shadow: 0 0 0 0.28rem var(--control-fill-bg);
   z-index: 1;
   text-shadow: var(--control-fill-text-shadow);
   transform: scale(1.08);
@@ -519,16 +519,6 @@ button.card--secondary:active,
 .theme-toggle__option--active:active,
 .location-mode-toggle__option--active:active {
   transform: scale(1.14);
-}
-
-.theme-toggle__option--active::before,
-.location-mode-toggle__option--active::before {
-  position: absolute;
-  inset: -0.3rem -0.24rem;
-  z-index: -1;
-  background: var(--control-fill-bg);
-  content: "";
-  pointer-events: none;
 }
 
 .form-field {
