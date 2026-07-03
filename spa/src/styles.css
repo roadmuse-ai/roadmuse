@@ -1,58 +1,66 @@
 :root {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --lobster: #dc2626;
+  --brand-road-deep: #1b1004;
+  --brand-road-dark: #3a1a0a;
+  --brand-road-gold: #ffcf32;
+  --brand-road-soft: #ffe9a8;
+  --brand-road-cream: #fff0a3;
+  --brand-road-amber: #cf8728;
 
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f8fafc;
-  --color-text: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
-  --color-text-nav: #334155;
-  --color-border: #cbd5e1;
-  --color-border-subtle: #e2e8f0;
-  --color-accent-bg: #0f172a;
-  --color-accent-text: #ffffff;
-  --color-button-secondary-bg: #e2e8f0;
-  --color-header-bg: #e2e8f0;
+  --color-bg: #fffaf0;
+  --color-surface: #fffef8;
+  --color-surface-muted: #fff3c4;
+  --color-text: var(--brand-road-deep);
+  --color-text-secondary: #5f4320;
+  --color-text-muted: #846433;
+  --color-text-nav: var(--brand-road-dark);
+  --color-border: #d6a64b;
+  --color-border-subtle: #edd58c;
+  --color-accent-bg: var(--brand-road-dark);
+  --color-accent-text: var(--brand-road-soft);
+  --color-button-secondary-bg: var(--brand-road-cream);
+  --color-header-bg: var(--brand-road-soft);
   --color-error: #dc2626;
   --color-overlay: rgb(15 23 42 / 0.64);
-  --color-hover-bg: #e2e8f0;
-  --brand-muse-color: #ffcf32;
+  --color-hover-bg: var(--brand-road-cream);
+  --color-link: var(--badge-supported-text);
+  --control-fill-bg: var(--brand-road-dark);
+  --control-fill-text: var(--brand-road-soft);
+  --control-fill-text-shadow: none;
+  --control-fill-shadow: none;
+  --control-secondary-fill-bg: var(--brand-road-dark);
+  --control-secondary-fill-shadow: none;
+  --control-border: var(--bottom-nav-separator);
+  --brand-muse-color: var(--brand-road-gold);
   --brand-muse-shadow: 0 1px 0 rgb(76 44 0 / 0.42);
   --control-height: 2.75rem;
   --content-gap: 0.6rem;
   --field-gap: 0.5rem;
   --control-inner-gap: 0.4rem;
+  --radius-panel: 0.25rem;
+  --radius-control: 0.2rem;
+  --radius-small: 0.15rem;
   --section-heading-size: 1.02rem;
   --separator-gap: 1.1rem;
   --separator-width: 2px;
   --bottom-nav-height: 4rem;
-  --bottom-nav-bg: #321408;
-  --bottom-nav-border: rgb(96 45 12 / 0.92);
-  --bottom-nav-separator: rgb(255 208 63 / 0.22);
-  --bottom-nav-text: #ffe9a8;
-  --bottom-nav-text-active: #1b1004;
+  --bottom-nav-bg: var(--brand-road-dark);
+  --bottom-nav-separator: rgb(255 207 50 / 0.28);
+  --bottom-nav-text: var(--brand-road-soft);
+  --bottom-nav-text-active: var(--brand-road-deep);
   --bottom-nav-text-shadow: 0 1px 0 rgb(0 0 0 / 0.55);
   --bottom-nav-active-text-shadow: 0 1px 0 rgb(255 255 255 / 0.42);
-  --bottom-nav-gloss:
-    linear-gradient(180deg, rgb(255 236 156 / 0.28), rgb(255 198 48 / 0.08) 33%, rgb(22 8 3 / 0.28) 100%),
-    radial-gradient(115% 180% at 20% -35%, rgb(255 214 63 / 0.4), transparent 48%),
-    radial-gradient(120% 180% at 82% 130%, rgb(111 45 12 / 0.82), transparent 56%),
-    repeating-linear-gradient(98deg, rgb(255 224 122 / 0.12) 0 2px, transparent 2px 14px),
-    repeating-linear-gradient(7deg, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 9px),
-    linear-gradient(90deg, #2a1006 0%, #713612 27%, #3a1607 51%, #7e4317 78%, #2a1006 100%);
-  --bottom-nav-highlight: rgb(255 229 133 / 0.56);
+  --bottom-nav-gloss: none;
   --bottom-nav-hover-bg: rgb(255 208 63 / 0.13);
-  --bottom-nav-active-bg: linear-gradient(180deg, #fff09a 0%, #ffcf32 50%, #b86f07 100%);
+  --bottom-nav-active-bg: var(--brand-road-gold);
   --bottom-nav-active-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.64),
-    inset 0 -1px 0 rgb(79 37 3 / 0.48),
-    0 0 0.9rem rgb(255 191 25 / 0.2);
+    inset 0 1px 0 rgb(255 255 255 / 0.46),
+    inset 0 0 0 1px rgb(255 246 184 / 0.38),
+    0 0 1rem rgb(255 191 25 / 0.2);
   --bottom-nav-shadow:
     0 -0.9rem 1.8rem rgb(28 10 3 / 0.24),
-    inset 0 1px 0 rgb(255 232 151 / 0.22),
-    inset 0 -0.55rem 1rem rgb(16 6 2 / 0.38);
+    inset 0 1px 0 rgb(255 232 151 / 0.14);
 
   --badge-supported-text: #166534;
   --badge-supported-bg: #dcfce7;
@@ -72,49 +80,47 @@
 }
 
 [data-theme="dark"] {
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-surface-muted: #16213a;
-  --color-text: #f1f5f9;
-  --color-text-secondary: #cbd5e1;
-  --color-text-muted: #94a3b8;
-  --color-text-nav: #cbd5e1;
-  --color-border: #475569;
-  --color-border-subtle: #334155;
-  --color-accent-bg: #e2e8f0;
-  --color-accent-text: #0f172a;
-  --color-button-secondary-bg: #334155;
-  --color-header-bg: #334155;
+  --color-bg: #160900;
+  --color-surface: #241105;
+  --color-surface-muted: #321808;
+  --color-text: #fff6d6;
+  --color-text-secondary: #d8c69b;
+  --color-text-muted: #b79d68;
+  --color-text-nav: var(--brand-road-soft);
+  --color-border: #7b4918;
+  --color-border-subtle: #4f2a0d;
+  --color-accent-bg: var(--brand-road-cream);
+  --color-accent-text: #160900;
+  --color-button-secondary-bg: var(--brand-road-dark);
+  --color-header-bg: var(--brand-road-dark);
   --color-error: #f87171;
-  --color-overlay: rgb(2 6 23 / 0.78);
-  --color-hover-bg: #334155;
-  --brand-muse-color: #ffe68a;
+  --color-overlay: rgb(10 4 1 / 0.82);
+  --color-hover-bg: var(--brand-road-dark);
+  --brand-muse-color: var(--brand-road-cream);
+  --control-fill-bg: var(--brand-road-cream);
+  --control-fill-text: #160900;
+  --control-fill-text-shadow: none;
+  --control-fill-shadow: none;
+  --control-secondary-fill-bg: var(--brand-road-cream);
+  --control-secondary-fill-shadow: none;
+  --control-border: var(--bottom-nav-separator);
   --brand-muse-shadow: 0 1px 0 rgb(0 0 0 / 0.46);
-  --bottom-nav-bg: #b96a1c;
-  --bottom-nav-border: rgb(237 170 55 / 0.5);
+  --bottom-nav-bg: var(--brand-road-amber);
   --bottom-nav-separator: rgb(55 28 6 / 0.22);
   --bottom-nav-text: #231104;
   --bottom-nav-text-active: #160900;
   --bottom-nav-text-shadow: 0 1px 0 rgb(255 236 166 / 0.38);
   --bottom-nav-active-text-shadow: 0 1px 0 rgb(255 244 195 / 0.5);
-  --bottom-nav-gloss:
-    linear-gradient(180deg, rgb(255 235 159 / 0.54), rgb(255 195 51 / 0.16) 35%, rgb(103 42 8 / 0.16) 100%),
-    radial-gradient(115% 190% at 18% -40%, rgb(255 215 64 / 0.54), transparent 47%),
-    radial-gradient(110% 160% at 82% 126%, rgb(125 58 13 / 0.5), transparent 58%),
-    repeating-linear-gradient(98deg, rgb(64 26 5 / 0.14) 0 1px, transparent 1px 13px),
-    repeating-linear-gradient(8deg, rgb(255 239 174 / 0.17) 0 2px, transparent 2px 11px),
-    linear-gradient(90deg, #8c4311 0%, #d28a25 24%, #9e5014 50%, #e1a23b 78%, #8a3d0f 100%);
-  --bottom-nav-highlight: rgb(255 242 190 / 0.82);
+  --bottom-nav-gloss: none;
   --bottom-nav-hover-bg: rgb(255 244 186 / 0.2);
-  --bottom-nav-active-bg: linear-gradient(180deg, #fff3a8 0%, #ffd137 52%, #cc820d 100%);
+  --bottom-nav-active-bg: var(--brand-road-cream);
   --bottom-nav-active-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.74),
-    inset 0 -1px 0 rgb(95 45 4 / 0.28),
-    0 0 0.9rem rgb(255 204 38 / 0.24);
+    inset 0 1px 0 rgb(255 255 255 / 0.72),
+    inset 0 0 0 1px rgb(255 252 220 / 0.48),
+    0 0 1rem rgb(255 213 57 / 0.22);
   --bottom-nav-shadow:
     0 -0.9rem 1.8rem rgb(2 6 23 / 0.34),
-    inset 0 1px 0 rgb(255 242 190 / 0.58),
-    inset 0 -0.55rem 1rem rgb(70 28 5 / 0.2);
+    inset 0 1px 0 rgb(255 242 190 / 0.42);
 
   --badge-supported-text: #bbf7d0;
   --badge-supported-bg: #14532d;
@@ -139,6 +145,10 @@
 body {
   margin: 0;
   overflow-x: hidden;
+}
+
+a {
+  color: var(--color-link);
 }
 
 html {
@@ -185,7 +195,7 @@ html {
   width: 4rem;
   height: 4rem;
   align-self: stretch;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-panel);
   object-fit: contain;
 }
 
@@ -223,22 +233,10 @@ html {
   right: 0;
   bottom: 0;
   z-index: 20;
-  overflow: hidden;
+  overflow: visible;
   background: var(--bottom-nav-bg);
   background-image: var(--bottom-nav-gloss);
-  border-top: 1px solid var(--bottom-nav-border);
   box-shadow: var(--bottom-nav-shadow);
-}
-
-.bottom-nav::before {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: var(--bottom-nav-highlight);
-  content: "";
-  pointer-events: none;
 }
 
 .bottom-nav__list {
@@ -259,6 +257,7 @@ html {
 }
 
 .bottom-nav__link {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -275,7 +274,8 @@ html {
   transition:
     background-color 0.16s ease,
     box-shadow 0.16s ease,
-    color 0.16s ease;
+    color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .bottom-nav__link:hover {
@@ -291,7 +291,11 @@ html {
   background: var(--bottom-nav-active-bg);
   box-shadow: var(--bottom-nav-active-shadow);
   color: var(--bottom-nav-text-active);
+  font-weight: 800;
+  z-index: 1;
   text-shadow: var(--bottom-nav-active-text-shadow);
+  transform: scale(1.06);
+  transform-origin: center bottom;
 }
 
 section {
@@ -323,7 +327,7 @@ section {
 }
 
 .page-breadcrumb a {
-  color: inherit;
+  color: var(--color-link);
 }
 
 .page-breadcrumb + * {
@@ -344,7 +348,7 @@ section {
 
 .card {
   border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
+  border-radius: var(--radius-panel);
   padding: 1rem;
   background: var(--color-surface);
   margin: 1rem 0;
@@ -352,26 +356,29 @@ section {
 
 .card--primary {
   width: 100%;
-  background: var(--color-accent-bg);
-  color: var(--color-accent-text);
-  border-color: var(--color-accent-bg);
-  border-radius: 0.75rem;
+  background: var(--control-fill-bg);
+  color: var(--control-fill-text);
+  border-color: var(--control-border);
+  border-radius: var(--radius-control);
   min-height: var(--control-height);
   padding: 0.65rem 0.9rem;
   font-size: 0.95rem;
   font-weight: 700;
+  box-shadow: var(--control-fill-shadow);
+  text-shadow: var(--control-fill-text-shadow);
 }
 
 .card--secondary {
   width: 100%;
-  background: var(--color-button-secondary-bg);
-  color: var(--color-text);
-  border-color: var(--color-border);
-  border-radius: 0.75rem;
+  background: var(--control-secondary-fill-bg);
+  color: var(--control-fill-text);
+  border-color: var(--control-border);
+  border-radius: var(--radius-control);
   min-height: var(--control-height);
   padding: 0.65rem 0.9rem;
   font-size: 0.95rem;
   font-weight: 600;
+  box-shadow: var(--control-secondary-fill-shadow);
 }
 
 button.card--primary,
@@ -411,8 +418,8 @@ button.card--secondary {
   display: grid;
   gap: var(--control-inner-gap);
   padding: 0.3rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-panel);
   background: var(--color-surface);
 }
 
@@ -430,7 +437,8 @@ button.card--secondary {
   align-items: center;
   justify-content: center;
   padding: 0.55rem 0.4rem;
-  border-radius: 0.55rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--color-text-nav);
@@ -446,8 +454,11 @@ button.card--secondary {
 
 .theme-toggle__option--active,
 .location-mode-toggle__option--active {
-  background: var(--color-accent-bg);
-  color: var(--color-accent-text);
+  background: var(--control-fill-bg);
+  border-color: var(--control-border);
+  color: var(--control-fill-text);
+  box-shadow: var(--control-fill-shadow);
+  text-shadow: var(--control-fill-text-shadow);
 }
 
 .form-field {
@@ -461,7 +472,7 @@ button.card--secondary {
 .form-field select,
 .form-field textarea {
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: var(--radius-control);
   padding: 0.6rem 0.75rem;
   font: inherit;
   background: var(--color-surface);
@@ -537,14 +548,14 @@ button.card--secondary {
   padding: 0.25rem;
   list-style: none;
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: var(--radius-panel);
   background: var(--color-surface);
   box-shadow: 0 0.75rem 1.75rem rgb(15 23 42 / 0.18);
 }
 
 .lookup-field__option {
   width: 100%;
-  border-radius: 0.45rem;
+  border-radius: var(--radius-small);
   padding: 0.48rem 0.55rem;
   color: var(--color-text);
   font: inherit;
@@ -643,7 +654,7 @@ button.card--secondary {
   border: 1px solid transparent;
   color: var(--color-text-secondary);
   background: transparent;
-  border-radius: 0.55rem;
+  border-radius: var(--radius-control);
   width: 2rem;
   height: 2rem;
   padding: 0;
@@ -701,7 +712,7 @@ button.card--secondary {
   display: grid;
   gap: 0.5rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
+  border-radius: var(--radius-panel);
   padding: 0.8rem;
   margin-top: 0.4rem;
 }
@@ -758,7 +769,7 @@ button.card--secondary {
 
 .help-screen .list a,
 .navigator-comparison .list a {
-  color: inherit;
+  color: var(--color-link);
 }
 
 .list li + li {
@@ -983,7 +994,7 @@ button.card--secondary {
   width: min(18rem, calc(100vw - 2rem));
   padding: 0.55rem 0.65rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
+  border-radius: var(--radius-control);
   background: var(--color-surface);
   color: var(--color-text-secondary);
   box-shadow: 0 0.75rem 1.75rem rgb(15 23 42 / 0.18);
