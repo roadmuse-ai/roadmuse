@@ -3,7 +3,11 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PreferenceCard } from "../components/PreferenceCard";
 import { useSettings } from "../context/SettingsContext";
-import { countryOptions, getStateOptions } from "../data/locationOptions";
+import {
+  countryOptions,
+  getCountryOption,
+  getStateOptions,
+} from "../data/locationOptions";
 import { type TextPreference } from "../data/preferences";
 import {
   type NavigatorId,
@@ -68,6 +72,9 @@ const locationEntryModeLabels: Record<SavedPlaceEntryMode, string> = {
   coordinates: "Coordinates",
 };
 
+const countryLookupId = "saved-place-country-options";
+const stateLookupId = "saved-place-state-options";
+
 export function ConfigScreen() {
   const {
     settings,
@@ -102,6 +109,7 @@ export function ConfigScreen() {
   const [preferenceDraft, setPreferenceDraft] = useState("");
   const [preferenceEditorError, setPreferenceEditorError] = useState("");
   const isAddressMode = draft.entryMode === "address";
+  const selectedCountry = getCountryOption(draft.country);
   const stateOptions = getStateOptions(draft.country);
   const statePlaceholder = draft.country ? "Not required" : "Select country first";
 
@@ -166,11 +174,12 @@ export function ConfigScreen() {
         !isNonEmpty(draft.address) ||
         !isNonEmpty(draft.city) ||
         !isNonEmpty(draft.country) ||
+        !selectedCountry ||
         !isNonEmpty(draft.zipCode) ||
         (requiresState && !isNonEmpty(draft.state))
       ) {
         setEditorError(
-          "Address, city, country, ZIP code, and state when applicable are required.",
+          "Address, city, country from the list, ZIP code, and state when applicable are required.",
         );
         return;
       }
@@ -194,7 +203,7 @@ export function ConfigScreen() {
       address: isAddressMode ? trimmed(draft.address) : "",
       city: isAddressMode ? trimmed(draft.city) || undefined : undefined,
       state: nextState,
-      country: isAddressMode ? trimmed(draft.country) || undefined : undefined,
+      country: isAddressMode ? selectedCountry : undefined,
       zipCode: isAddressMode ? trimmed(draft.zipCode) || undefined : undefined,
       latitude: isAddressMode ? undefined : normalizeCoordinate(draft.latitude),
       longitude: isAddressMode ? undefined : normalizeCoordinate(draft.longitude),
@@ -486,18 +495,18 @@ export function ConfigScreen() {
                     <span>
                       Country <span className="required-marker">*</span>
                     </span>
-                    <select
+                    <input
                       aria-label="Country"
+                      list={countryLookupId}
                       value={draft.country}
                       onChange={(event) => updateCountry(event.target.value)}
-                    >
-                      <option value="">Select country</option>
+                      placeholder="e.g., United States"
+                    />
+                    <datalist id={countryLookupId}>
                       {countryOptions.map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
+                        <option key={country} value={country} />
                       ))}
-                    </select>
+                    </datalist>
                   </label>
                 </div>
                 <div className="saved-places__field-grid">
@@ -508,23 +517,21 @@ export function ConfigScreen() {
                         <span className="required-marker">*</span>
                       ) : null}
                     </span>
-                    <select
+                    <input
                       aria-label="State"
+                      list={stateLookupId}
                       value={draft.state}
                       disabled={stateOptions.length === 0}
                       onChange={(event) =>
                         setDraft((current) => ({ ...current, state: event.target.value }))
                       }
-                    >
-                      <option value="">
-                        {stateOptions.length > 0 ? "Select state" : statePlaceholder}
-                      </option>
+                      placeholder={stateOptions.length > 0 ? "e.g., DC" : statePlaceholder}
+                    />
+                    <datalist id={stateLookupId}>
                       {stateOptions.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
+                        <option key={state} value={state} />
                       ))}
-                    </select>
+                    </datalist>
                   </label>
                   <label className="form-field">
                     <span>
@@ -550,6 +557,7 @@ export function ConfigScreen() {
                   <input
                     aria-label="Latitude"
                     value={draft.latitude}
+                    placeholder="e.g., 38.8977"
                     onChange={(event) =>
                       setDraft((current) => ({ ...current, latitude: event.target.value }))
                     }
@@ -562,6 +570,7 @@ export function ConfigScreen() {
                   <input
                     aria-label="Longitude"
                     value={draft.longitude}
+                    placeholder="e.g., -77.0365"
                     onChange={(event) =>
                       setDraft((current) => ({ ...current, longitude: event.target.value }))
                     }

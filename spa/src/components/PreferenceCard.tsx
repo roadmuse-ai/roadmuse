@@ -16,22 +16,22 @@ interface PreferenceCardProps {
   onRemove: (id: string) => void;
 }
 
-function badgeClassName(status: PreferenceValidationStatus): string {
+function statusClassName(status: PreferenceValidationStatus): string {
   switch (status) {
     case "supported":
-      return "preference-badge preference-badge--supported";
+      return "preference-status preference-status--supported";
     case "partially-supported":
-      return "preference-badge preference-badge--partial";
+      return "preference-status preference-status--partial";
     case "needs-route-context":
-      return "preference-badge preference-badge--context";
+      return "preference-status preference-status--context";
     case "needs-clarification":
-      return "preference-badge preference-badge--clarification";
+      return "preference-status preference-status--clarification";
     case "unsupported":
-      return "preference-badge preference-badge--unsupported";
+      return "preference-status preference-status--unsupported";
     case "pending":
-      return "preference-badge preference-badge--pending";
+      return "preference-status preference-status--pending";
     default:
-      return "preference-badge preference-badge--unknown";
+      return "preference-status preference-status--unknown";
   }
 }
 
@@ -108,33 +108,35 @@ export function PreferenceCard({
   return (
     <li className={`preference-card${preference.enabled ? "" : " preference-card--disabled"}`}>
       <div className="preference-card__top-row">
-        <label className="preference-card__toggle">
-          <input
-            type="checkbox"
-            checked={preference.enabled}
-            onChange={(event) =>
-              onUpdate(preference.id, { enabled: event.target.checked })
-            }
-            aria-label={`Enable preference: ${preferenceName}`}
-          />
-          <span>{preference.enabled ? "Enabled" : "Disabled"}</span>
-        </label>
+        <div className="preference-card__meta">
+          <label className="preference-card__toggle">
+            <input
+              type="checkbox"
+              checked={preference.enabled}
+              onChange={(event) =>
+                onUpdate(preference.id, { enabled: event.target.checked })
+              }
+              aria-label={`Enable preference: ${preferenceName}`}
+            />
+            <span>{preference.enabled ? "Enabled" : "Disabled"}</span>
+          </label>
 
-        <div className="preference-card__actions">
-          <span className="preference-badge__wrap">
+          <span className="preference-status__wrap">
             <button
               type="button"
-              className={badgeClassName(preference.validationStatus)}
+              className={statusClassName(preference.validationStatus)}
               aria-label={`${badgeLabel(preference.validationStatus)} validation details`}
               aria-describedby={tooltipId}
             >
               {badgeLabel(preference.validationStatus)}
             </button>
-            <span className="preference-badge__tooltip" id={tooltipId} role="tooltip">
+            <span className="preference-status__tooltip" id={tooltipId} role="tooltip">
               {badgeDescription(preference)}
             </span>
           </span>
+        </div>
 
+        <div className="preference-card__actions">
           <button
             type="button"
             className="saved-place__icon-btn"

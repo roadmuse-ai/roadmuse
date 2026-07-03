@@ -57,8 +57,11 @@ describe("ConfigScreen", () => {
     await user.type(screen.getByLabelText("Place label"), " Home ");
     await user.type(screen.getByLabelText("Place address"), " 123 Main St ");
     await user.type(screen.getByLabelText("City"), " Washington ");
-    await user.selectOptions(screen.getByLabelText("Country"), "United States");
-    await user.selectOptions(screen.getByLabelText("State"), "DC");
+    expect(
+      document.querySelector('datalist#saved-place-country-options option[value="Afghanistan"]'),
+    ).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Country"), "United States");
+    await user.type(screen.getByLabelText("State"), "DC");
     await user.type(screen.getByLabelText("ZIP code"), " 20500 ");
 
     expect(saveButton).not.toBeDisabled();
@@ -123,11 +126,11 @@ describe("ConfigScreen", () => {
     await user.type(screen.getByLabelText("Place label"), "Hotel");
     await user.type(screen.getByLabelText("Place address"), "1 Rue de Rivoli");
     await user.type(screen.getByLabelText("City"), "Paris");
-    await user.selectOptions(screen.getByLabelText("Country"), "France");
+    await user.type(screen.getByLabelText("Country"), "France");
     await user.type(screen.getByLabelText("ZIP code"), "75001");
 
     expect(screen.getByLabelText("State")).toBeDisabled();
-    expect(screen.getByText("Not required")).toBeInTheDocument();
+    expect(screen.getByLabelText("State")).toHaveAttribute("placeholder", "Not required");
 
     await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -160,6 +163,14 @@ describe("ConfigScreen", () => {
 
     expect(screen.queryByLabelText("Place address")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Country")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Latitude")).toHaveAttribute(
+      "placeholder",
+      "e.g., 38.8977",
+    );
+    expect(screen.getByLabelText("Longitude")).toHaveAttribute(
+      "placeholder",
+      "e.g., -77.0365",
+    );
 
     await user.type(screen.getByLabelText("Place label"), "Trailhead");
     await user.click(screen.getByRole("button", { name: "Save" }));
@@ -239,19 +250,19 @@ describe("ConfigScreen", () => {
 
     expect(
       screen.getByText(
-        "Address, city, country, ZIP code, and state when applicable are required.",
+        "Address, city, country from the list, ZIP code, and state when applicable are required.",
       ),
     ).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Place address"), "123 Main St");
     await user.type(screen.getByLabelText("City"), "Washington");
-    await user.selectOptions(screen.getByLabelText("Country"), "United States");
+    await user.type(screen.getByLabelText("Country"), "United States");
     await user.type(screen.getByLabelText("ZIP code"), "20500");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(
       screen.getByText(
-        "Address, city, country, ZIP code, and state when applicable are required.",
+        "Address, city, country from the list, ZIP code, and state when applicable are required.",
       ),
     ).toBeInTheDocument();
   });

@@ -430,11 +430,15 @@ section {
   gap: 0.6rem;
 }
 
-.saved-places__field-grid,
-.saved-places__coords {
+.saved-places__field-grid {
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.saved-places__coords {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .saved-places__field-grid .form-field,
@@ -628,6 +632,14 @@ section {
   gap: 0.75rem;
 }
 
+.preference-card__meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
 .preference-card__toggle {
   display: inline-flex;
   align-items: center;
@@ -656,31 +668,29 @@ section {
   min-height: 7rem;
 }
 
-.preference-badge__wrap {
+.preference-status__wrap {
   position: relative;
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.preference-badge {
+.preference-status {
   display: inline-flex;
   align-items: center;
-  width: fit-content;
-  border-radius: 999px;
-  padding: 0.18rem 0.55rem;
-  font-size: 0.78rem;
+  padding: 0;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0;
   border: 0;
   font-family: inherit;
   cursor: help;
-  min-height: 2rem;
+  background: transparent;
 }
 
-.preference-badge__tooltip {
+.preference-status__tooltip {
   position: absolute;
   top: calc(100% + 0.4rem);
-  right: 0;
+  left: 0;
   z-index: 45;
   width: min(18rem, calc(100vw - 2rem));
   padding: 0.55rem 0.65rem;
@@ -702,40 +712,34 @@ section {
   visibility: hidden;
 }
 
-.preference-badge__wrap:hover .preference-badge__tooltip,
-.preference-badge__wrap:focus-within .preference-badge__tooltip {
+.preference-status__wrap:hover .preference-status__tooltip,
+.preference-status__wrap:focus-within .preference-status__tooltip {
   opacity: 1;
   transform: translateY(0);
   visibility: visible;
 }
 
-.preference-badge--supported {
+.preference-status--supported {
   color: var(--badge-supported-text);
-  background: var(--badge-supported-bg);
 }
 
-.preference-badge--partial {
+.preference-status--partial {
   color: var(--badge-partial-text);
-  background: var(--badge-partial-bg);
 }
 
-.preference-badge--context {
+.preference-status--context {
   color: var(--badge-context-text);
-  background: var(--badge-context-bg);
 }
 
-.preference-badge--clarification {
+.preference-status--clarification {
   color: var(--badge-clarification-text);
-  background: var(--badge-clarification-bg);
 }
 
-.preference-badge--unsupported {
+.preference-status--unsupported {
   color: var(--badge-unsupported-text);
-  background: var(--badge-unsupported-bg);
 }
 
-.preference-badge--pending,
-.preference-badge--unknown {
+.preference-status--pending,
+.preference-status--unknown {
   color: var(--badge-neutral-text);
-  background: var(--badge-neutral-bg);
 }
