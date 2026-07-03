@@ -264,12 +264,15 @@ const fallbackCountryNames = [
   "United States",
 ] as const;
 
-const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const regionNames =
+  typeof Intl !== "undefined" && "DisplayNames" in Intl
+    ? new Intl.DisplayNames(["en"], { type: "region" })
+    : null;
 
 export const countryOptions = Array.from(
   new Set([
     ...fallbackCountryNames,
-    ...countryRegionCodes.map((code) => regionNames.of(code) ?? code),
+    ...countryRegionCodes.map((code) => regionNames?.of(code) ?? code),
   ]),
 ).sort((left, right) => left.localeCompare(right));
 
