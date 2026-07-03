@@ -2,8 +2,8 @@ import { Car, CircleHelp, Settings, type LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const navItems: Array<{ Icon: LucideIcon; label: string; to: string }> = [
-  { Icon: Car, label: "Main", to: "/" },
   { Icon: Settings, label: "Config", to: "/config" },
+  { Icon: Car, label: "Main", to: "/" },
   { Icon: CircleHelp, label: "Help", to: "/help" },
 ];
 

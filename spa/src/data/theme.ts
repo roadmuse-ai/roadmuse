@@ -1,12 +1,12 @@
-export const themeModes = ["auto", "light", "dark"] as const;
+export const themeModes = ["light", "auto", "dark"] as const;
 
 export type ThemeMode = (typeof themeModes)[number];
 
 export type EffectiveTheme = "light" | "dark";
 
 export const themeModeLabels: Record<ThemeMode, string> = {
-  auto: "Auto",
   light: "Light",
+  auto: "Auto",
   dark: "Dark",
 };
 

@@ -74,10 +74,10 @@
   --badge-unsupported-bg: #fee2e2;
   --badge-neutral-text: #475569;
   --badge-neutral-bg: #e2e8f0;
-  --preference-disabled-bg: #eef0f2;
-  --preference-disabled-border: #c7cbd1;
-  --preference-disabled-text: #5d6673;
-  --preference-disabled-muted: #737b86;
+  --preference-disabled-bg: #f1e4c4;
+  --preference-disabled-border: #d0b06f;
+  --preference-disabled-text: #6c5838;
+  --preference-disabled-muted: #7b6a49;
 
   color: var(--color-text);
   background: var(--color-bg);
@@ -138,10 +138,10 @@
   --badge-unsupported-bg: #7f1d1d;
   --badge-neutral-text: #cbd5e1;
   --badge-neutral-bg: #334155;
-  --preference-disabled-bg: #27272a;
-  --preference-disabled-border: #52525b;
-  --preference-disabled-text: #a1a1aa;
-  --preference-disabled-muted: #8f8f96;
+  --preference-disabled-bg: #30251a;
+  --preference-disabled-border: #73572f;
+  --preference-disabled-text: #c2ae82;
+  --preference-disabled-muted: #a99972;
 
   --lobster: #f87171;
 }
