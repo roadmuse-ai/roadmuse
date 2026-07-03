@@ -125,7 +125,7 @@ export function PreferenceCard({
             <button
               type="button"
               className={statusClassName(preference.validationStatus)}
-              aria-label={`${badgeLabel(preference.validationStatus)} validation details`}
+              aria-label={`${badgeLabel(preference.validationStatus)} validation details for ${preferenceName}`}
               aria-describedby={tooltipId}
             >
               {badgeLabel(preference.validationStatus)}
