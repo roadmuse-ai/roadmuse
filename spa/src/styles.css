@@ -76,16 +76,23 @@
 
 body {
   margin: 0;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
+  min-width: 0;
 }
 
 .app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: 0 1rem 4.75rem;
 }
 
@@ -129,12 +136,16 @@ body {
   margin: 0.35rem 0 0;
   color: var(--color-text-secondary);
   font-size: 0.92rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .app-shell__content {
   flex: 1;
   max-width: 34rem;
+  min-width: 0;
   margin: 0 auto;
   width: 100%;
 }
@@ -381,10 +392,8 @@ section {
 
 .lookup-field__option {
   width: 100%;
-  border: 0;
   border-radius: 0.45rem;
   padding: 0.48rem 0.55rem;
-  background: transparent;
   color: var(--color-text);
   font: inherit;
   text-align: left;
@@ -392,7 +401,8 @@ section {
 }
 
 .lookup-field__option:hover,
-.lookup-field__option:focus {
+.lookup-field__option:focus,
+.lookup-field__option--active {
   background: var(--color-hover-bg);
 }
 
@@ -498,18 +508,22 @@ section {
 
 .saved-place__editor-overlay {
   position: fixed;
-  inset: 0;
+  top: 5.75rem;
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: var(--color-overlay);
   display: grid;
-  align-items: center;
+  align-items: start;
   justify-items: center;
-  padding: 1rem;
+  overflow-y: auto;
+  padding: 0.75rem 1rem 1rem;
   z-index: 30;
 }
 
 .saved-place__editor {
   width: min(100%, 28rem);
-  max-height: 90vh;
+  max-height: calc(100vh - 7.5rem);
   overflow-y: auto;
   display: grid;
   gap: 0.6rem;
@@ -591,7 +605,11 @@ section {
 
 .capability-matrix__viewport {
   margin-top: 0.75rem;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  width: 100%;
 }
 
 .capability-matrix {
@@ -658,6 +676,21 @@ section {
   margin: 0.5rem 0 0;
   color: var(--color-text-secondary);
   font-size: 0.9rem;
+}
+
+.navigator-comparison {
+  min-width: 0;
+}
+
+.navigator-comparison__section {
+  min-width: 0;
+  padding: 0;
+}
+
+.navigator-comparison__section + .navigator-comparison__section {
+  border-top: 2px dashed var(--color-border);
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
 }
 
 .capability-cell {

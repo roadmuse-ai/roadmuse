@@ -21,7 +21,7 @@ function hasExactDescendantText(text: string) {
 
 describe("NavigatorCapabilityMatrixScreen", () => {
   it("renders provider columns, capability meanings, and provider notes", () => {
-    render(
+    const { container } = render(
       <MemoryRouter>
         <NavigatorCapabilityMatrixScreen />
       </MemoryRouter>,
@@ -47,5 +47,6 @@ describe("NavigatorCapabilityMatrixScreen", () => {
       screen.getByTitle(providerMatrix[0].capability.Waypoints.detail),
     ).toHaveTextContent(providerMatrix[0].capability.Waypoints.icon);
     expect(screen.getByText(/Strong support/)).toBeInTheDocument();
+    expect(container.querySelectorAll(".navigator-comparison__section")).toHaveLength(3);
   });
 });

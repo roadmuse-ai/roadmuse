@@ -90,6 +90,11 @@ function getLookupOption(options: readonly string[], value: string): string | un
   return options.find((option) => option.toLocaleLowerCase() === normalized);
 }
 
+function scrollToPageTop() {
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 type LookupFieldProps = {
   label: string;
   ariaLabel: string;
@@ -114,13 +119,44 @@ function LookupField({
   const inputId = useId();
   const listId = `${inputId}-options`;
   const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const filteredOptions = filterLookupOptions(options, value);
   const hasOptions = filteredOptions.length > 0;
   const isExpanded = isOpen && !disabled && hasOptions;
+  const safeActiveIndex = hasOptions
+    ? Math.min(activeIndex, filteredOptions.length - 1)
+    : -1;
+  const activeOptionId =
+    safeActiveIndex >= 0 ? `${listId}-${safeActiveIndex}` : undefined;
 
   const selectOption = (option: string) => {
     onChange(option);
+    setActiveIndex(0);
     setIsOpen(false);
+  };
+
+  const moveActiveOption = (direction: 1 | -1) => {
+    if (!hasOptions) {
+      return;
+    }
+
+    setIsOpen(true);
+    setActiveIndex((current) => {
+      const currentIndex = Math.min(Math.max(current, 0), filteredOptions.length - 1);
+
+      return (
+        (currentIndex + direction + filteredOptions.length) %
+        filteredOptions.length
+      );
+    });
+  };
+
+  const selectActiveOption = () => {
+    if (safeActiveIndex < 0) {
+      return;
+    }
+
+    selectOption(filteredOptions[safeActiveIndex]);
   };
 
   return (
@@ -132,10 +168,12 @@ function LookupField({
         <input
           id={inputId}
           aria-label={ariaLabel}
+          aria-activedescendant={isExpanded ? activeOptionId : undefined}
           aria-autocomplete="list"
           aria-controls={listId}
           aria-expanded={isExpanded}
           aria-haspopup="listbox"
+          aria-required={required}
           autoComplete="off"
           disabled={disabled}
           placeholder={placeholder}
@@ -144,34 +182,73 @@ function LookupField({
           onBlur={() => setIsOpen(false)}
           onChange={(event) => {
             onChange(event.target.value);
+            setActiveIndex(0);
             setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            setActiveIndex(0);
+            setIsOpen(true);
+          }}
+          onKeyDown={(event) => {
+            if (disabled) {
+              return;
+            }
+
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              if (isExpanded) {
+                moveActiveOption(1);
+              } else {
+                setActiveIndex(0);
+                setIsOpen(true);
+              }
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              if (isExpanded) {
+                moveActiveOption(-1);
+              } else {
+                setActiveIndex(Math.max(filteredOptions.length - 1, 0));
+                setIsOpen(true);
+              }
+            } else if (event.key === "Enter" && isExpanded) {
+              event.preventDefault();
+              selectActiveOption();
+            } else if (event.key === "Escape") {
+              setIsOpen(false);
+            }
+          }}
         />
         <button
           type="button"
           className="lookup-field__toggle"
           aria-label={`Show ${label} options`}
+          aria-controls={listId}
+          aria-expanded={isExpanded}
           disabled={disabled}
           onMouseDown={(event) => event.preventDefault()}
-          onClick={() => setIsOpen((current) => !current)}
+          onClick={() => {
+            setActiveIndex(0);
+            setIsOpen((current) => !current);
+          }}
         >
           <ChevronDown aria-hidden="true" size={17} strokeWidth={2.2} />
         </button>
         {isExpanded ? (
           <ul className="lookup-field__options" id={listId} role="listbox">
-            {filteredOptions.map((option) => (
-              <li key={option} role="presentation">
-                <button
-                  type="button"
-                  className="lookup-field__option"
-                  role="option"
-                  aria-selected={option === value}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => selectOption(option)}
-                >
-                  {option}
-                </button>
+            {filteredOptions.map((option, index) => (
+              <li
+                id={`${listId}-${index}`}
+                key={option}
+                className={`lookup-field__option${
+                  index === safeActiveIndex ? " lookup-field__option--active" : ""
+                }`}
+                role="option"
+                aria-selected={index === safeActiveIndex}
+                onMouseDown={(event) => event.preventDefault()}
+                onMouseEnter={() => setActiveIndex(index)}
+                onClick={() => selectOption(option)}
+              >
+                {option}
               </li>
             ))}
           </ul>
@@ -221,6 +298,7 @@ export function ConfigScreen() {
   const statePlaceholder = draft.country ? "Not required" : "Select country first";
 
   const openAddPlace = () => {
+    scrollToPageTop();
     setEditingId(null);
     setDraft(emptyDraft);
     setEditorError("");
@@ -228,6 +306,7 @@ export function ConfigScreen() {
   };
 
   const openEditPlace = (place: SavedPlace) => {
+    scrollToPageTop();
     setEditingId(place.id);
     setDraft({
       entryMode: place.entryMode ?? "address",
@@ -330,6 +409,7 @@ export function ConfigScreen() {
   };
 
   const openAddPreference = () => {
+    scrollToPageTop();
     setEditingPreferenceId(null);
     setPreferenceDraft("");
     setPreferenceEditorError("");
@@ -337,6 +417,7 @@ export function ConfigScreen() {
   };
 
   const openEditPreference = (preference: TextPreference) => {
+    scrollToPageTop();
     setEditingPreferenceId(preference.id);
     setPreferenceDraft(preference.text);
     setPreferenceEditorError("");

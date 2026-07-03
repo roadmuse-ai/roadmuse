@@ -70,8 +70,11 @@ describe("ConfigScreen", () => {
     await user.type(screen.getByLabelText("Place label"), " Home ");
     await user.type(screen.getByLabelText("Place address"), " 123 Main St ");
     await user.type(screen.getByLabelText("City"), " Washington ");
-    await user.type(screen.getByLabelText("Country"), "Afgh");
+    const countryInput = screen.getByLabelText("Country");
+    await user.type(countryInput, "Afgh");
     expect(screen.getByRole("option", { name: "Afghanistan" })).toBeInTheDocument();
+    await user.keyboard("{ArrowDown}{ArrowUp}{Enter}");
+    expect(countryInput).toHaveValue("Afghanistan");
     await chooseLookupOption(user, "Country", "United", "United States");
     await chooseLookupOption(user, "State", "D", "DC");
     await user.type(screen.getByLabelText("ZIP code"), " 20500 ");
