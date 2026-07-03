@@ -24,7 +24,7 @@
   --color-error: #dc2626;
   --color-overlay: rgb(15 23 42 / 0.64);
   --color-hover-bg: var(--brand-road-cream);
-  --color-link: var(--badge-supported-text);
+  --color-link: #0e7490;
   --control-fill-bg: var(--brand-road-dark);
   --control-fill-text: var(--brand-road-soft);
   --control-fill-text-shadow: none;
@@ -102,6 +102,7 @@
   --color-error: #f87171;
   --color-overlay: rgb(10 4 1 / 0.82);
   --color-hover-bg: var(--brand-road-dark);
+  --color-link: #67e8f9;
   --brand-road-wordmark-color: var(--bottom-nav-bg);
   --brand-road-wordmark-shadow: 0 1px 0 rgb(0 0 0 / 0.42);
   --brand-muse-color: var(--bottom-nav-active-bg);
