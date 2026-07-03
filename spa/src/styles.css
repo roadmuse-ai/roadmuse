@@ -290,6 +290,10 @@ html {
   background: var(--bottom-nav-hover-bg);
 }
 
+.bottom-nav__link:active {
+  transform: scale(1.06);
+}
+
 .bottom-nav__icon {
   width: 1.55rem;
   height: 1.55rem;
@@ -310,6 +314,10 @@ html {
   text-shadow: var(--bottom-nav-active-text-shadow);
   transform: scale(1.06);
   transform-origin: center bottom;
+}
+
+.bottom-nav__link.active:active {
+  transform: scale(1.12);
 }
 
 section {
@@ -380,6 +388,10 @@ section {
   font-weight: 700;
   box-shadow: var(--control-fill-shadow);
   text-shadow: var(--control-fill-text-shadow);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease;
 }
 
 .card--secondary {
@@ -393,6 +405,10 @@ section {
   font-size: 0.95rem;
   font-weight: 600;
   box-shadow: var(--control-secondary-fill-shadow);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease;
 }
 
 button.card--primary,
@@ -400,6 +416,13 @@ button.card--secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+button.card--primary:active,
+button.card--secondary:active,
+.saved-place__icon-btn:active,
+.preference-status:active {
+  transform: scale(1.06);
 }
 
 .config-form {
@@ -448,7 +471,7 @@ button.card--secondary {
 
 .theme-toggle,
 .location-mode-toggle {
-  margin-block: 0.2rem;
+  margin-block: 0.35rem;
 }
 
 .theme-toggle__option,
@@ -480,12 +503,32 @@ button.card--secondary {
 
 .theme-toggle__option--active,
 .location-mode-toggle__option--active {
-  background: var(--control-fill-bg);
+  background: transparent;
   color: var(--control-fill-text);
-  box-shadow: 0 0 0 0.14rem var(--control-fill-bg);
+  box-shadow: none;
   z-index: 1;
   text-shadow: var(--control-fill-text-shadow);
-  transform: scale(1.1);
+  transform: scale(1.08);
+}
+
+.theme-toggle__option:active,
+.location-mode-toggle__option:active {
+  transform: scale(1.06);
+}
+
+.theme-toggle__option--active:active,
+.location-mode-toggle__option--active:active {
+  transform: scale(1.14);
+}
+
+.theme-toggle__option--active::before,
+.location-mode-toggle__option--active::before {
+  position: absolute;
+  inset: -0.3rem -0.24rem;
+  z-index: -1;
+  background: var(--control-fill-bg);
+  content: "";
+  pointer-events: none;
 }
 
 .form-field {
@@ -535,7 +578,10 @@ button.card--secondary {
   right: 0.72rem;
   top: 50%;
   color: var(--color-text-secondary);
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(1);
+  transition:
+    color 0.16s ease,
+    transform 0.12s ease;
 }
 
 .select-control__icon {
@@ -556,6 +602,10 @@ button.card--secondary {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+.lookup-field__toggle:active:not(:disabled) {
+  transform: translateY(-50%) scale(1.16);
 }
 
 .lookup-field__toggle:disabled {
@@ -689,6 +739,10 @@ button.card--secondary {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease;
 }
 
 .saved-place__icon-btn:hover {
@@ -1029,6 +1083,9 @@ button.card--secondary {
   font-family: inherit;
   cursor: help;
   background: transparent;
+  transition:
+    color 0.16s ease,
+    transform 0.12s ease;
 }
 
 .preference-status__tooltip {
