@@ -16,6 +16,19 @@ function renderConfigScreen() {
   );
 }
 
+async function chooseLookupOption(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  query: string,
+  option = query,
+) {
+  const input = screen.getByLabelText(label);
+
+  await user.clear(input);
+  await user.type(input, query);
+  await user.click(screen.getByRole("option", { name: option }));
+}
+
 describe("ConfigScreen", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -52,10 +65,19 @@ describe("ConfigScreen", () => {
 
     const saveButton = screen.getByRole("button", { name: "Save" });
     expect(saveButton).toBeEnabled();
+    expect(screen.getByRole("radio", { name: "Address" })).toBeChecked();
 
     await user.type(screen.getByLabelText("Place label"), " Home ");
     await user.type(screen.getByLabelText("Place address"), " 123 Main St ");
-    await user.type(screen.getByLabelText("Latitude"), "38.9");
+    await user.type(screen.getByLabelText("City"), " Washington ");
+    const countryInput = screen.getByLabelText("Country");
+    await user.type(countryInput, "Afgh");
+    expect(screen.getByRole("option", { name: "Afghanistan" })).toBeInTheDocument();
+    await user.keyboard("{ArrowDown}{ArrowUp}{Enter}");
+    expect(countryInput).toHaveValue("Afghanistan");
+    await chooseLookupOption(user, "Country", "United", "United States");
+    await chooseLookupOption(user, "State", "D", "DC");
+    await user.type(screen.getByLabelText("ZIP code"), " 20500 ");
 
     expect(saveButton).not.toBeDisabled();
     await user.click(saveButton);
@@ -63,43 +85,144 @@ describe("ConfigScreen", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("123 Main St")).toBeInTheDocument();
-    expect(screen.getByText("38.9, N/A")).toBeInTheDocument();
+    expect(screen.getByText("Washington, DC 20500, United States")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        savedPlaces: [
+          {
+            entryMode: "address",
+            label: "Home",
+            address: "123 Main St",
+            city: "Washington",
+            state: "DC",
+            country: "United States",
+            zipCode: "20500",
+          },
+        ],
+      });
+    });
 
     await user.click(screen.getByRole("button", { name: "Edit Home" }));
     expect(screen.getByRole("dialog", { name: "Edit saved place" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Address" })).toBeChecked();
+    expect(screen.getByLabelText("City")).toHaveValue("Washington");
+    expect(screen.getByLabelText("State")).toHaveValue("DC");
+    expect(screen.getByLabelText("Country")).toHaveValue("United States");
+    expect(screen.getByLabelText("ZIP code")).toHaveValue("20500");
 
     await user.clear(screen.getByLabelText("Place address"));
     await user.type(screen.getByLabelText("Place address"), "456 Center Ave");
-    await user.type(screen.getByLabelText("Longitude"), "-77.01");
+    await user.clear(screen.getByLabelText("City"));
+    await user.type(screen.getByLabelText("City"), "Arlington");
+    await user.clear(screen.getByLabelText("ZIP code"));
+    await user.type(screen.getByLabelText("ZIP code"), "22201");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(screen.getByText("456 Center Ave")).toBeInTheDocument();
-    expect(screen.getByText("38.9, -77.01")).toBeInTheDocument();
+    expect(screen.getByText("Arlington, DC 22201, United States")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Remove Home" }));
 
     expect(screen.queryByText("Home")).not.toBeInTheDocument();
     expect(screen.queryByText("456 Center Ave")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Arlington, DC 22201, United States"),
+    ).not.toBeInTheDocument();
   });
 
-  it("shows coordinate validation errors and closes the saved place dialog", async () => {
+  it("allows saved place addresses for countries without states", async () => {
     const user = userEvent.setup();
     renderConfigScreen();
 
     await user.click(screen.getByRole("button", { name: "Add Place" }));
-    await user.type(screen.getByLabelText("Place label"), "Park");
-    await user.type(screen.getByLabelText("Place address"), "National Mall");
+
+    expect(screen.getByLabelText("State")).toBeDisabled();
+
+    await user.type(screen.getByLabelText("Place label"), "Hotel");
+    await user.type(screen.getByLabelText("Place address"), "1 Rue de Rivoli");
+    await user.type(screen.getByLabelText("City"), "Paris");
+    await chooseLookupOption(user, "Country", "Fra", "France");
+    await user.type(screen.getByLabelText("ZIP code"), "75001");
+
+    expect(screen.getByLabelText("State")).toBeDisabled();
+    expect(screen.getByLabelText("State")).toHaveAttribute("placeholder", "Not required");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Hotel")).toBeInTheDocument();
+    expect(screen.getByText("1 Rue de Rivoli")).toBeInTheDocument();
+    expect(screen.getByText("Paris 75001, France")).toBeInTheDocument();
+    await waitFor(() => {
+      const savedPlace = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")
+        .savedPlaces[0];
+
+      expect(savedPlace).toMatchObject({
+        entryMode: "address",
+        label: "Hotel",
+        address: "1 Rue de Rivoli",
+        city: "Paris",
+        country: "France",
+        zipCode: "75001",
+      });
+      expect(savedPlace).not.toHaveProperty("state");
+    });
+  });
+
+  it("adds coordinate saved places and validates coordinate fields", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    await user.click(screen.getByRole("button", { name: "Add Place" }));
+    await user.click(screen.getByRole("radio", { name: "Coordinates" }));
+
+    expect(screen.queryByLabelText("Place address")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Country")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Latitude")).toHaveAttribute(
+      "placeholder",
+      "e.g., 38.8977",
+    );
+    expect(screen.getByLabelText("Longitude")).toHaveAttribute(
+      "placeholder",
+      "e.g., -77.0365",
+    );
+
+    await user.type(screen.getByLabelText("Place label"), "Trailhead");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByText("Latitude and longitude are required and must be numeric."),
+    ).toBeInTheDocument();
+
     await user.type(screen.getByLabelText("Latitude"), "north");
+    await user.type(screen.getByLabelText("Longitude"), "-77.01");
 
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(
-      screen.getByText("Latitude and longitude must be numeric when provided."),
+      screen.getByText("Latitude and longitude are required and must be numeric."),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.clear(screen.getByLabelText("Latitude"));
+    await user.type(screen.getByLabelText("Latitude"), "38.9");
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Trailhead")).toBeInTheDocument();
+    expect(screen.getByText("38.9, -77.01")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        savedPlaces: [
+          {
+            entryMode: "coordinates",
+            label: "Trailhead",
+            address: "",
+            latitude: 38.9,
+            longitude: -77.01,
+          },
+        ],
+      });
+    });
   });
 
   it("selects and persists the theme mode", async () => {
@@ -108,6 +231,7 @@ describe("ConfigScreen", () => {
 
     const autoOption = screen.getByRole("radio", { name: "Auto" });
     expect(autoOption).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
 
     await user.click(screen.getByRole("radio", { name: "Dark" }));
 
@@ -115,6 +239,15 @@ describe("ConfigScreen", () => {
     await waitFor(() => {
       expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
         themeMode: "dark",
+      });
+    });
+
+    await user.click(screen.getByRole("radio", { name: "7/4" }));
+
+    expect(screen.getByRole("radio", { name: "7/4" })).toBeChecked();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        accentTheme: "patriotic",
       });
     });
 
@@ -135,7 +268,28 @@ describe("ConfigScreen", () => {
     await user.click(screen.getByRole("button", { name: "Add Place" }));
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(screen.getByText("Label and address are required.")).toBeInTheDocument();
+    expect(screen.getByText("Label is required.")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Place label"), "Home");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByText(
+        "Address, city, country from the list, ZIP code, and state when applicable are required.",
+      ),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Place address"), "123 Main St");
+    await user.type(screen.getByLabelText("City"), "Washington");
+    await user.type(screen.getByLabelText("Country"), "United States");
+    await user.type(screen.getByLabelText("ZIP code"), "20500");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByText(
+        "Address, city, country from the list, ZIP code, and state when applicable are required.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("adds, validates, disables, and removes route preferences", async () => {
@@ -145,7 +299,47 @@ describe("ConfigScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Add Preference" }));
 
+    expect(
+      screen.getByRole("dialog", { name: "Add route preference" }),
+    ).toBeInTheDocument();
     await user.type(screen.getByLabelText("Preference text"), "Avoid tolls");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Avoid tolls")).toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(450);
+
+    await waitFor(() => {
+      expect(screen.getByText("Supported")).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("button", {
+        name: "Supported validation details for Avoid tolls",
+      }),
+    ).toHaveAttribute("aria-describedby");
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "Preference saved. Full validation will run once the backend is connected.",
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Enable preference: Avoid tolls" }),
+    );
+    expect(screen.getByText("Disabled")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Edit preference: Avoid tolls" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Edit route preference" }),
+    ).toBeInTheDocument();
+    await user.clear(screen.getByLabelText("Preference text"));
+    await user.type(screen.getByLabelText("Preference text"), "Avoid ferries");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByText("Avoid tolls")).not.toBeInTheDocument();
+    expect(screen.getByText("Avoid ferries")).toBeInTheDocument();
+
     await vi.advanceTimersByTimeAsync(450);
 
     await waitFor(() => {
@@ -153,16 +347,11 @@ describe("ConfigScreen", () => {
     });
 
     await user.click(
-      screen.getByRole("checkbox", { name: "Enable preference: Avoid tolls" }),
-    );
-    expect(screen.getByText("Disabled")).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Remove preference: Avoid tolls" }),
+      screen.getByRole("button", { name: "Remove preference: Avoid ferries" }),
     );
 
     await waitFor(() => {
-      expect(screen.queryByLabelText("Preference text")).not.toBeInTheDocument();
+      expect(screen.queryByText("Avoid ferries")).not.toBeInTheDocument();
     });
 
     await waitFor(() => {

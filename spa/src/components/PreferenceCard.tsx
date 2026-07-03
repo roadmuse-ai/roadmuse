@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { validatePreferenceText } from "../api/preferenceValidation";
 import {
   type PreferenceValidationStatus,
@@ -12,25 +12,26 @@ const VALIDATION_DEBOUNCE_MS = 450;
 interface PreferenceCardProps {
   preference: TextPreference;
   onUpdate: (id: string, updates: Partial<TextPreference>) => void;
+  onEdit: (preference: TextPreference) => void;
   onRemove: (id: string) => void;
 }
 
-function badgeClassName(status: PreferenceValidationStatus): string {
+function statusClassName(status: PreferenceValidationStatus): string {
   switch (status) {
     case "supported":
-      return "preference-badge preference-badge--supported";
+      return "preference-status preference-status--supported";
     case "partially-supported":
-      return "preference-badge preference-badge--partial";
+      return "preference-status preference-status--partial";
     case "needs-route-context":
-      return "preference-badge preference-badge--context";
+      return "preference-status preference-status--context";
     case "needs-clarification":
-      return "preference-badge preference-badge--clarification";
+      return "preference-status preference-status--clarification";
     case "unsupported":
-      return "preference-badge preference-badge--unsupported";
+      return "preference-status preference-status--unsupported";
     case "pending":
-      return "preference-badge preference-badge--pending";
+      return "preference-status preference-status--pending";
     default:
-      return "preference-badge preference-badge--unknown";
+      return "preference-status preference-status--unknown";
   }
 }
 
@@ -46,8 +47,32 @@ function badgeLabel(status: PreferenceValidationStatus): string {
   return preferenceValidationLabels[status];
 }
 
-export function PreferenceCard({ preference, onUpdate, onRemove }: PreferenceCardProps) {
+function badgeDescription(preference: TextPreference): string {
+  if (preference.validationExplanation) {
+    return preference.validationExplanation;
+  }
+
+  if (preference.validationStatus === "pending") {
+    return "Checking whether this preference can be applied to route planning.";
+  }
+
+  if (preference.validationStatus === "unknown") {
+    return "This preference has not been validated yet.";
+  }
+
+  return `${badgeLabel(preference.validationStatus)} for route planning.`;
+}
+
+export function PreferenceCard({
+  preference,
+  onUpdate,
+  onEdit,
+  onRemove,
+}: PreferenceCardProps) {
   const requestIdRef = useRef(0);
+  const trimmedText = preference.text.trim();
+  const preferenceName = trimmedText || "new preference";
+  const tooltipId = `preference-${preference.id}-validation`;
 
   useEffect(() => {
     const trimmed = preference.text.trim();
@@ -82,7 +107,7 @@ export function PreferenceCard({ preference, onUpdate, onRemove }: PreferenceCar
 
   return (
     <li className={`preference-card${preference.enabled ? "" : " preference-card--disabled"}`}>
-      <div className="preference-card__header">
+      <div className="preference-card__top-row">
         <label className="preference-card__toggle">
           <input
             type="checkbox"
@@ -90,41 +115,47 @@ export function PreferenceCard({ preference, onUpdate, onRemove }: PreferenceCar
             onChange={(event) =>
               onUpdate(preference.id, { enabled: event.target.checked })
             }
-            aria-label={`Enable preference: ${preference.text.trim() || "new preference"}`}
+            aria-label={`Enable preference: ${preferenceName}`}
           />
           <span>{preference.enabled ? "Enabled" : "Disabled"}</span>
         </label>
-        <button
-          type="button"
-          className="saved-place__icon-btn"
-          onClick={() => onRemove(preference.id)}
-          aria-label={`Remove preference: ${preference.text.trim() || "new preference"}`}
-          title="Remove"
-        >
-          <Trash2 aria-hidden="true" size={17} strokeWidth={2.2} />
-        </button>
+
+        <div className="preference-card__actions">
+          <span className="preference-status__wrap">
+            <button
+              type="button"
+              className={statusClassName(preference.validationStatus)}
+              aria-label={`${badgeLabel(preference.validationStatus)} validation details for ${preferenceName}`}
+              aria-describedby={tooltipId}
+            >
+              {badgeLabel(preference.validationStatus)}
+            </button>
+            <span className="preference-status__tooltip" id={tooltipId} role="tooltip">
+              {badgeDescription(preference)}
+            </span>
+          </span>
+          <button
+            type="button"
+            className="saved-place__icon-btn"
+            onClick={() => onEdit(preference)}
+            aria-label={`Edit preference: ${preferenceName}`}
+            title="Edit"
+          >
+            <Pencil aria-hidden="true" size={17} strokeWidth={2.2} />
+          </button>
+          <button
+            type="button"
+            className="saved-place__icon-btn"
+            onClick={() => onRemove(preference.id)}
+            aria-label={`Remove preference: ${preferenceName}`}
+            title="Remove"
+          >
+            <Trash2 aria-hidden="true" size={17} strokeWidth={2.2} />
+          </button>
+        </div>
       </div>
 
-      <label className="form-field preference-card__field">
-        <span className="sr-only">Preference text</span>
-        <textarea
-          aria-label="Preference text"
-          className="preference-card__textarea"
-          value={preference.text}
-          onChange={(event) => onUpdate(preference.id, { text: event.target.value })}
-          placeholder='e.g., "Avoid tolls unless they save 20 minutes"'
-          rows={3}
-        />
-      </label>
-
-      <div className="preference-card__validation">
-        <span className={badgeClassName(preference.validationStatus)}>
-          {badgeLabel(preference.validationStatus)}
-        </span>
-        {preference.validationExplanation ? (
-          <p className="preference-card__explanation">{preference.validationExplanation}</p>
-        ) : null}
-      </div>
+      <p className="preference-card__text">{trimmedText || "No preference text yet"}</p>
     </li>
   );
 }

@@ -33,11 +33,17 @@ describe("settings persistence", () => {
       storageKey,
       JSON.stringify({
         preferredNavigator: "waze",
+        accentTheme: "navy",
         savedPlaces: [
           {
             id: "home",
             label: "  Home  ",
+            entryMode: "address",
             address: "  123 Main St  ",
+            city: "  Washington  ",
+            state: "  DC  ",
+            country: "  United States  ",
+            zipCode: "  20500  ",
             latitude: 38.9,
           },
           null,
@@ -55,6 +61,34 @@ describe("settings persistence", () => {
             id: "bad-address",
             label: "Bad address",
             address: 123,
+          },
+          {
+            id: "bad-city",
+            label: "Bad city",
+            entryMode: "address",
+            address: "Somewhere",
+            city: 123,
+          },
+          {
+            id: "bad-mode",
+            label: "Bad mode",
+            entryMode: "postal",
+            address: "Somewhere",
+          },
+          {
+            id: "bad-coordinates",
+            label: "Bad Coordinates",
+            entryMode: "coordinates",
+            address: "",
+            latitude: 38.9,
+          },
+          {
+            id: "trailhead",
+            label: "Trailhead",
+            entryMode: "coordinates",
+            address: "",
+            latitude: 38.9,
+            longitude: -77.01,
           },
           {
             id: "missing-label",
@@ -89,13 +123,27 @@ describe("settings persistence", () => {
         {
           id: "home",
           label: "Home",
+          entryMode: "address",
           address: "123 Main St",
+          city: "Washington",
+          state: "DC",
+          country: "United States",
+          zipCode: "20500",
           latitude: 38.9,
           longitude: undefined,
         },
         {
+          id: "trailhead",
+          label: "Trailhead",
+          entryMode: "coordinates",
+          address: "",
+          latitude: 38.9,
+          longitude: -77.01,
+        },
+        {
           id: "office",
           label: "Office",
+          entryMode: "address",
           address: "456 Center Ave",
           latitude: undefined,
           longitude: -77.01,
@@ -103,6 +151,7 @@ describe("settings persistence", () => {
       ],
       preferences: [],
       themeMode: "auto",
+      accentTheme: "navy",
     });
   });
 
@@ -160,21 +209,24 @@ describe("settings persistence", () => {
     expect(loadSettings()).toEqual(defaultSettings);
   });
 
-  it("persists valid theme modes and falls back to auto on invalid values", () => {
+  it("persists valid theme modes and accent themes with defaults for invalid values", () => {
     window.localStorage.setItem(
       storageKey,
-      JSON.stringify({ themeMode: "dark" }),
+      JSON.stringify({ themeMode: "dark", accentTheme: "rock" }),
     );
     expect(loadSettings().themeMode).toBe("dark");
+    expect(loadSettings().accentTheme).toBe("rock");
 
     window.localStorage.setItem(
       storageKey,
-      JSON.stringify({ themeMode: "sepia" }),
+      JSON.stringify({ themeMode: "sepia", accentTheme: "forest" }),
     );
     expect(loadSettings().themeMode).toBe("auto");
+    expect(loadSettings().accentTheme).toBe("ground");
 
     window.localStorage.setItem(storageKey, JSON.stringify({}));
     expect(loadSettings().themeMode).toBe("auto");
+    expect(loadSettings().accentTheme).toBe("ground");
   });
 
   it("saves settings to local storage", () => {
@@ -184,13 +236,19 @@ describe("settings persistence", () => {
         {
           id: "office",
           label: "Office",
+          entryMode: "address",
           address: "456 Center Ave",
+          city: "Washington",
+          state: "DC",
+          country: "United States",
+          zipCode: "20001",
           latitude: 38.8977,
           longitude: -77.0365,
         },
       ],
       preferences: [],
       themeMode: "dark",
+      accentTheme: "rock",
     };
 
     saveSettings(settings);

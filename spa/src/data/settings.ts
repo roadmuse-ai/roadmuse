@@ -3,7 +3,7 @@ import {
   isTextPreference,
   normalizeTextPreference,
 } from "./preferences";
-import { type ThemeMode, isThemeMode } from "./theme";
+import { type AccentTheme, type ThemeMode, isAccentTheme, isThemeMode } from "./theme";
 
 export const storageKey = "roadmuse-settings-v1";
 
@@ -32,6 +32,7 @@ export interface RoadMuseSettings {
   savedPlaces: SavedPlace[];
   preferences: TextPreference[];
   themeMode: ThemeMode;
+  accentTheme: AccentTheme;
 }
 
 export const defaultSettings: RoadMuseSettings = {
@@ -39,15 +40,31 @@ export const defaultSettings: RoadMuseSettings = {
   savedPlaces: [],
   preferences: [],
   themeMode: "auto",
+  accentTheme: "ground",
 };
+
+export type SavedPlaceEntryMode = "address" | "coordinates";
 
 export interface SavedPlace {
   id: string;
   label: string;
+  entryMode?: SavedPlaceEntryMode;
   address: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
   latitude?: number;
   longitude?: number;
 }
+
+const isOptionalString = (value: unknown): value is string | undefined => {
+  return value === undefined || typeof value === "string";
+};
+
+const isSavedPlaceEntryMode = (value: unknown): value is SavedPlaceEntryMode => {
+  return value === undefined || value === "address" || value === "coordinates";
+};
 
 const isSavedPlace = (value: unknown): value is SavedPlace => {
   if (!value || typeof value !== "object") {
@@ -63,6 +80,19 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
     return false;
   }
 
+  if (!isSavedPlaceEntryMode(candidate.entryMode)) {
+    return false;
+  }
+
+  if (
+    !isOptionalString(candidate.city) ||
+    !isOptionalString(candidate.state) ||
+    !isOptionalString(candidate.country) ||
+    !isOptionalString(candidate.zipCode)
+  ) {
+    return false;
+  }
+
   if (candidate.latitude !== undefined && typeof candidate.latitude !== "number") {
     return false;
   }
@@ -71,16 +101,60 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
     return false;
   }
 
-  return candidate.label.trim().length > 0 && candidate.address.trim().length > 0;
+  const entryMode = candidate.entryMode ?? "address";
+  const hasAddress = candidate.address.trim().length > 0;
+  const hasCoordinates =
+    Number.isFinite(candidate.latitude) && Number.isFinite(candidate.longitude);
+
+  return (
+    candidate.label.trim().length > 0 &&
+    (entryMode === "coordinates" ? hasCoordinates : hasAddress)
+  );
 };
 
-const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => ({
-  id: raw.id,
-  label: raw.label.trim(),
-  address: raw.address.trim(),
-  latitude: Number.isFinite(raw.latitude) ? raw.latitude : undefined,
-  longitude: Number.isFinite(raw.longitude) ? raw.longitude : undefined,
-});
+const normalizeOptionalText = (value?: string): string | undefined => {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+};
+
+const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => {
+  const entryMode = raw.entryMode ?? "address";
+  const normalized: SavedPlace = {
+    id: raw.id,
+    label: raw.label.trim(),
+    entryMode,
+    address: raw.address.trim(),
+    latitude: Number.isFinite(raw.latitude) ? raw.latitude : undefined,
+    longitude: Number.isFinite(raw.longitude) ? raw.longitude : undefined,
+  };
+
+  if (entryMode === "coordinates") {
+    return normalized;
+  }
+
+  const city = normalizeOptionalText(raw.city);
+  const state = normalizeOptionalText(raw.state);
+  const country = normalizeOptionalText(raw.country);
+  const zipCode = normalizeOptionalText(raw.zipCode);
+
+  if (city) {
+    normalized.city = city;
+  }
+
+  if (state) {
+    normalized.state = state;
+  }
+
+  if (country) {
+    normalized.country = country;
+  }
+
+  if (zipCode) {
+    normalized.zipCode = zipCode;
+  }
+
+  return normalized;
+};
 
 const isNavigatorId = (value: unknown): value is NavigatorId => {
   return typeof value === "string" && (navigatorIds as readonly string[]).includes(value);
@@ -118,11 +192,16 @@ export function loadSettings(): RoadMuseSettings {
       ? parsed.themeMode
       : defaultSettings.themeMode;
 
+    const accentTheme = isAccentTheme(parsed.accentTheme)
+      ? parsed.accentTheme
+      : defaultSettings.accentTheme;
+
     return {
       preferredNavigator,
       savedPlaces,
       preferences,
       themeMode,
+      accentTheme,
     };
   } catch {
     // Swallow malformed data and fall back to defaults.

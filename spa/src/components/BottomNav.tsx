@@ -1,9 +1,10 @@
+import { Car, CircleHelp, Settings, type LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-const navItems = [
-  { label: "Main", to: "/" },
-  { label: "Config", to: "/config" },
-  { label: "Help", to: "/help" },
+const navItems: Array<{ Icon: LucideIcon; label: string; to: string }> = [
+  { Icon: Settings, label: "Config", to: "/config" },
+  { Icon: Car, label: "Main", to: "/" },
+  { Icon: CircleHelp, label: "Help", to: "/help" },
 ];
 
 export function BottomNav() {
@@ -13,11 +14,12 @@ export function BottomNav() {
         {navItems.map((item) => (
           <li key={item.label}>
             <NavLink
+              aria-label={item.label}
               className={({ isActive }) => `bottom-nav__link${isActive ? " active" : ""}`}
               end={item.to === "/"}
               to={item.to}
             >
-              {item.label}
+              <item.Icon aria-hidden="true" className="bottom-nav__icon" />
             </NavLink>
           </li>
         ))}

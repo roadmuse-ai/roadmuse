@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -63,8 +63,15 @@ describe("App", () => {
     const user = userEvent.setup();
     renderApp("/help");
 
+    const helpBreadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(within(helpBreadcrumb).getByText("Help")).toBeInTheDocument();
+    expect(within(helpBreadcrumb).queryByRole("link", { name: "Help" })).not.toBeInTheDocument();
+
     await user.click(screen.getByRole("link", { name: "Navigator Comparison" }));
 
+    const comparisonBreadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(within(comparisonBreadcrumb).getByRole("link", { name: "Help" })).toBeInTheDocument();
+    expect(within(comparisonBreadcrumb).getByText("Navigator Comparison")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Navigator Capability Matrix" }),
     ).toBeInTheDocument();
@@ -79,24 +86,35 @@ describe("App", () => {
     expect(screen.getAllByText("None yet")).toHaveLength(2);
   });
 
-  it("applies the saved theme mode to the document", async () => {
-    window.localStorage.setItem(storageKey, JSON.stringify({ themeMode: "dark" }));
+  it("applies the saved theme mode and accent theme to the document", async () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({ themeMode: "dark", accentTheme: "navy" }),
+    );
 
     renderApp("/config");
 
     expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(document.documentElement.dataset.accentTheme).toBe("navy");
     expect(screen.getByRole("radio", { name: "Dark" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Air" })).toBeChecked();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("radio", { name: "Light" }));
 
     expect(document.documentElement.dataset.theme).toBe("light");
+
+    await user.click(screen.getByRole("radio", { name: "7/4" }));
+
+    expect(document.documentElement.dataset.accentTheme).toBe("patriotic");
   });
 
   it("defaults to auto theme mode resolved as light without system dark preference", () => {
     renderApp("/config");
 
     expect(screen.getByRole("radio", { name: "Auto" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
     expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.accentTheme).toBe("ground");
   });
 });

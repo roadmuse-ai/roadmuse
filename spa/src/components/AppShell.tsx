@@ -14,15 +14,18 @@ export function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     // Set on <html> so fixed overlays and native controls follow the theme too.
     document.documentElement.dataset.theme = effectiveTheme;
+    document.documentElement.dataset.accentTheme = settings.accentTheme;
     document.documentElement.style.colorScheme = effectiveTheme;
-  }, [effectiveTheme]);
+  }, [effectiveTheme, settings.accentTheme]);
 
   return (
     <div className="app-shell">
       <header className="app-shell__header">
         <div className="app-shell__brand">
           <div className="app-shell__brand-text">
-            <h1>RoadMuse</h1>
+            <h1>
+              Road<span className="app-shell__brand-accent">Muse</span>
+            </h1>
             <p>AI route planning for smarter road trips</p>
           </div>
           <img

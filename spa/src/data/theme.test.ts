@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  accentThemeLabels,
+  accentThemes,
   getSystemTheme,
+  isAccentTheme,
   isThemeMode,
   resolveEffectiveTheme,
   themeModeLabels,
@@ -35,6 +38,15 @@ describe("theme helpers", () => {
 
   it("keeps labels for every theme mode", () => {
     expect(Object.keys(themeModeLabels)).toEqual([...themeModes]);
+  });
+
+  it("recognizes accent themes and keeps their labels aligned", () => {
+    expect(isAccentTheme("ground")).toBe(true);
+    expect(isAccentTheme("navy")).toBe(true);
+    expect(isAccentTheme("rock")).toBe(true);
+    expect(isAccentTheme("patriotic")).toBe(true);
+    expect(isAccentTheme("forest")).toBe(false);
+    expect(Object.keys(accentThemeLabels)).toEqual([...accentThemes]);
   });
 
   it("reads the system color scheme through matchMedia", () => {

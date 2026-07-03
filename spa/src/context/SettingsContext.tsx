@@ -16,16 +16,17 @@ import {
   saveSettings,
 } from "../data/settings";
 import { type TextPreference, createEmptyPreference } from "../data/preferences";
-import { type ThemeMode } from "../data/theme";
+import { type AccentTheme, type ThemeMode } from "../data/theme";
 
 interface SettingsContextValue {
   settings: RoadMuseSettings;
   setPreferredNavigator: (navigatorId: NavigatorId) => void;
   setThemeMode: (mode: ThemeMode) => void;
+  setAccentTheme: (accentTheme: AccentTheme) => void;
   addSavedPlace: (place: Omit<SavedPlace, "id">) => void;
   updateSavedPlace: (id: string, updates: Partial<SavedPlace>) => void;
   removeSavedPlace: (id: string) => void;
-  addPreference: () => void;
+  addPreference: () => string;
   updatePreference: (id: string, updates: Partial<TextPreference>) => void;
   removePreference: (id: string) => void;
   resetSettings: () => void;
@@ -50,6 +51,10 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
   const setThemeMode = useCallback((mode: ThemeMode) => {
     setSettings((current) => ({ ...current, themeMode: mode }));
+  }, []);
+
+  const setAccentTheme = useCallback((accentTheme: AccentTheme) => {
+    setSettings((current) => ({ ...current, accentTheme }));
   }, []);
 
   const addSavedPlace = useCallback((place: Omit<SavedPlace, "id">) => {
@@ -82,10 +87,14 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   }, []);
 
   const addPreference = useCallback(() => {
+    const preference = createEmptyPreference();
+
     setSettings((current) => ({
       ...current,
-      preferences: [...current.preferences, createEmptyPreference()],
+      preferences: [...current.preferences, preference],
     }));
+
+    return preference.id;
   }, []);
 
   const updatePreference = useCallback((id: string, updates: Partial<TextPreference>) => {
@@ -113,6 +122,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       settings,
       setPreferredNavigator,
       setThemeMode,
+      setAccentTheme,
       addSavedPlace,
       updateSavedPlace,
       removeSavedPlace,
@@ -125,6 +135,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       settings,
       setPreferredNavigator,
       setThemeMode,
+      setAccentTheme,
       addSavedPlace,
       updateSavedPlace,
       removeSavedPlace,
