@@ -234,7 +234,7 @@ section {
 }
 
 .config-screen > section + section {
-  border-top: 2px solid var(--color-border);
+  border-top: 2px dashed var(--color-border);
   margin-top: 1.1rem;
   padding-top: 1.1rem;
 }
