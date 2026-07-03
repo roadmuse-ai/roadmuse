@@ -244,9 +244,9 @@ section {
   gap: 0.5rem;
 }
 
-.theme-toggle {
+.theme-toggle,
+.location-mode-toggle {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
   padding: 0.3rem;
   border: 1px solid var(--color-border);
@@ -254,7 +254,16 @@ section {
   background: var(--color-surface);
 }
 
-.theme-toggle__option {
+.theme-toggle {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.location-mode-toggle {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.theme-toggle__option,
+.location-mode-toggle__option {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -266,13 +275,15 @@ section {
   cursor: pointer;
 }
 
-.theme-toggle__option input {
+.theme-toggle__option input,
+.location-mode-toggle__option input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
 
-.theme-toggle__option--active {
+.theme-toggle__option--active,
+.location-mode-toggle__option--active {
   background: var(--color-accent-bg);
   color: var(--color-accent-text);
 }
@@ -294,7 +305,8 @@ section {
   color: var(--color-text);
 }
 
-.form-field input {
+.form-field input,
+.form-field select {
   min-width: 0;
 }
 

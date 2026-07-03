@@ -3,15 +3,18 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PreferenceCard } from "../components/PreferenceCard";
 import { useSettings } from "../context/SettingsContext";
+import { countryOptions, getStateOptions } from "../data/locationOptions";
 import {
   type NavigatorId,
   navigatorIds,
   navigatorLabels,
   type SavedPlace,
+  type SavedPlaceEntryMode,
 } from "../data/settings";
 import { type ThemeMode, themeModeLabels, themeModes } from "../data/theme";
 
 type SavedPlaceDraft = {
+  entryMode: SavedPlaceEntryMode;
   label: string;
   address: string;
   city: string;
@@ -59,6 +62,11 @@ function formatAddressDetails(place: SavedPlace): string | null {
   return details || null;
 }
 
+const locationEntryModeLabels: Record<SavedPlaceEntryMode, string> = {
+  address: "Address",
+  coordinates: "Coordinates",
+};
+
 export function ConfigScreen() {
   const {
     settings,
@@ -73,6 +81,7 @@ export function ConfigScreen() {
   } = useSettings();
 
   const emptyDraft: SavedPlaceDraft = {
+    entryMode: "address",
     label: "",
     address: "",
     city: "",
@@ -87,6 +96,8 @@ export function ConfigScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SavedPlaceDraft>(emptyDraft);
   const [editorError, setEditorError] = useState("");
+  const isAddressMode = draft.entryMode === "address";
+  const stateOptions = getStateOptions(draft.country);
 
   const openAddPlace = () => {
     setEditingId(null);
@@ -98,6 +109,7 @@ export function ConfigScreen() {
   const openEditPlace = (place: SavedPlace) => {
     setEditingId(place.id);
     setDraft({
+      entryMode: place.entryMode ?? "address",
       label: place.label,
       address: place.address,
       city: place.city ?? "",
@@ -118,26 +130,64 @@ export function ConfigScreen() {
     setEditorError("");
   };
 
+  const updateEntryMode = (entryMode: SavedPlaceEntryMode) => {
+    setDraft((current) => ({ ...current, entryMode }));
+    setEditorError("");
+  };
+
+  const updateCountry = (country: string) => {
+    setDraft((current) => {
+      const nextStateOptions = getStateOptions(country);
+
+      return {
+        ...current,
+        country,
+        state: nextStateOptions.includes(current.state) ? current.state : "",
+      };
+    });
+  };
+
   const savePlace = () => {
-    if (!isNonEmpty(draft.label) || !isNonEmpty(draft.address)) {
-      setEditorError("Label and address are required.");
+    if (!isNonEmpty(draft.label)) {
+      setEditorError("Label is required.");
       return;
     }
 
-    if (!isNumericOrEmpty(draft.latitude) || !isNumericOrEmpty(draft.longitude)) {
-      setEditorError("Latitude and longitude must be numeric when provided.");
+    if (draft.entryMode === "address") {
+      const requiresState = stateOptions.length > 0;
+
+      if (
+        !isNonEmpty(draft.address) ||
+        !isNonEmpty(draft.city) ||
+        !isNonEmpty(draft.country) ||
+        !isNonEmpty(draft.zipCode) ||
+        (requiresState && !isNonEmpty(draft.state))
+      ) {
+        setEditorError(
+          "Address, city, country, ZIP code, and state when applicable are required.",
+        );
+        return;
+      }
+    } else if (
+      !isNonEmpty(draft.latitude) ||
+      !isNonEmpty(draft.longitude) ||
+      !isNumericOrEmpty(draft.latitude) ||
+      !isNumericOrEmpty(draft.longitude)
+    ) {
+      setEditorError("Latitude and longitude are required and must be numeric.");
       return;
     }
 
     const next: Omit<SavedPlace, "id"> = {
+      entryMode: draft.entryMode,
       label: trimmed(draft.label),
-      address: trimmed(draft.address),
-      city: trimmed(draft.city) || undefined,
-      state: trimmed(draft.state) || undefined,
-      country: trimmed(draft.country) || undefined,
-      zipCode: trimmed(draft.zipCode) || undefined,
-      latitude: normalizeCoordinate(draft.latitude),
-      longitude: normalizeCoordinate(draft.longitude),
+      address: isAddressMode ? trimmed(draft.address) : "",
+      city: isAddressMode ? trimmed(draft.city) || undefined : undefined,
+      state: isAddressMode ? trimmed(draft.state) || undefined : undefined,
+      country: isAddressMode ? trimmed(draft.country) || undefined : undefined,
+      zipCode: isAddressMode ? trimmed(draft.zipCode) || undefined : undefined,
+      latitude: isAddressMode ? undefined : normalizeCoordinate(draft.latitude),
+      longitude: isAddressMode ? undefined : normalizeCoordinate(draft.longitude),
     };
 
     if (editingId) {
@@ -225,7 +275,9 @@ export function ConfigScreen() {
               <li className="saved-place" key={place.id}>
                 <div className="saved-place__content">
                   <p className="saved-place__name">{place.label}</p>
-                  <p className="saved-place__address">{place.address}</p>
+                  {place.address ? (
+                    <p className="saved-place__address">{place.address}</p>
+                  ) : null}
                   {addressDetails ? (
                     <p className="saved-place__address">{addressDetails}</p>
                   ) : null}
@@ -306,6 +358,31 @@ export function ConfigScreen() {
             <h4 className="saved-places__subheading">
               {editingId ? "Edit Place" : "Add Place"}
             </h4>
+            <div
+              className="location-mode-toggle"
+              role="radiogroup"
+              aria-label="Location entry mode"
+            >
+              {(["address", "coordinates"] as const).map((entryMode) => (
+                <label
+                  key={entryMode}
+                  className={`location-mode-toggle__option${
+                    draft.entryMode === entryMode
+                      ? " location-mode-toggle__option--active"
+                      : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="saved-place-entry-mode"
+                    value={entryMode}
+                    checked={draft.entryMode === entryMode}
+                    onChange={() => updateEntryMode(entryMode)}
+                  />
+                  <span>{locationEntryModeLabels[entryMode]}</span>
+                </label>
+              ))}
+            </div>
             <label className="form-field">
               <span>
                 Label <span className="required-marker">*</span>
@@ -319,89 +396,118 @@ export function ConfigScreen() {
                 placeholder="e.g., home"
               />
             </label>
-            <label className="form-field">
-              <span>
-                Address <span className="required-marker">*</span>
-              </span>
-              <input
-                aria-label="Place address"
-                value={draft.address}
-                onChange={(event) =>
-                  setDraft((current) => ({ ...current, address: event.target.value }))
-                }
-                placeholder="e.g., 1600 Pennsylvania Ave, Washington, DC"
-              />
-            </label>
-            <div className="saved-places__field-grid">
-              <label className="form-field">
-                <span>City</span>
-                <input
-                  aria-label="City"
-                  value={draft.city}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, city: event.target.value }))
-                  }
-                  placeholder="e.g., Washington"
-                />
-              </label>
-              <label className="form-field">
-                <span>State</span>
-                <input
-                  aria-label="State"
-                  value={draft.state}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, state: event.target.value }))
-                  }
-                  placeholder="e.g., DC"
-                />
-              </label>
-            </div>
-            <div className="saved-places__field-grid">
-              <label className="form-field">
-                <span>Country</span>
-                <input
-                  aria-label="Country"
-                  value={draft.country}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, country: event.target.value }))
-                  }
-                  placeholder="e.g., United States"
-                />
-              </label>
-              <label className="form-field">
-                <span>ZIP Code</span>
-                <input
-                  aria-label="ZIP code"
-                  value={draft.zipCode}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, zipCode: event.target.value }))
-                  }
-                  placeholder="e.g., 20500"
-                />
-              </label>
-            </div>
-            <div className="saved-places__coords">
-              <label className="form-field">
-                <span>Latitude</span>
-                <input
-                  aria-label="Latitude"
-                  value={draft.latitude}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, latitude: event.target.value }))
-                  }
-                />
-              </label>
-              <label className="form-field">
-                <span>Longitude</span>
-                <input
-                  aria-label="Longitude"
-                  value={draft.longitude}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, longitude: event.target.value }))
-                  }
-                />
-              </label>
-            </div>
+            {isAddressMode ? (
+              <>
+                <label className="form-field">
+                  <span>
+                    Address <span className="required-marker">*</span>
+                  </span>
+                  <input
+                    aria-label="Place address"
+                    value={draft.address}
+                    onChange={(event) =>
+                      setDraft((current) => ({ ...current, address: event.target.value }))
+                    }
+                    placeholder="e.g., 1600 Pennsylvania Ave"
+                  />
+                </label>
+                <div className="saved-places__field-grid">
+                  <label className="form-field">
+                    <span>
+                      City <span className="required-marker">*</span>
+                    </span>
+                    <input
+                      aria-label="City"
+                      value={draft.city}
+                      onChange={(event) =>
+                        setDraft((current) => ({ ...current, city: event.target.value }))
+                      }
+                      placeholder="e.g., Washington"
+                    />
+                  </label>
+                  {stateOptions.length > 0 ? (
+                    <label className="form-field">
+                      <span>
+                        State <span className="required-marker">*</span>
+                      </span>
+                      <select
+                        aria-label="State"
+                        value={draft.state}
+                        onChange={(event) =>
+                          setDraft((current) => ({ ...current, state: event.target.value }))
+                        }
+                      >
+                        <option value="">Select state</option>
+                        {stateOptions.map((state) => (
+                          <option key={state} value={state}>
+                            {state}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </div>
+                <div className="saved-places__field-grid">
+                  <label className="form-field">
+                    <span>
+                      Country <span className="required-marker">*</span>
+                    </span>
+                    <select
+                      aria-label="Country"
+                      value={draft.country}
+                      onChange={(event) => updateCountry(event.target.value)}
+                    >
+                      <option value="">Select country</option>
+                      {countryOptions.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="form-field">
+                    <span>
+                      ZIP Code <span className="required-marker">*</span>
+                    </span>
+                    <input
+                      aria-label="ZIP code"
+                      value={draft.zipCode}
+                      onChange={(event) =>
+                        setDraft((current) => ({ ...current, zipCode: event.target.value }))
+                      }
+                      placeholder="e.g., 20500"
+                    />
+                  </label>
+                </div>
+              </>
+            ) : (
+              <div className="saved-places__coords">
+                <label className="form-field">
+                  <span>
+                    Latitude <span className="required-marker">*</span>
+                  </span>
+                  <input
+                    aria-label="Latitude"
+                    value={draft.latitude}
+                    onChange={(event) =>
+                      setDraft((current) => ({ ...current, latitude: event.target.value }))
+                    }
+                  />
+                </label>
+                <label className="form-field">
+                  <span>
+                    Longitude <span className="required-marker">*</span>
+                  </span>
+                  <input
+                    aria-label="Longitude"
+                    value={draft.longitude}
+                    onChange={(event) =>
+                      setDraft((current) => ({ ...current, longitude: event.target.value }))
+                    }
+                  />
+                </label>
+              </div>
+            )}
 
             {editorError ? (
               <p className="form-note form-note--error">{editorError}</p>

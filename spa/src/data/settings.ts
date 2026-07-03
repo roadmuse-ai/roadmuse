@@ -41,9 +41,12 @@ export const defaultSettings: RoadMuseSettings = {
   themeMode: "auto",
 };
 
+export type SavedPlaceEntryMode = "address" | "coordinates";
+
 export interface SavedPlace {
   id: string;
   label: string;
+  entryMode?: SavedPlaceEntryMode;
   address: string;
   city?: string;
   state?: string;
@@ -57,6 +60,10 @@ const isOptionalString = (value: unknown): value is string | undefined => {
   return value === undefined || typeof value === "string";
 };
 
+const isSavedPlaceEntryMode = (value: unknown): value is SavedPlaceEntryMode => {
+  return value === undefined || value === "address" || value === "coordinates";
+};
+
 const isSavedPlace = (value: unknown): value is SavedPlace => {
   if (!value || typeof value !== "object") {
     return false;
@@ -68,6 +75,10 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
   }
 
   if (typeof candidate.address !== "string") {
+    return false;
+  }
+
+  if (!isSavedPlaceEntryMode(candidate.entryMode)) {
     return false;
   }
 
@@ -88,7 +99,15 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
     return false;
   }
 
-  return candidate.label.trim().length > 0 && candidate.address.trim().length > 0;
+  const entryMode = candidate.entryMode ?? "address";
+  const hasAddress = candidate.address.trim().length > 0;
+  const hasCoordinates =
+    Number.isFinite(candidate.latitude) && Number.isFinite(candidate.longitude);
+
+  return (
+    candidate.label.trim().length > 0 &&
+    (entryMode === "coordinates" ? hasCoordinates : hasAddress)
+  );
 };
 
 const normalizeOptionalText = (value?: string): string | undefined => {
@@ -97,13 +116,19 @@ const normalizeOptionalText = (value?: string): string | undefined => {
 };
 
 const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => {
+  const entryMode = raw.entryMode ?? "address";
   const normalized: SavedPlace = {
     id: raw.id,
     label: raw.label.trim(),
+    entryMode,
     address: raw.address.trim(),
     latitude: Number.isFinite(raw.latitude) ? raw.latitude : undefined,
     longitude: Number.isFinite(raw.longitude) ? raw.longitude : undefined,
   };
+
+  if (entryMode === "coordinates") {
+    return normalized;
+  }
 
   const city = normalizeOptionalText(raw.city);
   const state = normalizeOptionalText(raw.state);

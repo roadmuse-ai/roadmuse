@@ -37,6 +37,7 @@ describe("settings persistence", () => {
           {
             id: "home",
             label: "  Home  ",
+            entryMode: "address",
             address: "  123 Main St  ",
             city: "  Washington  ",
             state: "  DC  ",
@@ -63,8 +64,30 @@ describe("settings persistence", () => {
           {
             id: "bad-city",
             label: "Bad city",
+            entryMode: "address",
             address: "Somewhere",
             city: 123,
+          },
+          {
+            id: "bad-mode",
+            label: "Bad mode",
+            entryMode: "postal",
+            address: "Somewhere",
+          },
+          {
+            id: "bad-coordinates",
+            label: "Bad Coordinates",
+            entryMode: "coordinates",
+            address: "",
+            latitude: 38.9,
+          },
+          {
+            id: "trailhead",
+            label: "Trailhead",
+            entryMode: "coordinates",
+            address: "",
+            latitude: 38.9,
+            longitude: -77.01,
           },
           {
             id: "missing-label",
@@ -99,6 +122,7 @@ describe("settings persistence", () => {
         {
           id: "home",
           label: "Home",
+          entryMode: "address",
           address: "123 Main St",
           city: "Washington",
           state: "DC",
@@ -108,8 +132,17 @@ describe("settings persistence", () => {
           longitude: undefined,
         },
         {
+          id: "trailhead",
+          label: "Trailhead",
+          entryMode: "coordinates",
+          address: "",
+          latitude: 38.9,
+          longitude: -77.01,
+        },
+        {
           id: "office",
           label: "Office",
+          entryMode: "address",
           address: "456 Center Ave",
           latitude: undefined,
           longitude: -77.01,
@@ -198,6 +231,7 @@ describe("settings persistence", () => {
         {
           id: "office",
           label: "Office",
+          entryMode: "address",
           address: "456 Center Ave",
           city: "Washington",
           state: "DC",

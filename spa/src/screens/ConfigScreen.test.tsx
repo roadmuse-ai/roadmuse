@@ -52,14 +52,14 @@ describe("ConfigScreen", () => {
 
     const saveButton = screen.getByRole("button", { name: "Save" });
     expect(saveButton).toBeEnabled();
+    expect(screen.getByRole("radio", { name: "Address" })).toBeChecked();
 
     await user.type(screen.getByLabelText("Place label"), " Home ");
     await user.type(screen.getByLabelText("Place address"), " 123 Main St ");
     await user.type(screen.getByLabelText("City"), " Washington ");
-    await user.type(screen.getByLabelText("State"), " DC ");
-    await user.type(screen.getByLabelText("Country"), " United States ");
+    await user.selectOptions(screen.getByLabelText("Country"), "United States");
+    await user.selectOptions(screen.getByLabelText("State"), "DC");
     await user.type(screen.getByLabelText("ZIP code"), " 20500 ");
-    await user.type(screen.getByLabelText("Latitude"), "38.9");
 
     expect(saveButton).not.toBeDisabled();
     await user.click(saveButton);
@@ -68,11 +68,11 @@ describe("ConfigScreen", () => {
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("123 Main St")).toBeInTheDocument();
     expect(screen.getByText("Washington, DC 20500, United States")).toBeInTheDocument();
-    expect(screen.getByText("38.9, N/A")).toBeInTheDocument();
     await waitFor(() => {
       expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
         savedPlaces: [
           {
+            entryMode: "address",
             label: "Home",
             address: "123 Main St",
             city: "Washington",
@@ -86,6 +86,7 @@ describe("ConfigScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit Home" }));
     expect(screen.getByRole("dialog", { name: "Edit saved place" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Address" })).toBeChecked();
     expect(screen.getByLabelText("City")).toHaveValue("Washington");
     expect(screen.getByLabelText("State")).toHaveValue("DC");
     expect(screen.getByLabelText("Country")).toHaveValue("United States");
@@ -97,12 +98,10 @@ describe("ConfigScreen", () => {
     await user.type(screen.getByLabelText("City"), "Arlington");
     await user.clear(screen.getByLabelText("ZIP code"));
     await user.type(screen.getByLabelText("ZIP code"), "22201");
-    await user.type(screen.getByLabelText("Longitude"), "-77.01");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(screen.getByText("456 Center Ave")).toBeInTheDocument();
     expect(screen.getByText("Arlington, DC 22201, United States")).toBeInTheDocument();
-    expect(screen.getByText("38.9, -77.01")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Remove Home" }));
 
@@ -113,24 +112,52 @@ describe("ConfigScreen", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows coordinate validation errors and closes the saved place dialog", async () => {
+  it("adds coordinate saved places and validates coordinate fields", async () => {
     const user = userEvent.setup();
     renderConfigScreen();
 
     await user.click(screen.getByRole("button", { name: "Add Place" }));
-    await user.type(screen.getByLabelText("Place label"), "Park");
-    await user.type(screen.getByLabelText("Place address"), "National Mall");
+    await user.click(screen.getByRole("radio", { name: "Coordinates" }));
+
+    expect(screen.queryByLabelText("Place address")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Country")).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Place label"), "Trailhead");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByText("Latitude and longitude are required and must be numeric."),
+    ).toBeInTheDocument();
+
     await user.type(screen.getByLabelText("Latitude"), "north");
+    await user.type(screen.getByLabelText("Longitude"), "-77.01");
 
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(
-      screen.getByText("Latitude and longitude must be numeric when provided."),
+      screen.getByText("Latitude and longitude are required and must be numeric."),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.clear(screen.getByLabelText("Latitude"));
+    await user.type(screen.getByLabelText("Latitude"), "38.9");
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Trailhead")).toBeInTheDocument();
+    expect(screen.getByText("38.9, -77.01")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        savedPlaces: [
+          {
+            entryMode: "coordinates",
+            label: "Trailhead",
+            address: "",
+            latitude: 38.9,
+            longitude: -77.01,
+          },
+        ],
+      });
+    });
   });
 
   it("selects and persists the theme mode", async () => {
@@ -166,7 +193,28 @@ describe("ConfigScreen", () => {
     await user.click(screen.getByRole("button", { name: "Add Place" }));
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(screen.getByText("Label and address are required.")).toBeInTheDocument();
+    expect(screen.getByText("Label is required.")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Place label"), "Home");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByText(
+        "Address, city, country, ZIP code, and state when applicable are required.",
+      ),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Place address"), "123 Main St");
+    await user.type(screen.getByLabelText("City"), "Washington");
+    await user.selectOptions(screen.getByLabelText("Country"), "United States");
+    await user.type(screen.getByLabelText("ZIP code"), "20500");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(
+      screen.getByText(
+        "Address, city, country, ZIP code, and state when applicable are required.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("adds, validates, disables, and removes route preferences", async () => {
