@@ -282,6 +282,12 @@ html {
   background: var(--bottom-nav-hover-bg);
 }
 
+.bottom-nav__icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  stroke-width: 2.15;
+}
+
 .bottom-nav__link:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: -0.45rem;
