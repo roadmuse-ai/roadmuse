@@ -263,7 +263,45 @@ describe("ConfigScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Add Preference" }));
 
+    expect(
+      screen.getByRole("dialog", { name: "Add route preference" }),
+    ).toBeInTheDocument();
     await user.type(screen.getByLabelText("Preference text"), "Avoid tolls");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Avoid tolls")).toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(450);
+
+    await waitFor(() => {
+      expect(screen.getByText("Supported")).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("button", { name: "Supported validation details" }),
+    ).toHaveAttribute("aria-describedby");
+    expect(screen.getByRole("tooltip")).toHaveTextContent(
+      "Preference saved. Full validation will run once the backend is connected.",
+    );
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Enable preference: Avoid tolls" }),
+    );
+    expect(screen.getByText("Disabled")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Edit preference: Avoid tolls" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Edit route preference" }),
+    ).toBeInTheDocument();
+    await user.clear(screen.getByLabelText("Preference text"));
+    await user.type(screen.getByLabelText("Preference text"), "Avoid ferries");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByText("Avoid tolls")).not.toBeInTheDocument();
+    expect(screen.getByText("Avoid ferries")).toBeInTheDocument();
+
     await vi.advanceTimersByTimeAsync(450);
 
     await waitFor(() => {
@@ -271,16 +309,11 @@ describe("ConfigScreen", () => {
     });
 
     await user.click(
-      screen.getByRole("checkbox", { name: "Enable preference: Avoid tolls" }),
-    );
-    expect(screen.getByText("Disabled")).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Remove preference: Avoid tolls" }),
+      screen.getByRole("button", { name: "Remove preference: Avoid ferries" }),
     );
 
     await waitFor(() => {
-      expect(screen.queryByLabelText("Preference text")).not.toBeInTheDocument();
+      expect(screen.queryByText("Avoid ferries")).not.toBeInTheDocument();
     });
 
     await waitFor(() => {

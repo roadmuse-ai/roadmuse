@@ -296,7 +296,8 @@ section {
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   border: 1px solid var(--color-border);
   border-radius: 0.65rem;
   padding: 0.6rem 0.75rem;
@@ -306,8 +307,14 @@ section {
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   min-width: 0;
+}
+
+.form-field textarea {
+  resize: vertical;
+  line-height: 1.35;
 }
 
 .form-actions {
@@ -331,7 +338,7 @@ section {
   padding: 0.85rem 0;
   border-bottom: 1px dashed var(--color-border-subtle);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   justify-content: space-between;
 }
@@ -596,28 +603,29 @@ section {
   margin: 0.75rem 0 0;
   padding: 0;
   display: grid;
-  gap: 0.75rem;
 }
 
 .preference-card {
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
+  border-bottom: 1px dashed var(--color-border-subtle);
+  padding: 0.85rem 0;
   display: grid;
-  gap: 0.55rem;
-  background: var(--color-surface);
+  gap: 0.35rem;
+  background: transparent;
+}
+
+.preference-card:first-child {
+  border-top: 1px dashed var(--color-border-subtle);
 }
 
 .preference-card--disabled {
   opacity: 0.72;
-  background: var(--color-surface-muted);
 }
 
-.preference-card__header {
+.preference-card__top-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .preference-card__toggle {
@@ -628,33 +636,30 @@ section {
   color: var(--color-text-nav);
 }
 
-.preference-card__field {
-  margin: 0;
+.preference-card__actions {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  flex: 0 0 auto;
 }
 
-.preference-card__textarea {
-  width: 100%;
-  min-height: 4.5rem;
-  resize: vertical;
-  border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
-  padding: 0.55rem 0.65rem;
-  font: inherit;
-  line-height: 1.35;
-  background: var(--color-surface);
+.preference-card__text {
+  margin: 0;
   color: var(--color-text);
-}
-
-.preference-card__validation {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.preference-card__explanation {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.preference-editor__textarea {
+  min-height: 7rem;
+}
+
+.preference-badge__wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
 }
 
 .preference-badge {
@@ -665,7 +670,43 @@ section {
   padding: 0.18rem 0.55rem;
   font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
+  border: 0;
+  font-family: inherit;
+  cursor: help;
+  min-height: 2rem;
+}
+
+.preference-badge__tooltip {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 45;
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  box-shadow: 0 0.75rem 1.75rem rgb(15 23 42 / 0.18);
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.15rem);
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease,
+    visibility 0.14s ease;
+  visibility: hidden;
+}
+
+.preference-badge__wrap:hover .preference-badge__tooltip,
+.preference-badge__wrap:focus-within .preference-badge__tooltip {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .preference-badge--supported {

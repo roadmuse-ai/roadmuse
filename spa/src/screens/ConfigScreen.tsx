@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { PreferenceCard } from "../components/PreferenceCard";
 import { useSettings } from "../context/SettingsContext";
 import { countryOptions, getStateOptions } from "../data/locationOptions";
+import { type TextPreference } from "../data/preferences";
 import {
   type NavigatorId,
   navigatorIds,
@@ -96,6 +97,10 @@ export function ConfigScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SavedPlaceDraft>(emptyDraft);
   const [editorError, setEditorError] = useState("");
+  const [isPreferenceEditorOpen, setIsPreferenceEditorOpen] = useState(false);
+  const [editingPreferenceId, setEditingPreferenceId] = useState<string | null>(null);
+  const [preferenceDraft, setPreferenceDraft] = useState("");
+  const [preferenceEditorError, setPreferenceEditorError] = useState("");
   const isAddressMode = draft.entryMode === "address";
   const stateOptions = getStateOptions(draft.country);
   const statePlaceholder = draft.country ? "Not required" : "Select country first";
@@ -206,6 +211,49 @@ export function ConfigScreen() {
 
   const removePlace = (id: string) => {
     removeSavedPlace(id);
+  };
+
+  const openAddPreference = () => {
+    setEditingPreferenceId(null);
+    setPreferenceDraft("");
+    setPreferenceEditorError("");
+    setIsPreferenceEditorOpen(true);
+  };
+
+  const openEditPreference = (preference: TextPreference) => {
+    setEditingPreferenceId(preference.id);
+    setPreferenceDraft(preference.text);
+    setPreferenceEditorError("");
+    setIsPreferenceEditorOpen(true);
+  };
+
+  const closePreferenceEditor = () => {
+    setIsPreferenceEditorOpen(false);
+    setEditingPreferenceId(null);
+    setPreferenceDraft("");
+    setPreferenceEditorError("");
+  };
+
+  const savePreference = () => {
+    if (!isNonEmpty(preferenceDraft)) {
+      setPreferenceEditorError("Preference text is required.");
+      return;
+    }
+
+    const updates: Partial<TextPreference> = {
+      text: trimmed(preferenceDraft),
+      validationStatus: "unknown",
+      validationExplanation: undefined,
+    };
+
+    if (editingPreferenceId) {
+      updatePreference(editingPreferenceId, updates);
+    } else {
+      const preferenceId = addPreference();
+      updatePreference(preferenceId, updates);
+    }
+
+    closePreferenceEditor();
   };
 
   return (
@@ -341,12 +389,13 @@ export function ConfigScreen() {
               key={preference.id}
               preference={preference}
               onUpdate={updatePreference}
+              onEdit={openEditPreference}
               onRemove={removePreference}
             />
           ))}
         </ul>
 
-        <button className="card card--secondary" type="button" onClick={addPreference}>
+        <button className="card card--secondary" type="button" onClick={openAddPreference}>
           Add Preference
         </button>
       </section>
@@ -537,6 +586,58 @@ export function ConfigScreen() {
                 className="card card--secondary"
                 type="button"
                 onClick={closeEditor}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isPreferenceEditorOpen ? (
+        <div className="saved-place__editor-overlay" onClick={closePreferenceEditor}>
+          <div
+            className="card saved-place__editor preference-editor"
+            role="dialog"
+            aria-modal="true"
+            aria-label={
+              editingPreferenceId ? "Edit route preference" : "Add route preference"
+            }
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h4 className="saved-places__subheading">
+              {editingPreferenceId ? "Edit Preference" : "Add Preference"}
+            </h4>
+            <label className="form-field">
+              <span>
+                Preference Text <span className="required-marker">*</span>
+              </span>
+              <textarea
+                aria-label="Preference text"
+                className="preference-editor__textarea"
+                value={preferenceDraft}
+                onChange={(event) => setPreferenceDraft(event.target.value)}
+                placeholder='e.g., "Avoid tolls unless they save 20 minutes"'
+                rows={4}
+              />
+            </label>
+
+            {preferenceEditorError ? (
+              <p className="form-note form-note--error">{preferenceEditorError}</p>
+            ) : null}
+
+            <div className="saved-place__actions saved-place__editor-actions">
+              <button
+                className="card card--secondary"
+                type="button"
+                onClick={savePreference}
+              >
+                Save
+              </button>
+              <button
+                className="card card--secondary"
+                type="button"
+                onClick={closePreferenceEditor}
               >
                 Cancel
               </button>

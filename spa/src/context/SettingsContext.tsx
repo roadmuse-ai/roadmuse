@@ -25,7 +25,7 @@ interface SettingsContextValue {
   addSavedPlace: (place: Omit<SavedPlace, "id">) => void;
   updateSavedPlace: (id: string, updates: Partial<SavedPlace>) => void;
   removeSavedPlace: (id: string) => void;
-  addPreference: () => void;
+  addPreference: () => string;
   updatePreference: (id: string, updates: Partial<TextPreference>) => void;
   removePreference: (id: string) => void;
   resetSettings: () => void;
@@ -82,10 +82,14 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   }, []);
 
   const addPreference = useCallback(() => {
+    const preference = createEmptyPreference();
+
     setSettings((current) => ({
       ...current,
-      preferences: [...current.preferences, createEmptyPreference()],
+      preferences: [...current.preferences, preference],
     }));
+
+    return preference.id;
   }, []);
 
   const updatePreference = useCallback((id: string, updates: Partial<TextPreference>) => {
