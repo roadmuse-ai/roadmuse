@@ -314,7 +314,9 @@ describe("ConfigScreen", () => {
       expect(screen.getByText("Supported")).toBeInTheDocument();
     });
     expect(
-      screen.getByRole("button", { name: "Supported validation details" }),
+      screen.getByRole("button", {
+        name: "Supported validation details for Avoid tolls",
+      }),
     ).toHaveAttribute("aria-describedby");
     expect(screen.getByRole("tooltip")).toHaveTextContent(
       "Preference saved. Full validation will run once the backend is connected.",
