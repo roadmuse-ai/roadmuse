@@ -32,7 +32,9 @@
   --control-secondary-fill-bg: var(--brand-road-dark);
   --control-secondary-fill-shadow: none;
   --control-border: var(--bottom-nav-separator);
-  --brand-muse-color: var(--brand-road-gold);
+  --brand-road-wordmark-color: var(--bottom-nav-bg);
+  --brand-road-wordmark-shadow: 0 1px 0 rgb(255 207 50 / 0.18);
+  --brand-muse-color: var(--bottom-nav-active-bg);
   --brand-muse-shadow: 0 1px 0 rgb(76 44 0 / 0.42);
   --control-height: 2.75rem;
   --content-gap: 0.6rem;
@@ -100,7 +102,9 @@
   --color-error: #f87171;
   --color-overlay: rgb(10 4 1 / 0.82);
   --color-hover-bg: var(--brand-road-dark);
-  --brand-muse-color: var(--brand-road-cream);
+  --brand-road-wordmark-color: var(--bottom-nav-bg);
+  --brand-road-wordmark-shadow: 0 1px 0 rgb(0 0 0 / 0.42);
+  --brand-muse-color: var(--bottom-nav-active-bg);
   --control-fill-bg: var(--brand-road-cream);
   --control-fill-text: #160900;
   --control-fill-text-shadow: none;
@@ -210,6 +214,8 @@ html {
 .app-shell__header h1 {
   margin: 0;
   font-size: 1.5rem;
+  color: var(--brand-road-wordmark-color);
+  text-shadow: var(--brand-road-wordmark-shadow);
 }
 
 .app-shell__brand-accent {
