@@ -22,7 +22,9 @@ export function AppShell({ children }: AppShellProps) {
       <header className="app-shell__header">
         <div className="app-shell__brand">
           <div className="app-shell__brand-text">
-            <h1>RoadMuse</h1>
+            <h1>
+              Road<span className="app-shell__brand-accent">Muse</span>
+            </h1>
             <p>AI route planning for smarter road trips</p>
           </div>
           <img

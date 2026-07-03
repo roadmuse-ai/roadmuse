@@ -18,6 +18,8 @@
   --color-error: #dc2626;
   --color-overlay: rgb(15 23 42 / 0.64);
   --color-hover-bg: #e2e8f0;
+  --brand-muse-color: #ffcf32;
+  --brand-muse-shadow: 0 1px 0 rgb(76 44 0 / 0.42);
   --control-height: 2.75rem;
   --content-gap: 0.6rem;
   --field-gap: 0.5rem;
@@ -86,6 +88,8 @@
   --color-error: #f87171;
   --color-overlay: rgb(2 6 23 / 0.78);
   --color-hover-bg: #334155;
+  --brand-muse-color: #ffe68a;
+  --brand-muse-shadow: 0 1px 0 rgb(0 0 0 / 0.46);
   --bottom-nav-bg: #b96a1c;
   --bottom-nav-border: rgb(237 170 55 / 0.5);
   --bottom-nav-separator: rgb(55 28 6 / 0.22);
@@ -188,6 +192,11 @@ html {
 .app-shell__header h1 {
   margin: 0;
   font-size: 1.5rem;
+}
+
+.app-shell__brand-accent {
+  color: var(--brand-muse-color);
+  text-shadow: var(--brand-muse-shadow);
 }
 
 .app-shell__header p {
