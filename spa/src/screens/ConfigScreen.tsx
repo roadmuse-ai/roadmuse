@@ -130,7 +130,7 @@ export function ConfigScreen() {
   };
 
   return (
-    <section>
+    <section className="config-screen">
       <section className="config-section">
         <h3 className="settings-title">Theme</h3>
         <p className="form-note">
