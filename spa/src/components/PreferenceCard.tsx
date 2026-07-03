@@ -108,19 +108,19 @@ export function PreferenceCard({
   return (
     <li className={`preference-card${preference.enabled ? "" : " preference-card--disabled"}`}>
       <div className="preference-card__top-row">
-        <div className="preference-card__meta">
-          <label className="preference-card__toggle">
-            <input
-              type="checkbox"
-              checked={preference.enabled}
-              onChange={(event) =>
-                onUpdate(preference.id, { enabled: event.target.checked })
-              }
-              aria-label={`Enable preference: ${preferenceName}`}
-            />
-            <span>{preference.enabled ? "Enabled" : "Disabled"}</span>
-          </label>
+        <label className="preference-card__toggle">
+          <input
+            type="checkbox"
+            checked={preference.enabled}
+            onChange={(event) =>
+              onUpdate(preference.id, { enabled: event.target.checked })
+            }
+            aria-label={`Enable preference: ${preferenceName}`}
+          />
+          <span>{preference.enabled ? "Enabled" : "Disabled"}</span>
+        </label>
 
+        <div className="preference-card__actions">
           <span className="preference-status__wrap">
             <button
               type="button"
@@ -134,9 +134,6 @@ export function PreferenceCard({
               {badgeDescription(preference)}
             </span>
           </span>
-        </div>
-
-        <div className="preference-card__actions">
           <button
             type="button"
             className="saved-place__icon-btn"

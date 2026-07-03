@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { useId, useState } from "react";
+import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PreferenceCard } from "../components/PreferenceCard";
 import { useSettings } from "../context/SettingsContext";
@@ -72,8 +72,114 @@ const locationEntryModeLabels: Record<SavedPlaceEntryMode, string> = {
   coordinates: "Coordinates",
 };
 
-const countryLookupId = "saved-place-country-options";
-const stateLookupId = "saved-place-state-options";
+function filterLookupOptions(options: readonly string[], value: string): string[] {
+  const normalized = value.trim().toLocaleLowerCase();
+
+  if (!normalized) {
+    return options.slice(0, 8);
+  }
+
+  return options
+    .filter((option) => option.toLocaleLowerCase().includes(normalized))
+    .slice(0, 8);
+}
+
+function getLookupOption(options: readonly string[], value: string): string | undefined {
+  const normalized = value.trim().toLocaleLowerCase();
+
+  return options.find((option) => option.toLocaleLowerCase() === normalized);
+}
+
+type LookupFieldProps = {
+  label: string;
+  ariaLabel: string;
+  value: string;
+  options: readonly string[];
+  onChange: (value: string) => void;
+  required?: boolean;
+  disabled?: boolean;
+  placeholder?: string;
+};
+
+function LookupField({
+  label,
+  ariaLabel,
+  value,
+  options,
+  onChange,
+  required = false,
+  disabled = false,
+  placeholder,
+}: LookupFieldProps) {
+  const inputId = useId();
+  const listId = `${inputId}-options`;
+  const [isOpen, setIsOpen] = useState(false);
+  const filteredOptions = filterLookupOptions(options, value);
+  const hasOptions = filteredOptions.length > 0;
+  const isExpanded = isOpen && !disabled && hasOptions;
+
+  const selectOption = (option: string) => {
+    onChange(option);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="form-field lookup-field">
+      <label htmlFor={inputId}>
+        {label} {required ? <span className="required-marker">*</span> : null}
+      </label>
+      <div className="lookup-field__control">
+        <input
+          id={inputId}
+          aria-label={ariaLabel}
+          aria-autocomplete="list"
+          aria-controls={listId}
+          aria-expanded={isExpanded}
+          aria-haspopup="listbox"
+          autoComplete="off"
+          disabled={disabled}
+          placeholder={placeholder}
+          role="combobox"
+          value={value}
+          onBlur={() => setIsOpen(false)}
+          onChange={(event) => {
+            onChange(event.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+        />
+        <button
+          type="button"
+          className="lookup-field__toggle"
+          aria-label={`Show ${label} options`}
+          disabled={disabled}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => setIsOpen((current) => !current)}
+        >
+          <ChevronDown aria-hidden="true" size={17} strokeWidth={2.2} />
+        </button>
+        {isExpanded ? (
+          <ul className="lookup-field__options" id={listId} role="listbox">
+            {filteredOptions.map((option) => (
+              <li key={option} role="presentation">
+                <button
+                  type="button"
+                  className="lookup-field__option"
+                  role="option"
+                  aria-selected={option === value}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => selectOption(option)}
+                >
+                  {option}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 export function ConfigScreen() {
   const {
@@ -111,6 +217,7 @@ export function ConfigScreen() {
   const isAddressMode = draft.entryMode === "address";
   const selectedCountry = getCountryOption(draft.country);
   const stateOptions = getStateOptions(draft.country);
+  const selectedState = getLookupOption(stateOptions, draft.state);
   const statePlaceholder = draft.country ? "Not required" : "Select country first";
 
   const openAddPlace = () => {
@@ -176,7 +283,7 @@ export function ConfigScreen() {
         !isNonEmpty(draft.country) ||
         !selectedCountry ||
         !isNonEmpty(draft.zipCode) ||
-        (requiresState && !isNonEmpty(draft.state))
+        (requiresState && !selectedState)
       ) {
         setEditorError(
           "Address, city, country from the list, ZIP code, and state when applicable are required.",
@@ -195,7 +302,7 @@ export function ConfigScreen() {
 
     const nextState =
       isAddressMode && stateOptions.length > 0
-        ? trimmed(draft.state) || undefined
+        ? selectedState
         : undefined;
     const next: Omit<SavedPlace, "id"> = {
       entryMode: draft.entryMode,
@@ -305,19 +412,27 @@ export function ConfigScreen() {
         <form className="config-form" onSubmit={(event) => event.preventDefault()}>
           <label className="form-field">
             <span className="sr-only">Preferred Navigator</span>
-          <select
-            aria-label="Preferred Navigator"
-            value={settings.preferredNavigator}
-            onChange={(event) =>
-              setPreferredNavigator(event.target.value as NavigatorId)
-            }
-          >
-            {navigatorIds.map((id) => (
-              <option key={id} value={id}>
-                {navigatorLabels[id]}
-              </option>
-            ))}
-          </select>
+          <span className="select-control">
+            <select
+              aria-label="Preferred Navigator"
+              value={settings.preferredNavigator}
+              onChange={(event) =>
+                setPreferredNavigator(event.target.value as NavigatorId)
+              }
+            >
+              {navigatorIds.map((id) => (
+                <option key={id} value={id}>
+                  {navigatorLabels[id]}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              className="select-control__icon"
+              aria-hidden="true"
+              size={17}
+              strokeWidth={2.2}
+            />
+          </span>
         </label>
         </form>
       </section>
@@ -491,48 +606,29 @@ export function ConfigScreen() {
                       placeholder="e.g., Washington"
                     />
                   </label>
-                  <label className="form-field">
-                    <span>
-                      Country <span className="required-marker">*</span>
-                    </span>
-                    <input
-                      aria-label="Country"
-                      list={countryLookupId}
-                      value={draft.country}
-                      onChange={(event) => updateCountry(event.target.value)}
-                      placeholder="e.g., United States"
-                    />
-                    <datalist id={countryLookupId}>
-                      {countryOptions.map((country) => (
-                        <option key={country} value={country} />
-                      ))}
-                    </datalist>
-                  </label>
+                  <LookupField
+                    ariaLabel="Country"
+                    label="Country"
+                    options={countryOptions}
+                    placeholder="e.g., United States"
+                    required
+                    value={draft.country}
+                    onChange={updateCountry}
+                  />
                 </div>
                 <div className="saved-places__field-grid">
-                  <label className="form-field">
-                    <span>
-                      State{" "}
-                      {stateOptions.length > 0 ? (
-                        <span className="required-marker">*</span>
-                      ) : null}
-                    </span>
-                    <input
-                      aria-label="State"
-                      list={stateLookupId}
-                      value={draft.state}
-                      disabled={stateOptions.length === 0}
-                      onChange={(event) =>
-                        setDraft((current) => ({ ...current, state: event.target.value }))
-                      }
-                      placeholder={stateOptions.length > 0 ? "e.g., DC" : statePlaceholder}
-                    />
-                    <datalist id={stateLookupId}>
-                      {stateOptions.map((state) => (
-                        <option key={state} value={state} />
-                      ))}
-                    </datalist>
-                  </label>
+                  <LookupField
+                    ariaLabel="State"
+                    disabled={stateOptions.length === 0}
+                    label="State"
+                    options={stateOptions}
+                    placeholder={stateOptions.length > 0 ? "e.g., DC" : statePlaceholder}
+                    required={stateOptions.length > 0}
+                    value={draft.state}
+                    onChange={(state) =>
+                      setDraft((current) => ({ ...current, state }))
+                    }
+                  />
                   <label className="form-field">
                     <span>
                       ZIP Code <span className="required-marker">*</span>

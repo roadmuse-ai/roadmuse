@@ -16,6 +16,19 @@ function renderConfigScreen() {
   );
 }
 
+async function chooseLookupOption(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  query: string,
+  option = query,
+) {
+  const input = screen.getByLabelText(label);
+
+  await user.clear(input);
+  await user.type(input, query);
+  await user.click(screen.getByRole("option", { name: option }));
+}
+
 describe("ConfigScreen", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -57,11 +70,10 @@ describe("ConfigScreen", () => {
     await user.type(screen.getByLabelText("Place label"), " Home ");
     await user.type(screen.getByLabelText("Place address"), " 123 Main St ");
     await user.type(screen.getByLabelText("City"), " Washington ");
-    expect(
-      document.querySelector('datalist#saved-place-country-options option[value="Afghanistan"]'),
-    ).toBeInTheDocument();
-    await user.type(screen.getByLabelText("Country"), "United States");
-    await user.type(screen.getByLabelText("State"), "DC");
+    await user.type(screen.getByLabelText("Country"), "Afgh");
+    expect(screen.getByRole("option", { name: "Afghanistan" })).toBeInTheDocument();
+    await chooseLookupOption(user, "Country", "United", "United States");
+    await chooseLookupOption(user, "State", "D", "DC");
     await user.type(screen.getByLabelText("ZIP code"), " 20500 ");
 
     expect(saveButton).not.toBeDisabled();
@@ -126,7 +138,7 @@ describe("ConfigScreen", () => {
     await user.type(screen.getByLabelText("Place label"), "Hotel");
     await user.type(screen.getByLabelText("Place address"), "1 Rue de Rivoli");
     await user.type(screen.getByLabelText("City"), "Paris");
-    await user.type(screen.getByLabelText("Country"), "France");
+    await chooseLookupOption(user, "Country", "Fra", "France");
     await user.type(screen.getByLabelText("ZIP code"), "75001");
 
     expect(screen.getByLabelText("State")).toBeDisabled();

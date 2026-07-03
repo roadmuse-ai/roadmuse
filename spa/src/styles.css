@@ -312,6 +312,90 @@ section {
   min-width: 0;
 }
 
+.form-field input,
+.form-field select {
+  width: 100%;
+}
+
+.form-field select {
+  appearance: none;
+  padding-right: 2.4rem;
+}
+
+.select-control,
+.lookup-field__control {
+  position: relative;
+  display: block;
+}
+
+.select-control__icon,
+.lookup-field__toggle {
+  position: absolute;
+  right: 0.72rem;
+  top: 50%;
+  color: var(--color-text-secondary);
+  transform: translateY(-50%);
+}
+
+.select-control__icon {
+  pointer-events: none;
+}
+
+.lookup-field__control input {
+  padding-right: 2.4rem;
+}
+
+.lookup-field__toggle {
+  width: 1.2rem;
+  height: 1.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.lookup-field__toggle:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.lookup-field__options {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 12rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  background: var(--color-surface);
+  box-shadow: 0 0.75rem 1.75rem rgb(15 23 42 / 0.18);
+}
+
+.lookup-field__option {
+  width: 100%;
+  border: 0;
+  border-radius: 0.45rem;
+  padding: 0.48rem 0.55rem;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lookup-field__option:hover,
+.lookup-field__option:focus {
+  background: var(--color-hover-bg);
+}
+
 .form-field textarea {
   resize: vertical;
   line-height: 1.35;
@@ -386,6 +470,7 @@ section {
 .saved-place__actions--row {
   flex: 0 0 auto;
   justify-content: flex-end;
+  margin-top: -0.35rem;
 }
 
 .saved-place__editor-actions {
@@ -632,14 +717,6 @@ section {
   gap: 0.75rem;
 }
 
-.preference-card__meta {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
 .preference-card__toggle {
   display: inline-flex;
   align-items: center;
@@ -650,10 +727,11 @@ section {
 
 .preference-card__actions {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.45rem;
   flex: 0 0 auto;
+  margin-top: -0.35rem;
 }
 
 .preference-card__text {
