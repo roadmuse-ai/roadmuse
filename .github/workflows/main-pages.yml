@@ -16,21 +16,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  checks:
-    name: ${{ matrix.name }}
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: Lint
-            command: make lint
-            publish_pages: false
-          - name: Test and Coverage
-            command: make test
-            publish_pages: false
-          - name: Build
-            command: make build-pages
-            publish_pages: true
 
     steps:
       - name: Checkout
@@ -57,24 +45,79 @@ jobs:
         run: uv sync --frozen
         working-directory: backend
 
-      - name: Run ${{ matrix.name }}
-        run: ${{ matrix.command }}
+      - name: Run lint
+        run: make lint
+
+  test:
+    name: Test and Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: spa/package-lock.json
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: spa
+
+      - name: Sync backend dependencies
+        run: uv sync --frozen
+        working-directory: backend
+
+      - name: Run tests
+        run: make test
+
+  build:
+    name: Build Pages Artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: spa/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: spa
+
+      - name: Build Pages artifact
+        run: make build-pages
 
       - name: Configure GitHub Pages
-        if: ${{ matrix.publish_pages }}
         uses: actions/configure-pages@v5
         with:
           enablement: true
 
       - name: Upload GitHub Pages artifact
-        if: ${{ matrix.publish_pages }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: spa/dist
 
   deploy:
     name: Deploy to GitHub Pages
-    needs: checks
+    needs:
+      - lint
+      - test
+      - build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
