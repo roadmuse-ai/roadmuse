@@ -1,5 +1,5 @@
 export const themeModes = ["light", "auto", "dark"] as const;
-export const accentThemes = ["ground", "navy", "rock", "patriotic"] as const;
+export const accentThemes = ["ground", "navy", "patriotic", "rock"] as const;
 
 export type ThemeMode = (typeof themeModes)[number];
 export type AccentTheme = (typeof accentThemes)[number];
@@ -13,10 +13,10 @@ export const themeModeLabels: Record<ThemeMode, string> = {
 };
 
 export const accentThemeLabels: Record<AccentTheme, string> = {
-  ground: "Ground",
-  navy: "Navy",
-  rock: "Rock",
+  ground: "Sand",
+  navy: "Ocean",
   patriotic: "July 4th",
+  rock: "Asphalt",
 };
 
 export const isThemeMode = (value: unknown): value is ThemeMode => {

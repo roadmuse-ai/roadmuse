@@ -231,7 +231,7 @@ describe("ConfigScreen", () => {
 
     const autoOption = screen.getByRole("radio", { name: "Auto" });
     expect(autoOption).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Sand" })).toBeChecked();
 
     await user.click(screen.getByRole("radio", { name: "Dark" }));
 
