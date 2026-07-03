@@ -751,6 +751,16 @@ button.card--secondary {
   padding-left: 1.25rem;
 }
 
+.help-screen .list,
+.navigator-comparison .list {
+  color: var(--color-text-secondary);
+}
+
+.help-screen .list a,
+.navigator-comparison .list a {
+  color: inherit;
+}
+
 .list li + li {
   margin-top: 0.5rem;
 }
