@@ -317,7 +317,7 @@ section {
 
 .saved-place {
   padding: 0.85rem 0;
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: 1px dashed var(--color-border-subtle);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -325,7 +325,7 @@ section {
 }
 
 .saved-place:first-child {
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: 1px dashed var(--color-border-subtle);
 }
 
 .saved-place__content {
