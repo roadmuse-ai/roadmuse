@@ -14,6 +14,10 @@ import { type ThemeMode, themeModeLabels, themeModes } from "../data/theme";
 type SavedPlaceDraft = {
   label: string;
   address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
   latitude: string;
   longitude: string;
 };
@@ -47,6 +51,14 @@ function formatCoordinates(latitude?: number, longitude?: number): string | null
     : `${latitude ?? "N/A"}, ${longitude ?? "N/A"}`;
 }
 
+function formatAddressDetails(place: SavedPlace): string | null {
+  const cityState = [place.city, place.state].filter(Boolean).join(", ");
+  const locality = [cityState, place.zipCode].filter(Boolean).join(" ");
+  const details = [locality, place.country].filter(Boolean).join(", ");
+
+  return details || null;
+}
+
 export function ConfigScreen() {
   const {
     settings,
@@ -63,6 +75,10 @@ export function ConfigScreen() {
   const emptyDraft: SavedPlaceDraft = {
     label: "",
     address: "",
+    city: "",
+    state: "",
+    country: "",
+    zipCode: "",
     latitude: "",
     longitude: "",
   };
@@ -84,6 +100,10 @@ export function ConfigScreen() {
     setDraft({
       label: place.label,
       address: place.address,
+      city: place.city ?? "",
+      state: place.state ?? "",
+      country: place.country ?? "",
+      zipCode: place.zipCode ?? "",
       latitude: String(place.latitude ?? ""),
       longitude: String(place.longitude ?? ""),
     });
@@ -112,6 +132,10 @@ export function ConfigScreen() {
     const next: Omit<SavedPlace, "id"> = {
       label: trimmed(draft.label),
       address: trimmed(draft.address),
+      city: trimmed(draft.city) || undefined,
+      state: trimmed(draft.state) || undefined,
+      country: trimmed(draft.country) || undefined,
+      zipCode: trimmed(draft.zipCode) || undefined,
       latitude: normalizeCoordinate(draft.latitude),
       longitude: normalizeCoordinate(draft.longitude),
     };
@@ -194,6 +218,7 @@ export function ConfigScreen() {
 
         <ul className="saved-places__list" aria-label="Saved Places list">
           {settings.savedPlaces.map((place) => {
+            const addressDetails = formatAddressDetails(place);
             const coordinates = formatCoordinates(place.latitude, place.longitude);
 
             return (
@@ -201,6 +226,9 @@ export function ConfigScreen() {
                 <div className="saved-place__content">
                   <p className="saved-place__name">{place.label}</p>
                   <p className="saved-place__address">{place.address}</p>
+                  {addressDetails ? (
+                    <p className="saved-place__address">{addressDetails}</p>
+                  ) : null}
                   {coordinates ? (
                     <p className="saved-place__coordinates">{coordinates}</p>
                   ) : null}
@@ -304,6 +332,54 @@ export function ConfigScreen() {
                 placeholder="e.g., 1600 Pennsylvania Ave, Washington, DC"
               />
             </label>
+            <div className="saved-places__field-grid">
+              <label className="form-field">
+                <span>City</span>
+                <input
+                  aria-label="City"
+                  value={draft.city}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, city: event.target.value }))
+                  }
+                  placeholder="e.g., Washington"
+                />
+              </label>
+              <label className="form-field">
+                <span>State</span>
+                <input
+                  aria-label="State"
+                  value={draft.state}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, state: event.target.value }))
+                  }
+                  placeholder="e.g., DC"
+                />
+              </label>
+            </div>
+            <div className="saved-places__field-grid">
+              <label className="form-field">
+                <span>Country</span>
+                <input
+                  aria-label="Country"
+                  value={draft.country}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, country: event.target.value }))
+                  }
+                  placeholder="e.g., United States"
+                />
+              </label>
+              <label className="form-field">
+                <span>ZIP Code</span>
+                <input
+                  aria-label="ZIP code"
+                  value={draft.zipCode}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, zipCode: event.target.value }))
+                  }
+                  placeholder="e.g., 20500"
+                />
+              </label>
+            </div>
             <div className="saved-places__coords">
               <label className="form-field">
                 <span>Latitude</span>

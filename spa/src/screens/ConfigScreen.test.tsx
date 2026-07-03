@@ -55,6 +55,10 @@ describe("ConfigScreen", () => {
 
     await user.type(screen.getByLabelText("Place label"), " Home ");
     await user.type(screen.getByLabelText("Place address"), " 123 Main St ");
+    await user.type(screen.getByLabelText("City"), " Washington ");
+    await user.type(screen.getByLabelText("State"), " DC ");
+    await user.type(screen.getByLabelText("Country"), " United States ");
+    await user.type(screen.getByLabelText("ZIP code"), " 20500 ");
     await user.type(screen.getByLabelText("Latitude"), "38.9");
 
     expect(saveButton).not.toBeDisabled();
@@ -63,23 +67,50 @@ describe("ConfigScreen", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("123 Main St")).toBeInTheDocument();
+    expect(screen.getByText("Washington, DC 20500, United States")).toBeInTheDocument();
     expect(screen.getByText("38.9, N/A")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        savedPlaces: [
+          {
+            label: "Home",
+            address: "123 Main St",
+            city: "Washington",
+            state: "DC",
+            country: "United States",
+            zipCode: "20500",
+          },
+        ],
+      });
+    });
 
     await user.click(screen.getByRole("button", { name: "Edit Home" }));
     expect(screen.getByRole("dialog", { name: "Edit saved place" })).toBeInTheDocument();
+    expect(screen.getByLabelText("City")).toHaveValue("Washington");
+    expect(screen.getByLabelText("State")).toHaveValue("DC");
+    expect(screen.getByLabelText("Country")).toHaveValue("United States");
+    expect(screen.getByLabelText("ZIP code")).toHaveValue("20500");
 
     await user.clear(screen.getByLabelText("Place address"));
     await user.type(screen.getByLabelText("Place address"), "456 Center Ave");
+    await user.clear(screen.getByLabelText("City"));
+    await user.type(screen.getByLabelText("City"), "Arlington");
+    await user.clear(screen.getByLabelText("ZIP code"));
+    await user.type(screen.getByLabelText("ZIP code"), "22201");
     await user.type(screen.getByLabelText("Longitude"), "-77.01");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(screen.getByText("456 Center Ave")).toBeInTheDocument();
+    expect(screen.getByText("Arlington, DC 22201, United States")).toBeInTheDocument();
     expect(screen.getByText("38.9, -77.01")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Remove Home" }));
 
     expect(screen.queryByText("Home")).not.toBeInTheDocument();
     expect(screen.queryByText("456 Center Ave")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Arlington, DC 22201, United States"),
+    ).not.toBeInTheDocument();
   });
 
   it("shows coordinate validation errors and closes the saved place dialog", async () => {

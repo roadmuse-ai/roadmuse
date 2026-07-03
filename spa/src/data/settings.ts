@@ -45,9 +45,17 @@ export interface SavedPlace {
   id: string;
   label: string;
   address: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipCode?: string;
   latitude?: number;
   longitude?: number;
 }
+
+const isOptionalString = (value: unknown): value is string | undefined => {
+  return value === undefined || typeof value === "string";
+};
 
 const isSavedPlace = (value: unknown): value is SavedPlace => {
   if (!value || typeof value !== "object") {
@@ -63,6 +71,15 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
     return false;
   }
 
+  if (
+    !isOptionalString(candidate.city) ||
+    !isOptionalString(candidate.state) ||
+    !isOptionalString(candidate.country) ||
+    !isOptionalString(candidate.zipCode)
+  ) {
+    return false;
+  }
+
   if (candidate.latitude !== undefined && typeof candidate.latitude !== "number") {
     return false;
   }
@@ -74,13 +91,43 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
   return candidate.label.trim().length > 0 && candidate.address.trim().length > 0;
 };
 
-const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => ({
-  id: raw.id,
-  label: raw.label.trim(),
-  address: raw.address.trim(),
-  latitude: Number.isFinite(raw.latitude) ? raw.latitude : undefined,
-  longitude: Number.isFinite(raw.longitude) ? raw.longitude : undefined,
-});
+const normalizeOptionalText = (value?: string): string | undefined => {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+};
+
+const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => {
+  const normalized: SavedPlace = {
+    id: raw.id,
+    label: raw.label.trim(),
+    address: raw.address.trim(),
+    latitude: Number.isFinite(raw.latitude) ? raw.latitude : undefined,
+    longitude: Number.isFinite(raw.longitude) ? raw.longitude : undefined,
+  };
+
+  const city = normalizeOptionalText(raw.city);
+  const state = normalizeOptionalText(raw.state);
+  const country = normalizeOptionalText(raw.country);
+  const zipCode = normalizeOptionalText(raw.zipCode);
+
+  if (city) {
+    normalized.city = city;
+  }
+
+  if (state) {
+    normalized.state = state;
+  }
+
+  if (country) {
+    normalized.country = country;
+  }
+
+  if (zipCode) {
+    normalized.zipCode = zipCode;
+  }
+
+  return normalized;
+};
 
 const isNavigatorId = (value: unknown): value is NavigatorId => {
   return typeof value === "string" && (navigatorIds as readonly string[]).includes(value);

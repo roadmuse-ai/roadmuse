@@ -411,12 +411,14 @@ section {
   gap: 0.6rem;
 }
 
+.saved-places__field-grid,
 .saved-places__coords {
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.saved-places__field-grid .form-field,
 .saved-places__coords .form-field {
   margin: 0;
 }
