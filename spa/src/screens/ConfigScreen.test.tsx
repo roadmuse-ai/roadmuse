@@ -112,6 +112,45 @@ describe("ConfigScreen", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("allows saved place addresses for countries without states", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    await user.click(screen.getByRole("button", { name: "Add Place" }));
+
+    expect(screen.getByLabelText("State")).toBeDisabled();
+
+    await user.type(screen.getByLabelText("Place label"), "Hotel");
+    await user.type(screen.getByLabelText("Place address"), "1 Rue de Rivoli");
+    await user.type(screen.getByLabelText("City"), "Paris");
+    await user.selectOptions(screen.getByLabelText("Country"), "France");
+    await user.type(screen.getByLabelText("ZIP code"), "75001");
+
+    expect(screen.getByLabelText("State")).toBeDisabled();
+    expect(screen.getByText("Not required")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Hotel")).toBeInTheDocument();
+    expect(screen.getByText("1 Rue de Rivoli")).toBeInTheDocument();
+    expect(screen.getByText("Paris 75001, France")).toBeInTheDocument();
+    await waitFor(() => {
+      const savedPlace = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")
+        .savedPlaces[0];
+
+      expect(savedPlace).toMatchObject({
+        entryMode: "address",
+        label: "Hotel",
+        address: "1 Rue de Rivoli",
+        city: "Paris",
+        country: "France",
+        zipCode: "75001",
+      });
+      expect(savedPlace).not.toHaveProperty("state");
+    });
+  });
+
   it("adds coordinate saved places and validates coordinate fields", async () => {
     const user = userEvent.setup();
     renderConfigScreen();

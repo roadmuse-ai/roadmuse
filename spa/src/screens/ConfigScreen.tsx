@@ -98,6 +98,7 @@ export function ConfigScreen() {
   const [editorError, setEditorError] = useState("");
   const isAddressMode = draft.entryMode === "address";
   const stateOptions = getStateOptions(draft.country);
+  const statePlaceholder = draft.country ? "Not required" : "Select country first";
 
   const openAddPlace = () => {
     setEditingId(null);
@@ -178,12 +179,16 @@ export function ConfigScreen() {
       return;
     }
 
+    const nextState =
+      isAddressMode && stateOptions.length > 0
+        ? trimmed(draft.state) || undefined
+        : undefined;
     const next: Omit<SavedPlace, "id"> = {
       entryMode: draft.entryMode,
       label: trimmed(draft.label),
       address: isAddressMode ? trimmed(draft.address) : "",
       city: isAddressMode ? trimmed(draft.city) || undefined : undefined,
-      state: isAddressMode ? trimmed(draft.state) || undefined : undefined,
+      state: nextState,
       country: isAddressMode ? trimmed(draft.country) || undefined : undefined,
       zipCode: isAddressMode ? trimmed(draft.zipCode) || undefined : undefined,
       latitude: isAddressMode ? undefined : normalizeCoordinate(draft.latitude),
@@ -358,31 +363,6 @@ export function ConfigScreen() {
             <h4 className="saved-places__subheading">
               {editingId ? "Edit Place" : "Add Place"}
             </h4>
-            <div
-              className="location-mode-toggle"
-              role="radiogroup"
-              aria-label="Location entry mode"
-            >
-              {(["address", "coordinates"] as const).map((entryMode) => (
-                <label
-                  key={entryMode}
-                  className={`location-mode-toggle__option${
-                    draft.entryMode === entryMode
-                      ? " location-mode-toggle__option--active"
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="saved-place-entry-mode"
-                    value={entryMode}
-                    checked={draft.entryMode === entryMode}
-                    onChange={() => updateEntryMode(entryMode)}
-                  />
-                  <span>{locationEntryModeLabels[entryMode]}</span>
-                </label>
-              ))}
-            </div>
             <label className="form-field">
               <span>
                 Label <span className="required-marker">*</span>
@@ -396,6 +376,34 @@ export function ConfigScreen() {
                 placeholder="e.g., home"
               />
             </label>
+            <div className="form-field">
+              <span>Type</span>
+              <div
+                className="location-mode-toggle"
+                role="radiogroup"
+                aria-label="Location entry mode"
+              >
+                {(["address", "coordinates"] as const).map((entryMode) => (
+                  <label
+                    key={entryMode}
+                    className={`location-mode-toggle__option${
+                      draft.entryMode === entryMode
+                        ? " location-mode-toggle__option--active"
+                        : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="saved-place-entry-mode"
+                      value={entryMode}
+                      checked={draft.entryMode === entryMode}
+                      onChange={() => updateEntryMode(entryMode)}
+                    />
+                    <span>{locationEntryModeLabels[entryMode]}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
             {isAddressMode ? (
               <>
                 <label className="form-field">
@@ -425,29 +433,6 @@ export function ConfigScreen() {
                       placeholder="e.g., Washington"
                     />
                   </label>
-                  {stateOptions.length > 0 ? (
-                    <label className="form-field">
-                      <span>
-                        State <span className="required-marker">*</span>
-                      </span>
-                      <select
-                        aria-label="State"
-                        value={draft.state}
-                        onChange={(event) =>
-                          setDraft((current) => ({ ...current, state: event.target.value }))
-                        }
-                      >
-                        <option value="">Select state</option>
-                        {stateOptions.map((state) => (
-                          <option key={state} value={state}>
-                            {state}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : null}
-                </div>
-                <div className="saved-places__field-grid">
                   <label className="form-field">
                     <span>
                       Country <span className="required-marker">*</span>
@@ -461,6 +446,33 @@ export function ConfigScreen() {
                       {countryOptions.map((country) => (
                         <option key={country} value={country}>
                           {country}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="saved-places__field-grid">
+                  <label className="form-field">
+                    <span>
+                      State{" "}
+                      {stateOptions.length > 0 ? (
+                        <span className="required-marker">*</span>
+                      ) : null}
+                    </span>
+                    <select
+                      aria-label="State"
+                      value={draft.state}
+                      disabled={stateOptions.length === 0}
+                      onChange={(event) =>
+                        setDraft((current) => ({ ...current, state: event.target.value }))
+                      }
+                    >
+                      <option value="">
+                        {stateOptions.length > 0 ? "Select state" : statePlaceholder}
+                      </option>
+                      {stateOptions.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
                         </option>
                       ))}
                     </select>
