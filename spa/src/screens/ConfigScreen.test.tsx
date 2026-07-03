@@ -231,6 +231,7 @@ describe("ConfigScreen", () => {
 
     const autoOption = screen.getByRole("radio", { name: "Auto" });
     expect(autoOption).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
 
     await user.click(screen.getByRole("radio", { name: "Dark" }));
 
@@ -238,6 +239,15 @@ describe("ConfigScreen", () => {
     await waitFor(() => {
       expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
         themeMode: "dark",
+      });
+    });
+
+    await user.click(screen.getByRole("radio", { name: "July 4th" }));
+
+    expect(screen.getByRole("radio", { name: "July 4th" })).toBeChecked();
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        accentTheme: "patriotic",
       });
     });
 

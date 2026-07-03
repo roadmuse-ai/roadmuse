@@ -14,8 +14,9 @@ export function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     // Set on <html> so fixed overlays and native controls follow the theme too.
     document.documentElement.dataset.theme = effectiveTheme;
+    document.documentElement.dataset.accentTheme = settings.accentTheme;
     document.documentElement.style.colorScheme = effectiveTheme;
-  }, [effectiveTheme]);
+  }, [effectiveTheme, settings.accentTheme]);
 
   return (
     <div className="app-shell">

@@ -3,7 +3,7 @@ import {
   isTextPreference,
   normalizeTextPreference,
 } from "./preferences";
-import { type ThemeMode, isThemeMode } from "./theme";
+import { type AccentTheme, type ThemeMode, isAccentTheme, isThemeMode } from "./theme";
 
 export const storageKey = "roadmuse-settings-v1";
 
@@ -32,6 +32,7 @@ export interface RoadMuseSettings {
   savedPlaces: SavedPlace[];
   preferences: TextPreference[];
   themeMode: ThemeMode;
+  accentTheme: AccentTheme;
 }
 
 export const defaultSettings: RoadMuseSettings = {
@@ -39,6 +40,7 @@ export const defaultSettings: RoadMuseSettings = {
   savedPlaces: [],
   preferences: [],
   themeMode: "auto",
+  accentTheme: "ground",
 };
 
 export type SavedPlaceEntryMode = "address" | "coordinates";
@@ -190,11 +192,16 @@ export function loadSettings(): RoadMuseSettings {
       ? parsed.themeMode
       : defaultSettings.themeMode;
 
+    const accentTheme = isAccentTheme(parsed.accentTheme)
+      ? parsed.accentTheme
+      : defaultSettings.accentTheme;
+
     return {
       preferredNavigator,
       savedPlaces,
       preferences,
       themeMode,
+      accentTheme,
     };
   } catch {
     // Swallow malformed data and fall back to defaults.

@@ -16,7 +16,14 @@ import {
   type SavedPlace,
   type SavedPlaceEntryMode,
 } from "../data/settings";
-import { type ThemeMode, themeModeLabels, themeModes } from "../data/theme";
+import {
+  type AccentTheme,
+  type ThemeMode,
+  accentThemeLabels,
+  accentThemes,
+  themeModeLabels,
+  themeModes,
+} from "../data/theme";
 
 type SavedPlaceDraft = {
   entryMode: SavedPlaceEntryMode;
@@ -263,6 +270,7 @@ export function ConfigScreen() {
     settings,
     setPreferredNavigator,
     setThemeMode,
+    setAccentTheme,
     addSavedPlace,
     updateSavedPlace,
     removeSavedPlace,
@@ -480,6 +488,30 @@ export function ConfigScreen() {
                 onChange={() => setThemeMode(mode as ThemeMode)}
               />
               <span>{themeModeLabels[mode]}</span>
+            </label>
+          ))}
+        </div>
+        <h4 className="settings-subtitle">Accent color</h4>
+        <div
+          className="theme-toggle theme-toggle--accent"
+          role="radiogroup"
+          aria-label="Theme accent color"
+        >
+          {accentThemes.map((accentTheme) => (
+            <label
+              key={accentTheme}
+              className={`theme-toggle__option${
+                settings.accentTheme === accentTheme ? " theme-toggle__option--active" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="accent-theme"
+                value={accentTheme}
+                checked={settings.accentTheme === accentTheme}
+                onChange={() => setAccentTheme(accentTheme as AccentTheme)}
+              />
+              <span>{accentThemeLabels[accentTheme]}</span>
             </label>
           ))}
         </div>

@@ -33,6 +33,7 @@ describe("settings persistence", () => {
       storageKey,
       JSON.stringify({
         preferredNavigator: "waze",
+        accentTheme: "navy",
         savedPlaces: [
           {
             id: "home",
@@ -150,6 +151,7 @@ describe("settings persistence", () => {
       ],
       preferences: [],
       themeMode: "auto",
+      accentTheme: "navy",
     });
   });
 
@@ -207,21 +209,24 @@ describe("settings persistence", () => {
     expect(loadSettings()).toEqual(defaultSettings);
   });
 
-  it("persists valid theme modes and falls back to auto on invalid values", () => {
+  it("persists valid theme modes and accent themes with defaults for invalid values", () => {
     window.localStorage.setItem(
       storageKey,
-      JSON.stringify({ themeMode: "dark" }),
+      JSON.stringify({ themeMode: "dark", accentTheme: "rock" }),
     );
     expect(loadSettings().themeMode).toBe("dark");
+    expect(loadSettings().accentTheme).toBe("rock");
 
     window.localStorage.setItem(
       storageKey,
-      JSON.stringify({ themeMode: "sepia" }),
+      JSON.stringify({ themeMode: "sepia", accentTheme: "forest" }),
     );
     expect(loadSettings().themeMode).toBe("auto");
+    expect(loadSettings().accentTheme).toBe("ground");
 
     window.localStorage.setItem(storageKey, JSON.stringify({}));
     expect(loadSettings().themeMode).toBe("auto");
+    expect(loadSettings().accentTheme).toBe("ground");
   });
 
   it("saves settings to local storage", () => {
@@ -243,6 +248,7 @@ describe("settings persistence", () => {
       ],
       preferences: [],
       themeMode: "dark",
+      accentTheme: "rock",
     };
 
     saveSettings(settings);

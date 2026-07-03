@@ -86,24 +86,35 @@ describe("App", () => {
     expect(screen.getAllByText("None yet")).toHaveLength(2);
   });
 
-  it("applies the saved theme mode to the document", async () => {
-    window.localStorage.setItem(storageKey, JSON.stringify({ themeMode: "dark" }));
+  it("applies the saved theme mode and accent theme to the document", async () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({ themeMode: "dark", accentTheme: "navy" }),
+    );
 
     renderApp("/config");
 
     expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(document.documentElement.dataset.accentTheme).toBe("navy");
     expect(screen.getByRole("radio", { name: "Dark" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Navy" })).toBeChecked();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("radio", { name: "Light" }));
 
     expect(document.documentElement.dataset.theme).toBe("light");
+
+    await user.click(screen.getByRole("radio", { name: "July 4th" }));
+
+    expect(document.documentElement.dataset.accentTheme).toBe("patriotic");
   });
 
   it("defaults to auto theme mode resolved as light without system dark preference", () => {
     renderApp("/config");
 
     expect(screen.getByRole("radio", { name: "Auto" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
     expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.accentTheme).toBe("ground");
   });
 });

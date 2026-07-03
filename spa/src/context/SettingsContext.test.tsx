@@ -8,6 +8,7 @@ function SettingsHarness() {
   const {
     settings,
     setPreferredNavigator,
+    setAccentTheme,
     addSavedPlace,
     updateSavedPlace,
     removeSavedPlace,
@@ -23,6 +24,7 @@ function SettingsHarness() {
   return (
     <div>
       <p data-testid="navigator">{settings.preferredNavigator}</p>
+      <p data-testid="accent-theme">{settings.accentTheme}</p>
       <p data-testid="saved-places">
         {settings.savedPlaces.map((place) => `${place.label}:${place.address}`).join("|")}
       </p>
@@ -33,6 +35,9 @@ function SettingsHarness() {
       </p>
       <button type="button" onClick={() => setPreferredNavigator("apple-maps")}>
         Set Apple
+      </button>
+      <button type="button" onClick={() => setAccentTheme("patriotic")}>
+        Set Patriotic
       </button>
       <button
         type="button"
@@ -134,6 +139,9 @@ describe("SettingsProvider", () => {
     await user.click(screen.getByRole("button", { name: "Set Apple" }));
     expect(screen.getByTestId("navigator")).toHaveTextContent("apple-maps");
 
+    await user.click(screen.getByRole("button", { name: "Set Patriotic" }));
+    expect(screen.getByTestId("accent-theme")).toHaveTextContent("patriotic");
+
     await user.click(screen.getByRole("button", { name: "Add Work" }));
     await user.click(screen.getByRole("button", { name: "Add Gym" }));
     expect(screen.getByTestId("saved-places")).toHaveTextContent(
@@ -177,6 +185,9 @@ describe("SettingsProvider", () => {
     await user.click(screen.getByRole("button", { name: "Reset" }));
     expect(screen.getByTestId("navigator")).toHaveTextContent(
       defaultSettings.preferredNavigator,
+    );
+    expect(screen.getByTestId("accent-theme")).toHaveTextContent(
+      defaultSettings.accentTheme,
     );
 
     await waitFor(() => {
