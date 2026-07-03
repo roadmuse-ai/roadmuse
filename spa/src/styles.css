@@ -16,7 +16,7 @@
   --color-button-secondary-bg: #e2e8f0;
   --color-header-bg: #e2e8f0;
   --color-error: #dc2626;
-  --color-overlay: rgb(15 23 42 / 0.45);
+  --color-overlay: rgb(15 23 42 / 0.64);
   --color-hover-bg: #e2e8f0;
   --control-height: 2.75rem;
   --content-gap: 0.6rem;
@@ -84,7 +84,7 @@
   --color-button-secondary-bg: #334155;
   --color-header-bg: #334155;
   --color-error: #f87171;
-  --color-overlay: rgb(2 6 23 / 0.65);
+  --color-overlay: rgb(2 6 23 / 0.78);
   --color-hover-bg: #334155;
   --bottom-nav-bg: #b96a1c;
   --bottom-nav-border: rgb(237 170 55 / 0.5);
