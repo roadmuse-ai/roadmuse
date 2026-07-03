@@ -97,14 +97,14 @@ describe("App", () => {
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(document.documentElement.dataset.accentTheme).toBe("navy");
     expect(screen.getByRole("radio", { name: "Dark" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Ocean" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Air" })).toBeChecked();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("radio", { name: "Light" }));
 
     expect(document.documentElement.dataset.theme).toBe("light");
 
-    await user.click(screen.getByRole("radio", { name: "July 4th" }));
+    await user.click(screen.getByRole("radio", { name: "7/4" }));
 
     expect(document.documentElement.dataset.accentTheme).toBe("patriotic");
   });
@@ -113,7 +113,7 @@ describe("App", () => {
     renderApp("/config");
 
     expect(screen.getByRole("radio", { name: "Auto" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Sand" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
     expect(document.documentElement.dataset.theme).toBe("light");
     expect(document.documentElement.dataset.accentTheme).toBe("ground");
   });

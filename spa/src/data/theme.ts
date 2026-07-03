@@ -13,9 +13,9 @@ export const themeModeLabels: Record<ThemeMode, string> = {
 };
 
 export const accentThemeLabels: Record<AccentTheme, string> = {
-  ground: "Sand",
-  navy: "Ocean",
-  patriotic: "July 4th",
+  ground: "Ground",
+  navy: "Air",
+  patriotic: "7/4",
   rock: "Asphalt",
 };
 
