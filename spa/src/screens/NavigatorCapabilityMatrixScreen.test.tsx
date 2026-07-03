@@ -30,6 +30,9 @@ describe("NavigatorCapabilityMatrixScreen", () => {
     expect(
       screen.getByRole("heading", { name: "Navigator Capability Matrix" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toHaveTextContent(
+      "HelpNavigator Comparison",
+    );
 
     providerMatrix.forEach((provider) => {
       expect(screen.getAllByText(provider.provider).length).toBeGreaterThan(0);

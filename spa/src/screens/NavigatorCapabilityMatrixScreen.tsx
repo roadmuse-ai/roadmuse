@@ -10,9 +10,14 @@ export function NavigatorCapabilityMatrixScreen() {
 
   return (
     <section className="navigator-comparison">
-      <p>
-        <Link to="/help">Help</Link> → Navigator Comparison
-      </p>
+      <nav className="page-breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li>
+            <Link to="/help">Help</Link>
+          </li>
+          <li aria-current="page">Navigator Comparison</li>
+        </ol>
+      </nav>
 
       <section className="navigator-comparison__section">
         <h3>Navigator Capability Matrix</h3>

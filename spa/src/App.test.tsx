@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -63,8 +63,15 @@ describe("App", () => {
     const user = userEvent.setup();
     renderApp("/help");
 
+    const helpBreadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(within(helpBreadcrumb).getByText("Help")).toBeInTheDocument();
+    expect(within(helpBreadcrumb).queryByRole("link", { name: "Help" })).not.toBeInTheDocument();
+
     await user.click(screen.getByRole("link", { name: "Navigator Comparison" }));
 
+    const comparisonBreadcrumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(within(comparisonBreadcrumb).getByRole("link", { name: "Help" })).toBeInTheDocument();
+    expect(within(comparisonBreadcrumb).getByText("Navigator Comparison")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Navigator Capability Matrix" }),
     ).toBeInTheDocument();
