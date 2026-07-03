@@ -38,9 +38,9 @@
   --content-gap: 0.6rem;
   --field-gap: 0.5rem;
   --control-inner-gap: 0.4rem;
-  --radius-panel: 0.25rem;
-  --radius-control: 0.2rem;
-  --radius-small: 0.15rem;
+  --radius-panel: 0;
+  --radius-control: 0;
+  --radius-small: 0;
   --section-heading-size: 1.02rem;
   --separator-gap: 1.1rem;
   --separator-width: 2px;
@@ -74,6 +74,10 @@
   --badge-unsupported-bg: #fee2e2;
   --badge-neutral-text: #475569;
   --badge-neutral-bg: #e2e8f0;
+  --preference-disabled-bg: #eef0f2;
+  --preference-disabled-border: #c7cbd1;
+  --preference-disabled-text: #5d6673;
+  --preference-disabled-muted: #737b86;
 
   color: var(--color-text);
   background: var(--color-bg);
@@ -134,6 +138,10 @@
   --badge-unsupported-bg: #7f1d1d;
   --badge-neutral-text: #cbd5e1;
   --badge-neutral-bg: #334155;
+  --preference-disabled-bg: #27272a;
+  --preference-disabled-border: #52525b;
+  --preference-disabled-text: #a1a1aa;
+  --preference-disabled-muted: #8f8f96;
 
   --lobster: #f87171;
 }
@@ -423,8 +431,9 @@ button.card--secondary {
 .location-mode-toggle {
   display: grid;
   gap: var(--control-inner-gap);
+  overflow: visible;
   padding: 0.3rem;
-  border: 1px solid var(--control-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-panel);
   background: var(--color-surface);
 }
@@ -437,18 +446,29 @@ button.card--secondary {
   grid-template-columns: repeat(2, 1fr);
 }
 
+.theme-toggle,
+.location-mode-toggle {
+  margin-block: 0.2rem;
+}
+
 .theme-toggle__option,
 .location-mode-toggle__option {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.55rem 0.4rem;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: var(--radius-control);
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--color-text-nav);
   cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .theme-toggle__option input,
@@ -461,10 +481,11 @@ button.card--secondary {
 .theme-toggle__option--active,
 .location-mode-toggle__option--active {
   background: var(--control-fill-bg);
-  border-color: var(--control-border);
   color: var(--control-fill-text);
-  box-shadow: var(--control-fill-shadow);
+  box-shadow: 0 0 0 0.14rem var(--control-fill-bg);
+  z-index: 1;
   text-shadow: var(--control-fill-text-shadow);
+  transform: scale(1.1);
 }
 
 .form-field {
@@ -694,6 +715,7 @@ button.card--secondary {
   width: min(100%, 28rem);
   max-height: calc(100vh - 7.5rem);
   overflow-y: auto;
+  background: var(--color-bg);
   display: grid;
   gap: var(--content-gap);
 }
@@ -934,7 +956,24 @@ button.card--secondary {
 }
 
 .preference-card--disabled {
-  opacity: 0.72;
+  background: var(--preference-disabled-bg);
+  border-color: var(--preference-disabled-border);
+  color: var(--preference-disabled-text);
+  opacity: 1;
+}
+
+.preference-card--disabled:first-child {
+  border-top-color: var(--preference-disabled-border);
+}
+
+.preference-card--disabled .preference-card__toggle,
+.preference-card--disabled .preference-card__text,
+.preference-card--disabled .saved-place__icon-btn {
+  color: var(--preference-disabled-text);
+}
+
+.preference-card--disabled .preference-status {
+  color: var(--preference-disabled-muted);
 }
 
 .preference-card__top-row {

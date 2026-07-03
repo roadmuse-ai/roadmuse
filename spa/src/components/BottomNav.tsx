@@ -1,9 +1,9 @@
-import { Car, CircleHelp, Toolbox, type LucideIcon } from "lucide-react";
+import { Car, CircleHelp, Settings, type LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const navItems: Array<{ Icon: LucideIcon; label: string; to: string }> = [
   { Icon: Car, label: "Main", to: "/" },
-  { Icon: Toolbox, label: "Config", to: "/config" },
+  { Icon: Settings, label: "Config", to: "/config" },
   { Icon: CircleHelp, label: "Help", to: "/help" },
 ];
 
