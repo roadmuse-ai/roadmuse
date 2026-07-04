@@ -586,6 +586,11 @@ section {
   padding: 1rem 0.25rem 7.5rem;
 }
 
+.voice-home--prompt-entry {
+  margin-bottom: calc(-1 * (var(--bottom-nav-height) + 1rem));
+  padding-bottom: 0;
+}
+
 .previous-trips {
   display: grid;
   gap: var(--content-gap);
@@ -992,6 +997,11 @@ section {
   width: 1.7rem;
   height: 1.7rem;
   stroke-width: 2.4;
+}
+
+.voice-home__action--middle svg {
+  width: 2.15rem;
+  height: 2.15rem;
 }
 
 .voice-home__action--left,

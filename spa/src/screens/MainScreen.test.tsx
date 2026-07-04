@@ -67,6 +67,9 @@ describe("MainScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Enter Route" }));
 
+    expect(screen.getByLabelText("Voice route request")).toHaveClass(
+      "voice-home--prompt-entry",
+    );
     expect(screen.getByRole("heading", { name: "Enter Your Route" }))
       .toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Review Your Route" }))
@@ -120,6 +123,9 @@ describe("MainScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
 
+    expect(screen.getByLabelText("Voice route request")).toHaveClass(
+      "voice-home--prompt-entry",
+    );
     expect(screen.queryByRole("button", { name: "Start Voice Request" }))
       .not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Voice waves animation" }))

@@ -405,7 +405,10 @@ export function MainScreen() {
   };
 
   return (
-    <section className="voice-home" aria-label="Voice route request">
+    <section
+      className={`voice-home${showsPromptEntry ? " voice-home--prompt-entry" : ""}`}
+      aria-label="Voice route request"
+    >
       {mode === "initial" && settings.previousTrips.length > 0 ? (
         <div className="previous-trips" aria-labelledby="previous-trips-title">
           <h2 className="previous-trips__title" id="previous-trips-title">
