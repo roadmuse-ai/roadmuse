@@ -76,7 +76,9 @@ describe("MainScreen", () => {
 
   it("rotates the first-trip prompt while no trips are saved", () => {
     let intervalHandler: TimerHandler | undefined;
-    vi.spyOn(Math, "random").mockReturnValue(0);
+    vi.spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.34);
     vi.spyOn(window, "setInterval").mockImplementation((handler) => {
       intervalHandler = handler;
       return 1;
@@ -95,7 +97,7 @@ describe("MainScreen", () => {
       }
     });
 
-    expect(screen.getByRole("heading", { name: "Start with your voice!" }))
+    expect(screen.getByRole("heading", { name: "Speak your journey!" }))
       .toBeInTheDocument();
   });
 

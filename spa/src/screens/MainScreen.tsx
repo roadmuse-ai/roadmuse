@@ -35,6 +35,14 @@ const starterTripPrompts = [
   "Say your first trip!",
   "Tell us where to go!",
   "Where to head?",
+  "Speak your journey!",
+  "Name your road!",
+  "Whisper your destination.",
+  "Say where the road leads.",
+  "Where shall we wander?",
+  "Where are we off to?",
+  "Let's start the journey!",
+  "Say it, and we'll route it!",
 ] as const;
 const starterTripPromptRotationMs = 4000;
 
