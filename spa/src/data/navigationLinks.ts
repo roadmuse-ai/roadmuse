@@ -11,6 +11,11 @@ export type StubRoute = {
   destinationLongitude: number;
 };
 
+export type AddressRoute = {
+  startAddress: string;
+  destinationAddress: string;
+};
+
 export const stubVoiceRoute: StubRoute = {
   startLabel: "Rockville, MD",
   startLatitude: 39.084,
@@ -28,6 +33,13 @@ function encode(value: string): string {
   return encodeURIComponent(value);
 }
 
+function escapeXmlText(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function buildGpx(route: StubRoute): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="RoadMuse">
@@ -35,11 +47,21 @@ function buildGpx(route: StubRoute): string {
     <name>RoadMuse stub drive</name>
   </metadata>
   <wpt lat="${route.startLatitude}" lon="${route.startLongitude}">
-    <name>${route.startLabel}</name>
+    <name>${escapeXmlText(route.startLabel)}</name>
   </wpt>
   <wpt lat="${route.destinationLatitude}" lon="${route.destinationLongitude}">
-    <name>${route.destinationLabel}</name>
+    <name>${escapeXmlText(route.destinationLabel)}</name>
   </wpt>
+</gpx>`;
+}
+
+function buildAddressGpx(route: AddressRoute): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RoadMuse">
+  <metadata>
+    <name>RoadMuse address route</name>
+    <desc>${escapeXmlText(route.startAddress)} to ${escapeXmlText(route.destinationAddress)}</desc>
+  </metadata>
 </gpx>`;
 }
 
@@ -97,5 +119,33 @@ export function buildStubNavigatorDeepLink(
     case "google-maps":
     default:
       return `https://www.google.com/maps/dir/?api=1&origin=${encode(start)}&destination=${encode(route.destinationLabel)}&travelmode=driving`;
+  }
+}
+
+export function buildAddressNavigatorDeepLink(
+  preferredNavigator: NavigatorId | null | undefined,
+  route: AddressRoute,
+  platform: MobilePlatform = detectMobilePlatform(),
+): string {
+  const navigatorId = resolveDriveNavigator(preferredNavigator, platform);
+  const start = route.startAddress.trim();
+  const destination = route.destinationAddress.trim();
+
+  switch (navigatorId) {
+    case "apple-maps":
+      return `https://maps.apple.com/?saddr=${encode(start)}&daddr=${encode(destination)}&dirflg=d`;
+    case "waze":
+      return `https://waze.com/ul?q=${encode(destination)}&navigate=yes`;
+    case "here-wego":
+      return `https://wego.here.com/directions/drive/${encode(start)}/${encode(destination)}`;
+    case "organic-maps":
+      return `om://route?saddr=${encode(start)}&daddr=${encode(destination)}&type=vehicle`;
+    case "gpx-export":
+      return `data:application/gpx+xml;charset=utf-8,${encode(
+        buildAddressGpx({ startAddress: start, destinationAddress: destination }),
+      )}`;
+    case "google-maps":
+    default:
+      return `https://www.google.com/maps/dir/?api=1&origin=${encode(start)}&destination=${encode(destination)}&travelmode=driving`;
   }
 }

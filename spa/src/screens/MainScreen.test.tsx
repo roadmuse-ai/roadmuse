@@ -262,7 +262,7 @@ describe("MainScreen", () => {
     );
 
     expect(window.open).toHaveBeenCalledWith(
-      "https://www.google.com/maps/dir/?api=1&origin=39.084%2C-77.1528&destination=Bethesda%20coffee%20stop&travelmode=driving",
+      "https://www.google.com/maps/dir/?api=1&origin=Rockville%2C%20MD&destination=Bethesda%20coffee%20stop&travelmode=driving",
       "_blank",
       "noopener,noreferrer",
     );

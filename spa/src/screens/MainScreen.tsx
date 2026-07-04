@@ -13,7 +13,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
-import { buildStubNavigatorDeepLink, stubVoiceRoute } from "../data/navigationLinks";
+import {
+  buildAddressNavigatorDeepLink,
+  buildStubNavigatorDeepLink,
+  stubVoiceRoute,
+} from "../data/navigationLinks";
 import { type PreviousTrip } from "../data/settings";
 
 const stubPrompt =
@@ -238,9 +242,9 @@ export function MainScreen() {
 
   const playPreviousTrip = (trip: PreviousTrip) => {
     window.open(
-      buildStubNavigatorDeepLink(settings.preferredNavigator, {
-        ...stubVoiceRoute,
-        destinationLabel: getTripEndAddress(trip),
+      buildAddressNavigatorDeepLink(settings.preferredNavigator, {
+        startAddress: getTripStartAddress(trip),
+        destinationAddress: getTripEndAddress(trip),
       }),
       "_blank",
       "noopener,noreferrer",

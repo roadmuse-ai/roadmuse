@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildAddressNavigatorDeepLink,
   buildStubNavigatorDeepLink,
   detectMobilePlatform,
   resolveDriveNavigator,
@@ -35,6 +36,29 @@ describe("navigation link helpers", () => {
     );
   });
 
+  it("builds navigator links from saved trip addresses", () => {
+    const route = {
+      startAddress: "Rockville, MD",
+      destinationAddress: "Bethesda coffee stop",
+    };
+
+    expect(buildAddressNavigatorDeepLink("google-maps", route)).toBe(
+      "https://www.google.com/maps/dir/?api=1&origin=Rockville%2C%20MD&destination=Bethesda%20coffee%20stop&travelmode=driving",
+    );
+    expect(buildAddressNavigatorDeepLink("apple-maps", route)).toBe(
+      "https://maps.apple.com/?saddr=Rockville%2C%20MD&daddr=Bethesda%20coffee%20stop&dirflg=d",
+    );
+    expect(buildAddressNavigatorDeepLink("here-wego", route)).toBe(
+      "https://wego.here.com/directions/drive/Rockville%2C%20MD/Bethesda%20coffee%20stop",
+    );
+    expect(buildAddressNavigatorDeepLink("organic-maps", route)).toBe(
+      "om://route?saddr=Rockville%2C%20MD&daddr=Bethesda%20coffee%20stop&type=vehicle",
+    );
+    expect(buildAddressNavigatorDeepLink("waze", route)).toBe(
+      "https://waze.com/ul?q=Bethesda%20coffee%20stop&navigate=yes",
+    );
+  });
+
   it("uses Apple Maps as the iOS fallback when no navigator is configured", () => {
     expect(buildStubNavigatorDeepLink(undefined, stubVoiceRoute, "ios")).toContain(
       "https://maps.apple.com/",
@@ -47,5 +71,18 @@ describe("navigation link helpers", () => {
     expect(link).toContain("data:application/gpx+xml");
     expect(decodeURIComponent(link)).toContain("<name>RoadMuse stub drive</name>");
     expect(decodeURIComponent(link)).toContain("Rockville, MD");
+  });
+
+  it("builds a metadata-only GPX data URL from saved trip addresses", () => {
+    const link = buildAddressNavigatorDeepLink("gpx-export", {
+      startAddress: "Rockville, MD",
+      destinationAddress: "Bethesda coffee stop",
+    });
+
+    expect(link).toContain("data:application/gpx+xml");
+    expect(decodeURIComponent(link)).toContain("<name>RoadMuse address route</name>");
+    expect(decodeURIComponent(link)).toContain(
+      "<desc>Rockville, MD to Bethesda coffee stop</desc>",
+    );
   });
 });
