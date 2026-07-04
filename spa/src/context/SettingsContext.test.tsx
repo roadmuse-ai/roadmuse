@@ -210,6 +210,18 @@ describe("SettingsProvider", () => {
     await user.click(screen.getByRole("button", { name: "Remove Trip" }));
     expect(screen.getByTestId("previous-trips")).toBeEmptyDOMElement();
 
+    await user.click(screen.getByRole("button", { name: "Add Trip" }));
+    await user.click(screen.getByRole("button", { name: "Add Trip" }));
+    expect(screen.getByTestId("previous-trips")).toHaveTextContent(
+      "Find lunch|Find lunch",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Remove Trip" }));
+    expect(screen.getByTestId("previous-trips")).toHaveTextContent("Find lunch");
+
+    await user.click(screen.getByRole("button", { name: "Remove Trip" }));
+    expect(screen.getByTestId("previous-trips")).toBeEmptyDOMElement();
+
     await user.click(screen.getByRole("button", { name: "Add Preference" }));
     expect(screen.getByTestId("preferences")).toHaveTextContent(":on");
 

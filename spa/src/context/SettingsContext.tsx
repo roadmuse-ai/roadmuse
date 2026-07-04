@@ -146,12 +146,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
       setSettings((current) => ({
         ...current,
-        previousTrips: [
-          trip,
-          ...current.previousTrips.filter(
-            (entry) => entry.prompt !== normalizedPrompt,
-          ),
-        ],
+        previousTrips: [trip, ...current.previousTrips],
       }));
 
       return trip.id;

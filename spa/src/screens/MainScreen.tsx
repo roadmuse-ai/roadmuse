@@ -1,6 +1,5 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import {
-  CalendarClock,
   CircleDot,
   Clock3,
   Flag,
@@ -20,22 +19,11 @@ import { type PreviousTrip } from "../data/settings";
 const stubPrompt =
   "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.";
 
-type VoiceHomeMode = "initial" | "listening" | "review" | "returning";
+type VoiceHomeMode = "initial" | "listening" | "review";
 
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
-const routeDetailsTimeZone = "America/New_York";
-
-const routeDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: routeDetailsTimeZone,
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-  hour12: true,
-});
 
 function getTripStartAddress(trip: PreviousTrip): string {
   return trip.startAddress ?? stubVoiceRoute.startLabel;
@@ -54,41 +42,6 @@ function getTripDurationMinutes(trip: PreviousTrip): number {
 
 function getTripDistanceMiles(trip: PreviousTrip): number {
   return trip.distanceMiles ?? defaultRouteDistanceMiles;
-}
-
-function formatOrdinal(value: number): string {
-  const remainder = value % 100;
-
-  if (remainder >= 11 && remainder <= 13) {
-    return `${value}th`;
-  }
-
-  switch (value % 10) {
-    case 1:
-      return `${value}st`;
-    case 2:
-      return `${value}nd`;
-    case 3:
-      return `${value}rd`;
-    default:
-      return `${value}th`;
-  }
-}
-
-function getDatePart(parts: Intl.DateTimeFormatPart[], type: string): string {
-  return parts.find((part) => part.type === type)?.value ?? "";
-}
-
-function formatTripDateTime(timestamp: number): string {
-  const parts = routeDateTimeFormatter.formatToParts(new Date(timestamp));
-  const month = getDatePart(parts, "month");
-  const day = Number(getDatePart(parts, "day"));
-  const year = getDatePart(parts, "year");
-  const hour = getDatePart(parts, "hour");
-  const minute = getDatePart(parts, "minute");
-  const dayPeriod = getDatePart(parts, "dayPeriod");
-
-  return `${month} ${formatOrdinal(day)}, ${year}, ${hour}:${minute} ${dayPeriod}`;
 }
 
 function formatDuration(minutes: number): string {
@@ -128,11 +81,6 @@ function getTripAddressDetails(trip: PreviousTrip): TripDetail[] {
 function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
   return [
     {
-      label: "Datetime",
-      value: formatTripDateTime(trip.createdAt),
-      Icon: CalendarClock,
-    },
-    {
       label: "Duration",
       value: formatDuration(getTripDurationMinutes(trip)),
       Icon: Clock3,
@@ -167,12 +115,9 @@ export function MainScreen() {
   const [mode, setMode] = useState<VoiceHomeMode>("initial");
   const [prompt, setPrompt] = useState(stubPrompt);
   const [tripSearch, setTripSearch] = useState("");
-  const driveTimeoutRef = useRef<number | null>(null);
-  const handoffTimeoutRef = useRef<number | null>(null);
 
   const isListening = mode === "listening";
   const isReviewing = mode === "review";
-  const isReturning = mode === "returning";
   const primaryActionLabel = isListening ? "Next" : "Drive";
   const middleActionLabel = isListening ? "Stop" : "Rerecord";
   const normalizedTripSearch = tripSearch.trim().toLocaleLowerCase();
@@ -181,17 +126,6 @@ export function MainScreen() {
         getTripSearchText(trip).includes(normalizedTripSearch),
       )
     : settings.previousTrips;
-
-  useEffect(() => {
-    return () => {
-      if (driveTimeoutRef.current !== null) {
-        window.clearTimeout(driveTimeoutRef.current);
-      }
-      if (handoffTimeoutRef.current !== null) {
-        window.clearTimeout(handoffTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const startListening = () => {
     setMode("listening");
@@ -208,15 +142,6 @@ export function MainScreen() {
   };
 
   const backToPreviousTrips = () => {
-    if (driveTimeoutRef.current !== null) {
-      window.clearTimeout(driveTimeoutRef.current);
-      driveTimeoutRef.current = null;
-    }
-    if (handoffTimeoutRef.current !== null) {
-      window.clearTimeout(handoffTimeoutRef.current);
-      handoffTimeoutRef.current = null;
-    }
-
     setPrompt(stubPrompt);
     setMode("initial");
   };
@@ -236,25 +161,9 @@ export function MainScreen() {
       stopCount: 0,
     });
 
-    setMode("returning");
-
-    if (driveTimeoutRef.current !== null) {
-      window.clearTimeout(driveTimeoutRef.current);
-    }
-    if (handoffTimeoutRef.current !== null) {
-      window.clearTimeout(handoffTimeoutRef.current);
-    }
-
-    driveTimeoutRef.current = window.setTimeout(() => {
-      setPrompt(stubPrompt);
-      setMode("initial");
-      driveTimeoutRef.current = null;
-
-      handoffTimeoutRef.current = window.setTimeout(() => {
-        handoffTimeoutRef.current = null;
-        window.open(deepLink, "_blank", "noopener,noreferrer");
-      }, 160);
-    }, 360);
+    setPrompt(stubPrompt);
+    setMode("initial");
+    window.open(deepLink, "_blank", "noopener,noreferrer");
   };
 
   const playPreviousTrip = (trip: PreviousTrip) => {
@@ -405,15 +314,12 @@ export function MainScreen() {
           <Mic aria-hidden="true" />
         </button>
       ) : (
-        <div
-          className={`voice-home__actions${isReturning ? " voice-home__actions--returning" : ""}`}
-        >
+        <div className="voice-home__actions">
           <button
             type="button"
             className="voice-home__action voice-home__action--secondary voice-home__action--left"
             aria-label="Back to Previous Trips"
             title="Back"
-            disabled={isReturning}
             onClick={backToPreviousTrips}
           >
             <Play aria-hidden="true" className="voice-home__back-icon" />
@@ -424,7 +330,6 @@ export function MainScreen() {
             className="voice-home__action voice-home__action--secondary voice-home__action--middle"
             aria-label={middleActionLabel}
             title={middleActionLabel}
-            disabled={isReturning}
             onClick={isListening ? reviewPrompt : rerecord}
           >
             {isListening ? (
@@ -439,7 +344,6 @@ export function MainScreen() {
             className="voice-home__action voice-home__action--primary voice-home__action--right"
             aria-label={primaryActionLabel}
             title="Drive"
-            disabled={isReturning}
             onClick={drive}
           >
             <Play aria-hidden="true" />

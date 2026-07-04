@@ -126,7 +126,7 @@ describe("MainScreen", () => {
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("July 4th, 2026, 9:00 AM")).toBeInTheDocument();
+    expect(screen.queryByText("July 4th, 2026, 9:00 AM")).not.toBeInTheDocument();
     expect(screen.getByText("55 min")).toBeInTheDocument();
     expect(screen.getByText("14 mi")).toBeInTheDocument();
     expect(screen.getByText("0 stops")).toBeInTheDocument();
@@ -135,12 +135,30 @@ describe("MainScreen", () => {
     ).toMatchObject({
       prompt:
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
+      createdAt: routeCreatedAt,
       startAddress: "Rockville, MD",
       endAddress: "National Mall, Washington, DC",
       durationMinutes: 55,
       distanceMiles: 14,
       stopCount: 0,
     });
+
+    await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(window.open).toHaveBeenCalledTimes(2);
+    });
+    await waitFor(() => {
+      expect(
+        JSON.parse(window.localStorage.getItem(storageKey) ?? "{}").previousTrips,
+      ).toHaveLength(2);
+    });
+    expect(
+      screen.getAllByText(
+        "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
+      ),
+    ).toHaveLength(2);
   });
 
   it("filters, plays, and removes previous trips", async () => {
@@ -173,7 +191,7 @@ describe("MainScreen", () => {
     expect(screen.getByLabelText("Search Previous Trips")).toBeInTheDocument();
     expect(screen.getAllByText("Rockville, MD")).toHaveLength(2);
     expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
-    expect(screen.getAllByText("July 4th, 2026, 9:00 AM")).toHaveLength(2);
+    expect(screen.queryByText("July 4th, 2026, 9:00 AM")).not.toBeInTheDocument();
     expect(screen.getAllByText("55 min")).toHaveLength(2);
     expect(screen.getAllByText("14 mi")).toHaveLength(2);
     expect(screen.getByText("1 stop")).toBeInTheDocument();

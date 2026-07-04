@@ -874,22 +874,6 @@ section {
   animation: split-action-right 0.34s cubic-bezier(0.2, 0.85, 0.32, 1.25);
 }
 
-.voice-home__actions--returning .voice-home__action {
-  pointer-events: none;
-}
-
-.voice-home__actions--returning .voice-home__action--left {
-  animation: merge-action-left 0.36s cubic-bezier(0.32, 0, 0.2, 1) forwards;
-}
-
-.voice-home__actions--returning .voice-home__action--middle {
-  animation: merge-action-middle 0.32s cubic-bezier(0.32, 0, 0.2, 1) forwards;
-}
-
-.voice-home__actions--returning .voice-home__action--right {
-  animation: merge-action-right 0.36s cubic-bezier(0.32, 0, 0.2, 1) forwards;
-}
-
 .voice-home__action--primary,
 .voice-home__action--secondary {
   background: var(--control-fill-bg);
@@ -974,42 +958,6 @@ section {
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
-  }
-}
-
-@keyframes merge-action-left {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateX(5.75rem) scale(0.42);
-  }
-}
-
-@keyframes merge-action-middle {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(0.42);
-  }
-}
-
-@keyframes merge-action-right {
-  0% {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateX(-5.75rem) scale(0.42);
   }
 }
 
