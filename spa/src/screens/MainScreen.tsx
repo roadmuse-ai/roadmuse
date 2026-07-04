@@ -255,8 +255,8 @@ export function MainScreen() {
     <section className="voice-home" aria-label="Voice route request">
       {mode === "initial" && settings.previousTrips.length > 0 ? (
         <div className="previous-trips" aria-labelledby="previous-trips-title">
-          <h2 className="sr-only" id="previous-trips-title">
-            Previous Trips
+          <h2 className="previous-trips__title" id="previous-trips-title">
+            My Trips
           </h2>
           <div className="form-field previous-trips__search">
             <label className="sr-only" htmlFor={searchId}>
@@ -390,6 +390,7 @@ export function MainScreen() {
 
       {isReviewing ? (
         <div className="voice-home__review">
+          <h2 className="voice-home__review-title">Review Your Route Request</h2>
           <label className="sr-only" htmlFor={promptId}>
             Driving Request
           </label>

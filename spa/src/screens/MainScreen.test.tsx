@@ -38,6 +38,8 @@ describe("MainScreen", () => {
     expect(
       screen.getByRole("button", { name: "Start Voice Request" }),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "My Trips" }))
+      .not.toBeInTheDocument();
     expect(screen.queryByLabelText("Search Previous Trips")).not.toBeInTheDocument();
     expect(screen.queryByText("Current Settings")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Start planning a route" }))
@@ -75,6 +77,8 @@ describe("MainScreen", () => {
     );
     expect(screen.queryByRole("img", { name: "Voice waves animation" }))
       .not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Review Your Route Request" }))
+      .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rerecord" })).toBeInTheDocument();
@@ -238,6 +242,7 @@ describe("MainScreen", () => {
 
     renderMainScreen();
 
+    expect(screen.getByRole("heading", { name: "My Trips" })).toBeInTheDocument();
     expect(screen.getByLabelText("Search Previous Trips")).toBeInTheDocument();
     expect(screen.getAllByText("Rockville, MD")).toHaveLength(2);
     expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
