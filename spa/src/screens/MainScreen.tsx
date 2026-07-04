@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   CircleDot,
   Clock3,
@@ -289,6 +289,7 @@ export function MainScreen() {
   const { settings, addPreviousTrip, removePreviousTrip } = useSettings();
   const promptId = useId();
   const searchId = useId();
+  const promptRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<VoiceHomeMode>("initial");
   const [prompt, setPrompt] = useState(stubPrompt);
   const [tripSearch, setTripSearch] = useState("");
@@ -324,6 +325,12 @@ export function MainScreen() {
 
     return () => window.clearInterval(intervalId);
   }, [mode, settings.previousTrips.length]);
+
+  useEffect(() => {
+    if (mode === "manual") {
+      promptRef.current?.focus();
+    }
+  }, [mode]);
 
   const startListening = () => {
     setPrompt("");
@@ -537,6 +544,7 @@ export function MainScreen() {
           <div className="voice-home__prompt-shell">
             <textarea
               id={promptId}
+              ref={promptRef}
               aria-label="Driving Request"
               className="voice-home__prompt"
               disabled={isListening}
@@ -564,20 +572,20 @@ export function MainScreen() {
         <>
           <button
             type="button"
+            className="voice-home__mic-button"
+            aria-label="Start Voice Request"
+            onClick={startListening}
+          >
+            <Mic aria-hidden="true" />
+          </button>
+          <button
+            type="button"
             className="voice-home__manual-button"
             aria-label="Enter Route"
             title="Enter Route"
             onClick={startManualEntry}
           >
             <Pencil aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="voice-home__mic-button"
-            aria-label="Start Voice Request"
-            onClick={startListening}
-          >
-            <Mic aria-hidden="true" />
           </button>
         </>
       ) : (

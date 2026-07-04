@@ -32,7 +32,8 @@ describe("MainScreen", () => {
     window.localStorage.clear();
   });
 
-  it("opens with the first-trip prompt and primary voice control", () => {
+  it("opens with the first-trip prompt and primary voice control", async () => {
+    const user = userEvent.setup();
     vi.spyOn(Math, "random").mockReturnValue(0);
 
     renderMainScreen();
@@ -51,6 +52,13 @@ describe("MainScreen", () => {
       .not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Drive" })).not.toBeInTheDocument();
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Start Voice Request" }))
+      .toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Enter Route" })).toHaveFocus();
   });
 
   it("opens manual route entry from the pencil control", async () => {
@@ -70,6 +78,7 @@ describe("MainScreen", () => {
     expect(screen.queryByRole("button", { name: "Enter Route" }))
       .not.toBeInTheDocument();
     expect(screen.getByLabelText("Driving Request")).toHaveValue("");
+    expect(screen.getByLabelText("Driving Request")).toHaveFocus();
     expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rerecord" })).toBeInTheDocument();
