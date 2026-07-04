@@ -30,6 +30,7 @@ export const navigatorLabels: Record<NavigatorId, string> = {
 export interface RoadMuseSettings {
   preferredNavigator: NavigatorId;
   savedPlaces: SavedPlace[];
+  previousTrips: PreviousTrip[];
   preferences: TextPreference[];
   themeMode: ThemeMode;
   accentTheme: AccentTheme;
@@ -38,6 +39,7 @@ export interface RoadMuseSettings {
 export const defaultSettings: RoadMuseSettings = {
   preferredNavigator: "google-maps",
   savedPlaces: [],
+  previousTrips: [],
   preferences: [],
   themeMode: "auto",
   accentTheme: "ground",
@@ -58,8 +60,44 @@ export interface SavedPlace {
   longitude?: number;
 }
 
+export interface RouteWaypoint {
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface PreviousTrip {
+  id: string;
+  prompt: string;
+  createdAt: number;
+  route?: RouteWaypoint[];
+  startAddress?: string;
+  endAddress?: string;
+  durationMinutes?: number;
+  distanceMiles?: number;
+  stopCount?: number;
+}
+
 const isOptionalString = (value: unknown): value is string | undefined => {
   return value === undefined || typeof value === "string";
+};
+
+const isOptionalNonNegativeInteger = (
+  value: unknown,
+): value is number | undefined => {
+  return (
+    value === undefined ||
+    (typeof value === "number" && Number.isInteger(value) && value >= 0)
+  );
+};
+
+const isOptionalNonNegativeNumber = (
+  value: unknown,
+): value is number | undefined => {
+  return (
+    value === undefined ||
+    (typeof value === "number" && Number.isFinite(value) && value >= 0)
+  );
 };
 
 const isSavedPlaceEntryMode = (value: unknown): value is SavedPlaceEntryMode => {
@@ -112,6 +150,56 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
   );
 };
 
+const isRouteWaypoint = (value: unknown): value is RouteWaypoint => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  if (!isOptionalString(candidate.address)) {
+    return false;
+  }
+
+  if (candidate.latitude !== undefined && typeof candidate.latitude !== "number") {
+    return false;
+  }
+
+  if (candidate.longitude !== undefined && typeof candidate.longitude !== "number") {
+    return false;
+  }
+
+  const hasAddress =
+    typeof candidate.address === "string" && candidate.address.trim().length > 0;
+  const hasCoordinates =
+    Number.isFinite(candidate.latitude) && Number.isFinite(candidate.longitude);
+
+  return hasAddress || hasCoordinates;
+};
+
+const isPreviousTrip = (value: unknown): value is PreviousTrip => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.prompt === "string" &&
+    candidate.prompt.trim().length > 0 &&
+    typeof candidate.createdAt === "number" &&
+    Number.isFinite(candidate.createdAt) &&
+    (candidate.route === undefined ||
+      (Array.isArray(candidate.route) && candidate.route.every(isRouteWaypoint))) &&
+    isOptionalString(candidate.startAddress) &&
+    isOptionalString(candidate.endAddress) &&
+    isOptionalNonNegativeInteger(candidate.durationMinutes) &&
+    isOptionalNonNegativeNumber(candidate.distanceMiles) &&
+    isOptionalNonNegativeInteger(candidate.stopCount)
+  );
+};
+
 const normalizeOptionalText = (value?: string): string | undefined => {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
@@ -156,6 +244,72 @@ const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => {
   return normalized;
 };
 
+const normalizeRouteWaypoint = (raw: RouteWaypoint): RouteWaypoint => {
+  const normalized: RouteWaypoint = {};
+  const address = normalizeOptionalText(raw.address);
+
+  if (address) {
+    normalized.address = address;
+  }
+
+  if (Number.isFinite(raw.latitude) && Number.isFinite(raw.longitude)) {
+    normalized.latitude = raw.latitude;
+    normalized.longitude = raw.longitude;
+  }
+
+  return normalized;
+};
+
+const normalizePreviousTrip = (raw: PreviousTrip): PreviousTrip => {
+  const normalized: PreviousTrip = {
+    id: raw.id,
+    prompt: raw.prompt.trim(),
+    createdAt: raw.createdAt,
+  };
+
+  const startAddress = normalizeOptionalText(raw.startAddress);
+  const endAddress = normalizeOptionalText(raw.endAddress);
+  const route = Array.isArray(raw.route)
+    ? raw.route.map(normalizeRouteWaypoint).filter(isRouteWaypoint)
+    : [];
+
+  if (route.length > 0) {
+    normalized.route = route;
+  }
+
+  const normalizedStartAddress = route[0]?.address ?? startAddress;
+  const normalizedEndAddress = route[route.length - 1]?.address ?? endAddress;
+
+  if (normalizedStartAddress) {
+    normalized.startAddress = normalizedStartAddress;
+  }
+
+  if (normalizedEndAddress) {
+    normalized.endAddress = normalizedEndAddress;
+  }
+
+  if (!normalized.route && normalizedStartAddress && normalizedEndAddress) {
+    normalized.route = [
+      { address: normalizedStartAddress },
+      { address: normalizedEndAddress },
+    ];
+  }
+
+  if (raw.durationMinutes !== undefined) {
+    normalized.durationMinutes = raw.durationMinutes;
+  }
+
+  if (raw.distanceMiles !== undefined) {
+    normalized.distanceMiles = raw.distanceMiles;
+  }
+
+  if (raw.stopCount !== undefined) {
+    normalized.stopCount = raw.stopCount;
+  }
+
+  return normalized;
+};
+
 const isNavigatorId = (value: unknown): value is NavigatorId => {
   return typeof value === "string" && (navigatorIds as readonly string[]).includes(value);
 };
@@ -173,6 +327,7 @@ export function loadSettings(): RoadMuseSettings {
 
     const parsed = JSON.parse(raw) as Partial<RoadMuseSettings> & {
       savedPlaces?: unknown;
+      previousTrips?: unknown;
       preferences?: unknown;
     };
 
@@ -188,6 +343,10 @@ export function loadSettings(): RoadMuseSettings {
       ? parsed.preferences.filter(isTextPreference).map(normalizeTextPreference)
       : defaultSettings.preferences;
 
+    const previousTrips = Array.isArray(parsed.previousTrips)
+      ? parsed.previousTrips.filter(isPreviousTrip).map(normalizePreviousTrip)
+      : defaultSettings.previousTrips;
+
     const themeMode = isThemeMode(parsed.themeMode)
       ? parsed.themeMode
       : defaultSettings.themeMode;
@@ -199,6 +358,7 @@ export function loadSettings(): RoadMuseSettings {
     return {
       preferredNavigator,
       savedPlaces,
+      previousTrips,
       preferences,
       themeMode,
       accentTheme,

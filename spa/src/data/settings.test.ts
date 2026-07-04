@@ -34,6 +34,57 @@ describe("settings persistence", () => {
       JSON.stringify({
         preferredNavigator: "waze",
         accentTheme: "navy",
+        previousTrips: [
+          {
+            id: "trip-1",
+            prompt: "  Find coffee on the way  ",
+            createdAt: 1710000000000,
+            startAddress: "  Rockville, MD  ",
+            endAddress: "  Bethesda coffee stop  ",
+            durationMinutes: 55,
+            distanceMiles: 14,
+            stopCount: 1,
+          },
+          {
+            id: "legacy-trip",
+            prompt: "Legacy saved trip",
+            createdAt: 1710000000001,
+          },
+          null,
+          {
+            id: "bad-prompt",
+            prompt: "",
+            createdAt: 1710000000002,
+          },
+          {
+            id: 123,
+            prompt: "Bad id",
+            createdAt: 1710000000003,
+          },
+          {
+            id: "bad-created-at",
+            prompt: "Bad created at",
+            createdAt: "now",
+          },
+          {
+            id: "bad-stop-count",
+            prompt: "Bad stop count",
+            createdAt: 1710000000004,
+            stopCount: "two",
+          },
+          {
+            id: "bad-duration",
+            prompt: "Bad duration",
+            createdAt: 1710000000005,
+            durationMinutes: 55.5,
+          },
+          {
+            id: "bad-distance",
+            prompt: "Bad distance",
+            createdAt: 1710000000006,
+            distanceMiles: -14,
+          },
+        ],
         savedPlaces: [
           {
             id: "home",
@@ -149,6 +200,31 @@ describe("settings persistence", () => {
           longitude: -77.01,
         },
       ],
+      previousTrips: [
+        {
+          id: "trip-1",
+          prompt: "Find coffee on the way",
+          createdAt: 1710000000000,
+          route: [
+            {
+              address: "Rockville, MD",
+            },
+            {
+              address: "Bethesda coffee stop",
+            },
+          ],
+          startAddress: "Rockville, MD",
+          endAddress: "Bethesda coffee stop",
+          durationMinutes: 55,
+          distanceMiles: 14,
+          stopCount: 1,
+        },
+        {
+          id: "legacy-trip",
+          prompt: "Legacy saved trip",
+          createdAt: 1710000000001,
+        },
+      ],
       preferences: [],
       themeMode: "auto",
       accentTheme: "navy",
@@ -244,6 +320,30 @@ describe("settings persistence", () => {
           zipCode: "20001",
           latitude: 38.8977,
           longitude: -77.0365,
+        },
+      ],
+      previousTrips: [
+        {
+          id: "trip-1",
+          prompt: "Find a quiet lunch stop",
+          createdAt: 1710000000000,
+          route: [
+            {
+              address: "Rockville, MD",
+              latitude: 39.084,
+              longitude: -77.1528,
+            },
+            {
+              address: "National Mall",
+              latitude: 38.8895,
+              longitude: -77.0353,
+            },
+          ],
+          startAddress: "Rockville, MD",
+          endAddress: "National Mall",
+          durationMinutes: 55,
+          distanceMiles: 14,
+          stopCount: 0,
         },
       ],
       preferences: [],

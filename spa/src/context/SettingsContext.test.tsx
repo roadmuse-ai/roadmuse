@@ -12,6 +12,8 @@ function SettingsHarness() {
     addSavedPlace,
     updateSavedPlace,
     removeSavedPlace,
+    addPreviousTrip,
+    removePreviousTrip,
     addPreference,
     updatePreference,
     removePreference,
@@ -19,6 +21,7 @@ function SettingsHarness() {
   } = useSettings();
 
   const firstPlaceId = settings.savedPlaces[0]?.id ?? "";
+  const firstTripId = settings.previousTrips[0]?.id ?? "";
   const firstPreferenceId = settings.preferences[0]?.id ?? "";
 
   return (
@@ -31,6 +34,17 @@ function SettingsHarness() {
       <p data-testid="preferences">
         {settings.preferences
           .map((preference) => `${preference.text}:${preference.enabled ? "on" : "off"}`)
+          .join("|")}
+      </p>
+      <p data-testid="previous-trips">
+        {settings.previousTrips.map((trip) => trip.prompt).join("|")}
+      </p>
+      <p data-testid="previous-trip-details">
+        {settings.previousTrips
+          .map(
+            (trip) =>
+              `${trip.startAddress}:${trip.endAddress}:${trip.durationMinutes}:${trip.distanceMiles}:${trip.stopCount}`,
+          )
           .join("|")}
       </p>
       <button type="button" onClick={() => setPreferredNavigator("apple-maps")}>
@@ -77,6 +91,23 @@ function SettingsHarness() {
       </button>
       <button type="button" onClick={() => removeSavedPlace(firstPlaceId)}>
         Remove First
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          addPreviousTrip("Find lunch", {
+            startAddress: "Home",
+            endAddress: "Lunch spot",
+            durationMinutes: 55,
+            distanceMiles: 14,
+            stopCount: 1,
+          })
+        }
+      >
+        Add Trip
+      </button>
+      <button type="button" onClick={() => removePreviousTrip(firstTripId)}>
+        Remove Trip
       </button>
       <button type="button" onClick={addPreference}>
         Add Preference
@@ -169,6 +200,27 @@ describe("SettingsProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove First" }));
     expect(screen.getByTestId("saved-places")).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole("button", { name: "Add Trip" }));
+    expect(screen.getByTestId("previous-trips")).toHaveTextContent("Find lunch");
+    expect(screen.getByTestId("previous-trip-details")).toHaveTextContent(
+      "Home:Lunch spot:55:14:1",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Remove Trip" }));
+    expect(screen.getByTestId("previous-trips")).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole("button", { name: "Add Trip" }));
+    await user.click(screen.getByRole("button", { name: "Add Trip" }));
+    expect(screen.getByTestId("previous-trips")).toHaveTextContent(
+      "Find lunch|Find lunch",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Remove Trip" }));
+    expect(screen.getByTestId("previous-trips")).toHaveTextContent("Find lunch");
+
+    await user.click(screen.getByRole("button", { name: "Remove Trip" }));
+    expect(screen.getByTestId("previous-trips")).toBeEmptyDOMElement();
 
     await user.click(screen.getByRole("button", { name: "Add Preference" }));
     expect(screen.getByTestId("preferences")).toHaveTextContent(":on");
