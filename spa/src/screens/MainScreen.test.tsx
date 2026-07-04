@@ -59,7 +59,7 @@ describe("MainScreen", () => {
 
     expect(screen.getByRole("heading", { name: "Enter Your Route" }))
       .toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Review Your Route Request" }))
+    expect(screen.queryByRole("heading", { name: "Review Your Route" }))
       .not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Voice waves animation" }))
       .not.toBeInTheDocument();
@@ -130,7 +130,7 @@ describe("MainScreen", () => {
     );
     expect(screen.queryByRole("img", { name: "Voice waves animation" }))
       .not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Review Your Route Request" }))
+    expect(screen.getByRole("heading", { name: "Review Your Route" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
       .toBeInTheDocument();

@@ -8,7 +8,6 @@ import {
   Milestone,
   Pencil,
   Play,
-  RefreshCw,
   Square,
   Trash2,
   type LucideIcon,
@@ -222,7 +221,7 @@ export function MainScreen() {
   const isListening = mode === "listening";
   const isReviewing = mode === "review" || mode === "manual";
   const reviewTitle =
-    mode === "manual" ? "Enter Your Route" : "Review Your Route Request";
+    mode === "manual" ? "Enter Your Route" : "Review Your Route";
   const primaryActionLabel = isListening ? "Next" : "Drive";
   const middleActionLabel = isListening ? "Stop" : "Rerecord";
   const normalizedTripSearch = tripSearch.trim().toLocaleLowerCase();
@@ -497,7 +496,7 @@ export function MainScreen() {
             {isListening ? (
               <Square aria-hidden="true" />
             ) : (
-              <RefreshCw aria-hidden="true" />
+              <Mic aria-hidden="true" />
             )}
           </button>
 
