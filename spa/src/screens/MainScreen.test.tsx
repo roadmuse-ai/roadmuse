@@ -308,6 +308,41 @@ describe("MainScreen", () => {
     expect(screen.getByText("Earlier trip")).toBeInTheDocument();
   });
 
+  it("formats previous trip distances with the saved distance unit", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        routeSettings: { units: "kilometers" },
+        previousTrips: [
+          {
+            id: "trip-1",
+            prompt: "Find coffee and a restroom on the way",
+            createdAt: routeCreatedAt,
+            startAddress: "Rockville, MD",
+            endAddress: "Bethesda coffee stop",
+            durationMinutes: 55,
+            distanceMiles: 14,
+            stopCount: 1,
+          },
+        ],
+      }),
+    );
+
+    renderMainScreen();
+
+    expect(screen.getByText("22.5 km")).toBeInTheDocument();
+    expect(screen.queryByText("14 mi")).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Search Previous Trips"), "22.5 km");
+    expect(screen.getByText("Find coffee and a restroom on the way"))
+      .toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("Search Previous Trips"));
+    await user.type(screen.getByLabelText("Search Previous Trips"), "14 mi");
+    expect(screen.getByText("No matching trips")).toBeInTheDocument();
+  });
+
   it("filters, plays, and removes previous trips", async () => {
     const user = userEvent.setup();
     window.localStorage.setItem(
