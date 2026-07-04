@@ -30,12 +30,15 @@ describe("MainScreen", () => {
     window.localStorage.clear();
   });
 
-  it("opens with only the primary voice control in the home content", () => {
+  it("opens with the first-trip prompt and primary voice control", () => {
     renderMainScreen();
 
+    expect(screen.getByRole("heading", { name: "Start your first trip!" }))
+      .toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Start Voice Request" }),
     ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Search Previous Trips")).not.toBeInTheDocument();
     expect(screen.queryByText("Current Settings")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Start planning a route" }))
       .not.toBeInTheDocument();

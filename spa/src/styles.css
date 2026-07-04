@@ -742,6 +742,22 @@ section {
   font-size: 0.94rem;
 }
 
+.previous-trips__starter {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - var(--bottom-nav-height) - 16rem);
+  text-align: center;
+}
+
+.previous-trips__starter h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
 .voice-home__mic-button {
   position: fixed;
   left: 50%;

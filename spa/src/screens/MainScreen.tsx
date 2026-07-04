@@ -368,6 +368,12 @@ export function MainScreen() {
         </div>
       ) : null}
 
+      {mode === "initial" && settings.previousTrips.length === 0 ? (
+        <div className="previous-trips__starter">
+          <h2>Start your first trip!</h2>
+        </div>
+      ) : null}
+
       {isListening ? (
         <div
           className="voice-home__waves"
