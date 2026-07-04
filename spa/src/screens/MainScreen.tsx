@@ -63,6 +63,75 @@ interface TripDetail {
   Icon: LucideIcon;
 }
 
+interface TripTimeGroup {
+  label: string;
+  trips: PreviousTrip[];
+}
+
+const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+function startOfLocalDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfLocalWeek(date: Date): Date {
+  const start = startOfLocalDay(date);
+  start.setDate(start.getDate() - start.getDay());
+  return start;
+}
+
+function startOfLocalMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function getTripTimeGroup(createdAt: number, nowTimestamp: number): string {
+  const createdAtDate = new Date(createdAt);
+  const now = new Date(nowTimestamp);
+  const todayStart = startOfLocalDay(now);
+  const yesterdayStart = new Date(todayStart.getTime() - millisecondsPerDay);
+  const weekStart = startOfLocalWeek(now);
+  const monthStart = startOfLocalMonth(now);
+
+  if (createdAtDate >= todayStart) {
+    return "Today";
+  }
+
+  if (createdAtDate >= yesterdayStart) {
+    return "Yesterday";
+  }
+
+  if (createdAtDate >= weekStart) {
+    return "This Week";
+  }
+
+  if (createdAtDate >= monthStart) {
+    return "This Month";
+  }
+
+  return "Earlier";
+}
+
+function groupTripsByTime(
+  trips: PreviousTrip[],
+  nowTimestamp: number,
+): TripTimeGroup[] {
+  const groups = new Map<string, PreviousTrip[]>();
+
+  trips.forEach((trip) => {
+    const label = getTripTimeGroup(trip.createdAt, nowTimestamp);
+    groups.set(label, [...(groups.get(label) ?? []), trip]);
+  });
+
+  return ["Today", "Yesterday", "This Week", "This Month", "Earlier"].flatMap(
+    (label) => {
+      const groupTrips = groups.get(label);
+      return groupTrips && groupTrips.length > 0
+        ? [{ label, trips: groupTrips }]
+        : [];
+    },
+  );
+}
+
 function getTripAddressDetails(trip: PreviousTrip): TripDetail[] {
   return [
     {
@@ -126,6 +195,7 @@ export function MainScreen() {
         getTripSearchText(trip).includes(normalizedTripSearch),
       )
     : settings.previousTrips;
+  const previousTripGroups = groupTripsByTime(filteredPreviousTrips, Date.now());
 
   const startListening = () => {
     setMode("listening");
@@ -199,76 +269,95 @@ export function MainScreen() {
           </div>
 
           {filteredPreviousTrips.length > 0 ? (
-            <ul className="previous-trips__list" aria-label="Previous Trips">
-              {filteredPreviousTrips.map((trip) => (
-                <li className="previous-trip" key={trip.id}>
-                  <div className="previous-trip__body">
-                    <ul
-                      className="previous-trip__details"
-                      aria-label={`Route details for ${trip.prompt}`}
-                    >
-                      {getTripAddressDetails(trip).map(({ label, value, Icon }) => (
-                        <li
-                          className="previous-trip__detail previous-trip__detail--address"
-                          key={label}
-                          aria-label={`${label} ${value}`}
-                        >
-                          <Icon
-                            aria-hidden="true"
-                            className="previous-trip__detail-icon"
-                          />
-                          <span>{value}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p
-                      className="previous-trip__prompt"
-                      aria-label={`Prompt ${trip.prompt}`}
-                    >
-                      {trip.prompt}
-                    </p>
-                    <ul
-                      className="previous-trip__meta"
-                      aria-label={`Route stats for ${trip.prompt}`}
-                    >
-                      {getTripMetaDetails(trip).map(({ label, value, Icon }) => (
-                        <li
-                          className="previous-trip__meta-item"
-                          key={label}
-                          aria-label={`${label} ${value}`}
-                        >
-                          <Icon
-                            aria-hidden="true"
-                            className="previous-trip__meta-icon"
-                          />
-                          <span>{value}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="previous-trip__actions">
-                    <button
-                      type="button"
-                      className="saved-place__icon-btn"
-                      aria-label={`Play ${trip.prompt}`}
-                      title="Play"
-                      onClick={() => playPreviousTrip(trip)}
-                    >
-                      <Play aria-hidden="true" size={17} strokeWidth={2.2} />
-                    </button>
-                    <button
-                      type="button"
-                      className="saved-place__icon-btn"
-                      aria-label={`Remove ${trip.prompt}`}
-                      title="Remove"
-                      onClick={() => removePreviousTrip(trip.id)}
-                    >
-                      <Trash2 aria-hidden="true" size={17} strokeWidth={2.2} />
-                    </button>
-                  </div>
-                </li>
+            <div className="previous-trips__groups" aria-label="Previous Trips">
+              {previousTripGroups.map((group) => (
+                <div className="previous-trips__group" key={group.label}>
+                  <h3 className="previous-trips__group-title">{group.label}</h3>
+                  <ul className="previous-trips__list">
+                    {group.trips.map((trip) => (
+                      <li className="previous-trip" key={trip.id}>
+                        <div className="previous-trip__body">
+                          <ul
+                            className="previous-trip__details"
+                            aria-label={`Route details for ${trip.prompt}`}
+                          >
+                            {getTripAddressDetails(trip).map(
+                              ({ label, value, Icon }) => (
+                                <li
+                                  className="previous-trip__detail previous-trip__detail--address"
+                                  key={label}
+                                  aria-label={`${label} ${value}`}
+                                >
+                                  <Icon
+                                    aria-hidden="true"
+                                    className="previous-trip__detail-icon"
+                                  />
+                                  <span>{value}</span>
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                          <p
+                            className="previous-trip__prompt"
+                            aria-label={`Prompt ${trip.prompt}`}
+                          >
+                            {trip.prompt}
+                          </p>
+                          <ul
+                            className="previous-trip__meta"
+                            aria-label={`Route stats for ${trip.prompt}`}
+                          >
+                            {getTripMetaDetails(trip).map(
+                              ({ label, value, Icon }) => (
+                                <li
+                                  className="previous-trip__meta-item"
+                                  key={label}
+                                  aria-label={`${label} ${value}`}
+                                >
+                                  <Icon
+                                    aria-hidden="true"
+                                    className="previous-trip__meta-icon"
+                                  />
+                                  <span>{value}</span>
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        </div>
+                        <div className="previous-trip__actions">
+                          <button
+                            type="button"
+                            className="saved-place__icon-btn"
+                            aria-label={`Play ${trip.prompt}`}
+                            title="Play"
+                            onClick={() => playPreviousTrip(trip)}
+                          >
+                            <Play
+                              aria-hidden="true"
+                              size={17}
+                              strokeWidth={2.2}
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            className="saved-place__icon-btn"
+                            aria-label={`Remove ${trip.prompt}`}
+                            title="Remove"
+                            onClick={() => removePreviousTrip(trip.id)}
+                          >
+                            <Trash2
+                              aria-hidden="true"
+                              size={17}
+                              strokeWidth={2.2}
+                            />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="previous-trips__empty">No matching trips</p>
           )}

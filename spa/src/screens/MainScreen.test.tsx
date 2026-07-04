@@ -161,6 +161,53 @@ describe("MainScreen", () => {
     ).toHaveLength(2);
   });
 
+  it("groups previous trips by stored creation time", () => {
+    vi.mocked(Date.now).mockReturnValue(Date.UTC(2026, 6, 23, 13, 0));
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        previousTrips: [
+          {
+            id: "today-trip",
+            prompt: "Today trip",
+            createdAt: Date.UTC(2026, 6, 23, 12, 0),
+          },
+          {
+            id: "yesterday-trip",
+            prompt: "Yesterday trip",
+            createdAt: Date.UTC(2026, 6, 22, 13, 0),
+          },
+          {
+            id: "week-trip",
+            prompt: "This week trip",
+            createdAt: Date.UTC(2026, 6, 20, 13, 0),
+          },
+          {
+            id: "month-trip",
+            prompt: "This month trip",
+            createdAt: Date.UTC(2026, 6, 5, 13, 0),
+          },
+          {
+            id: "earlier-trip",
+            prompt: "Earlier trip",
+            createdAt: Date.UTC(2026, 5, 15, 13, 0),
+          },
+        ],
+      }),
+    );
+
+    renderMainScreen();
+
+    expect(
+      screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual(["Today", "Yesterday", "This Week", "This Month", "Earlier"]);
+    expect(screen.getByText("Today trip")).toBeInTheDocument();
+    expect(screen.getByText("Yesterday trip")).toBeInTheDocument();
+    expect(screen.getByText("This week trip")).toBeInTheDocument();
+    expect(screen.getByText("This month trip")).toBeInTheDocument();
+    expect(screen.getByText("Earlier trip")).toBeInTheDocument();
+  });
+
   it("filters, plays, and removes previous trips", async () => {
     const user = userEvent.setup();
     window.localStorage.setItem(

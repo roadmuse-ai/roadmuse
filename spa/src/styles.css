@@ -595,6 +595,25 @@ section {
   margin: 0;
 }
 
+.previous-trips__groups {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.previous-trips__group {
+  display: grid;
+}
+
+.previous-trips__group-title {
+  margin: 0;
+  padding: 0 0 0.45rem;
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .previous-trips__list {
   margin: 0;
   list-style: none;
