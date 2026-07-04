@@ -297,8 +297,9 @@ export function MainScreen() {
 
   const isListening = mode === "listening";
   const isReviewing = mode === "review" || mode === "manual";
+  const showsPromptEntry = isListening || isReviewing;
   const reviewTitle =
-    mode === "manual" ? "Enter Your Route" : "Review Your Route";
+    mode === "manual" || isListening ? "Enter Your Route" : "Review Your Route";
   const primaryActionLabel = isListening ? "Next" : "Drive";
   const middleActionLabel = isListening ? "Stop" : "Rerecord";
   const normalizedTripSearch = tripSearch.trim().toLocaleLowerCase();
@@ -324,6 +325,7 @@ export function MainScreen() {
   }, [mode, settings.previousTrips.length]);
 
   const startListening = () => {
+    setPrompt("");
     setMode("listening");
   };
 
@@ -338,7 +340,7 @@ export function MainScreen() {
   };
 
   const rerecord = () => {
-    setPrompt(stubPrompt);
+    setPrompt("");
     setMode("listening");
   };
 
@@ -506,33 +508,34 @@ export function MainScreen() {
         </div>
       ) : null}
 
-      {isListening ? (
-        <div
-          className="voice-home__waves"
-          aria-label="Voice waves animation"
-          role="img"
-        >
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-      ) : null}
-
-      {isReviewing ? (
+      {showsPromptEntry ? (
         <div className="voice-home__review">
           <h2 className="voice-home__review-title">{reviewTitle}</h2>
           <label className="sr-only" htmlFor={promptId}>
             Driving Request
           </label>
-          <textarea
-            id={promptId}
-            aria-label="Driving Request"
-            className="voice-home__prompt"
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-          />
+          <div className="voice-home__prompt-shell">
+            <textarea
+              id={promptId}
+              aria-label="Driving Request"
+              className="voice-home__prompt"
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+            />
+            {isListening ? (
+              <div
+                className="voice-home__waves"
+                aria-label="Voice waves animation"
+                role="img"
+              >
+                <span />
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 

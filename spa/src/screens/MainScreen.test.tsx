@@ -113,6 +113,11 @@ describe("MainScreen", () => {
       .not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Voice waves animation" }))
       .toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Enter Your Route" }))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Review Your Route" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByLabelText("Driving Request")).toHaveValue("");
     expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
@@ -146,7 +151,9 @@ describe("MainScreen", () => {
     expect(screen.getByRole("img", { name: "Voice waves animation" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
-    expect(screen.queryByLabelText("Driving Request")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Enter Your Route" }))
+      .toBeInTheDocument();
+    expect(screen.getByLabelText("Driving Request")).toHaveValue("");
 
     await user.click(screen.getByRole("button", { name: "Back to Previous Trips" }));
 
