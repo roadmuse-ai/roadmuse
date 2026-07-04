@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -361,5 +361,52 @@ describe("ConfigScreen", () => {
     });
 
     vi.useRealTimers();
+  });
+
+  it("renders route settings and persists travel mode changes", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    expect(screen.getByRole("heading", { name: "Route Settings" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Route Settings are direct Valhalla routing controls\. Route Preferences are plain-English rules that RoadMuse interprets later\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Travel mode" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Toll roads" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "Bicycle" }));
+    expect(screen.getByRole("radiogroup", { name: "Road comfort" })).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Toll roads" })).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        routeSettings: {
+          travelMode: "bicycle",
+        },
+      });
+    });
+
+    const hillComfort = screen.getByRole("radiogroup", { name: "Hill comfort" });
+    await user.click(within(hillComfort).getByRole("radio", { name: "High" }));
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        routeSettings: {
+          bicycle: { hillComfort: 0.75 },
+        },
+      });
+    });
+  });
+
+  it("renders pedestrian controls including Avoid stairs", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    await user.click(screen.getByRole("radio", { name: "Walking" }));
+
+    expect(screen.getByLabelText("Walking speed")).toBeInTheDocument();
+    expect(screen.getByLabelText("Avoid stairs")).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Prefer lit streets" })).toBeInTheDocument();
   });
 });

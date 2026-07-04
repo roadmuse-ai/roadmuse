@@ -1650,6 +1650,58 @@ button.card--secondary:active,
   line-height: 1.25;
 }
 
+.route-settings__units {
+  margin-top: 0.35rem;
+}
+
+.route-settings__units-heading {
+  margin-top: 0.85rem;
+}
+
+.route-settings__segmented {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.route-settings__segmented-label {
+  color: var(--color-text-nav);
+  font-size: 0.92rem;
+}
+
+.theme-toggle--scale {
+  flex-wrap: wrap;
+}
+
+.theme-toggle--scale .theme-toggle__option span {
+  font-size: 0.78rem;
+}
+
+.route-settings__mode-panel {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.form-field--checkbox {
+  gap: 0.35rem;
+}
+
+.route-settings__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-nav);
+  font-size: 0.92rem;
+}
+
+.route-settings__checkbox input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+
 .settings-summary dt {
   color: var(--color-text-secondary);
 }

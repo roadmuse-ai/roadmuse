@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultSettings, storageKey } from "../data/settings";
+import { defaultRouteSettings } from "../data/routeSettings";
 import { SettingsProvider, useSettings } from "./SettingsContext";
 
 function SettingsHarness() {
@@ -17,6 +18,7 @@ function SettingsHarness() {
     addPreference,
     updatePreference,
     removePreference,
+    updateRouteSettings,
     resetSettings,
   } = useSettings();
 
@@ -31,6 +33,8 @@ function SettingsHarness() {
       <p data-testid="saved-places">
         {settings.savedPlaces.map((place) => `${place.label}:${place.address}`).join("|")}
       </p>
+      <p data-testid="travel-mode">{settings.routeSettings.travelMode}</p>
+      <p data-testid="toll-preference">{settings.routeSettings.auto.tollPreference}</p>
       <p data-testid="preferences">
         {settings.preferences
           .map((preference) => `${preference.text}:${preference.enabled ? "on" : "off"}`)
@@ -131,6 +135,18 @@ function SettingsHarness() {
       </button>
       <button type="button" onClick={() => removePreference(firstPreferenceId)}>
         Remove Preference
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          updateRouteSettings({
+            travelMode: "bicycle",
+            auto: { tollPreference: 0 },
+            bicycle: { hillComfort: 1 },
+          })
+        }
+      >
+        Update Route Settings
       </button>
       <button type="button" onClick={resetSettings}>
         Reset
@@ -234,12 +250,19 @@ describe("SettingsProvider", () => {
     await user.click(screen.getByRole("button", { name: "Remove Preference" }));
     expect(screen.getByTestId("preferences")).toBeEmptyDOMElement();
 
+    await user.click(screen.getByRole("button", { name: "Update Route Settings" }));
+    expect(screen.getByTestId("travel-mode")).toHaveTextContent("bicycle");
+    expect(screen.getByTestId("toll-preference")).toHaveTextContent("0");
+
     await user.click(screen.getByRole("button", { name: "Reset" }));
     expect(screen.getByTestId("navigator")).toHaveTextContent(
       defaultSettings.preferredNavigator,
     );
     expect(screen.getByTestId("accent-theme")).toHaveTextContent(
       defaultSettings.accentTheme,
+    );
+    expect(screen.getByTestId("travel-mode")).toHaveTextContent(
+      defaultRouteSettings.travelMode,
     );
 
     await waitFor(() => {

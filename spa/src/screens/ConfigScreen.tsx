@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PreferenceCard } from "../components/PreferenceCard";
+import { RouteSettingsSection } from "../components/RouteSettingsSection";
 import { useSettings } from "../context/SettingsContext";
 import {
   countryOptions,
@@ -612,6 +613,8 @@ export function ConfigScreen() {
           Add Place
         </button>
       </section>
+
+      <RouteSettingsSection />
 
       <section className="preferences">
         <h3 className="settings-title">Route Preferences</h3>
