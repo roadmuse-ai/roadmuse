@@ -604,6 +604,51 @@ section {
   margin: 0;
 }
 
+.previous-trips__search-control {
+  position: relative;
+}
+
+.previous-trips__search-control input {
+  padding-right: 2.75rem;
+}
+
+.previous-trips__search-control input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.previous-trips__search-clear {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.previous-trips__search-clear:hover,
+.previous-trips__search-clear:focus-visible {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.previous-trips__search-clear svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2.5;
+}
+
 .previous-trips__groups {
   display: grid;
   gap: 1.15rem;
@@ -767,6 +812,11 @@ section {
   line-height: 1.05;
 }
 
+.previous-trips__starter-title {
+  animation: starter-trip-prompt-fade var(--starter-trip-prompt-rotation, 4s)
+    ease-in-out both;
+}
+
 .voice-home__manual-button,
 .voice-home__mic-button {
   position: fixed;
@@ -790,7 +840,8 @@ section {
 }
 
 .voice-home__manual-button {
-  bottom: calc(var(--bottom-nav-height) + 8.15rem);
+  left: calc(50% - 5.05rem);
+  bottom: calc(var(--bottom-nav-height) + 2.95rem);
   width: 3.6rem;
   height: 3.6rem;
 }
@@ -892,6 +943,14 @@ section {
   line-height: 1.3;
 }
 
+.voice-home__prompt:disabled {
+  opacity: 1;
+  background: var(--color-surface);
+  color: var(--color-text);
+  -webkit-text-fill-color: var(--color-text);
+  cursor: default;
+}
+
 .voice-home__actions {
   position: fixed;
   left: 50%;
@@ -980,6 +1039,20 @@ section {
   background: var(--control-fill-bg);
 }
 
+@keyframes starter-trip-prompt-fade {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+
+  14%,
+  78% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes voice-wave {
   0%,
   100% {
@@ -1053,6 +1126,14 @@ section {
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .previous-trips__starter-title {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 

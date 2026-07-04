@@ -10,6 +10,7 @@ import {
   Play,
   Square,
   Trash2,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
@@ -396,14 +397,27 @@ export function MainScreen() {
             <label className="sr-only" htmlFor={searchId}>
               Search Previous Trips
             </label>
-            <input
-              id={searchId}
-              type="search"
-              value={tripSearch}
-              placeholder="Search previous trips"
-              aria-label="Search Previous Trips"
-              onChange={(event) => setTripSearch(event.target.value)}
-            />
+            <div className="previous-trips__search-control">
+              <input
+                id={searchId}
+                type="search"
+                value={tripSearch}
+                placeholder="Search previous trips"
+                aria-label="Search Previous Trips"
+                onChange={(event) => setTripSearch(event.target.value)}
+              />
+              {tripSearch ? (
+                <button
+                  type="button"
+                  className="previous-trips__search-clear"
+                  aria-label="Clear Previous Trips Search"
+                  title="Clear"
+                  onClick={() => setTripSearch("")}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
           </div>
 
           {filteredPreviousTrips.length > 0 ? (
@@ -504,7 +518,13 @@ export function MainScreen() {
 
       {mode === "initial" && settings.previousTrips.length === 0 ? (
         <div className="previous-trips__starter">
-          <h2 aria-live="polite">{starterTripPrompt}</h2>
+          <h2
+            aria-live="polite"
+            className="previous-trips__starter-title"
+            key={starterTripPrompt}
+          >
+            {starterTripPrompt}
+          </h2>
         </div>
       ) : null}
 
@@ -519,6 +539,7 @@ export function MainScreen() {
               id={promptId}
               aria-label="Driving Request"
               className="voice-home__prompt"
+              disabled={isListening}
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
             />
