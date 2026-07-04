@@ -3,19 +3,14 @@ import { useSettings } from "../context/SettingsContext";
 import {
   type AutoRouteSettings,
   type BicycleRouteSettings,
-  type DistanceUnits,
   type PedestrianRouteSettings,
   type RouteTravelMode,
   type ValhallaScale,
-  alternateCountLabels,
-  alternateCounts,
   avoidNeutralPreferLabels,
   avoidNeutralPreferScales,
   bicycleTypeLabels,
   bicycleTypes,
   comfortScaleLabels,
-  distanceUnitLabels,
-  distanceUnits,
   maneuverPenaltyLabels,
   routeTravelModeLabels,
   routeTravelModes,
@@ -74,6 +69,48 @@ function ScaleSegmented<T extends ValhallaScale>({
   );
 }
 
+interface OnOffSegmentedProps {
+  label: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+  hint?: string;
+}
+
+function OnOffSegmented({ label, value, onChange, hint }: OnOffSegmentedProps) {
+  const groupName = label.toLowerCase().replace(/\s+/g, "-");
+
+  return (
+    <div className="route-settings__segmented">
+      <span className="route-settings__segmented-label">{label}</span>
+      <div className="theme-toggle theme-toggle--scale" role="radiogroup" aria-label={label}>
+        <label
+          className={`theme-toggle__option${!value ? " theme-toggle__option--active" : ""}`}
+        >
+          <input
+            type="radio"
+            name={groupName}
+            checked={!value}
+            onChange={() => onChange(false)}
+          />
+          <span>Off</span>
+        </label>
+        <label
+          className={`theme-toggle__option${value ? " theme-toggle__option--active" : ""}`}
+        >
+          <input
+            type="radio"
+            name={groupName}
+            checked={value}
+            onChange={() => onChange(true)}
+          />
+          <span>On</span>
+        </label>
+      </div>
+      {hint ? <span className="form-note">{hint}</span> : null}
+    </div>
+  );
+}
+
 interface EnumSelectProps<T extends string | number> {
   label: string;
   value: T;
@@ -114,29 +151,6 @@ function EnumSelect<T extends string | number>({
   );
 }
 
-interface ToggleFieldProps {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  hint?: string;
-}
-
-function ToggleField({ label, checked, onChange, hint }: ToggleFieldProps) {
-  return (
-    <label className="form-field form-field--checkbox">
-      <span className="route-settings__checkbox">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(event) => onChange(event.target.checked)}
-        />
-        <span>{label}</span>
-      </span>
-      {hint ? <span className="form-note">{hint}</span> : null}
-    </label>
-  );
-}
-
 interface AutoSettingsFieldsProps {
   settings: AutoRouteSettings;
   onChange: (updates: Partial<AutoRouteSettings>) => void;
@@ -145,7 +159,7 @@ interface AutoSettingsFieldsProps {
 function AutoSettingsFields({ settings, onChange }: AutoSettingsFieldsProps) {
   return (
     <div className="route-settings__mode-panel">
-      <h4 className="settings-subtitle">Driving / Auto settings</h4>
+      <h4 className="settings-subtitle">Driving settings</h4>
       <ScaleSegmented
         label="Toll roads"
         value={settings.tollPreference}
@@ -167,29 +181,29 @@ function AutoSettingsFields({ settings, onChange }: AutoSettingsFieldsProps) {
         optionLabels={avoidNeutralPreferLabels}
         onChange={(ferryPreference) => onChange({ ferryPreference })}
       />
-      <ToggleField
+      <OnOffSegmented
         label="Avoid unpaved roads"
-        checked={settings.excludeUnpaved}
+        value={settings.excludeUnpaved}
         onChange={(excludeUnpaved) => onChange({ excludeUnpaved })}
       />
-      <ToggleField
+      <OnOffSegmented
         label="Avoid cash-only tolls"
-        checked={settings.excludeCashOnlyTolls}
+        value={settings.excludeCashOnlyTolls}
         onChange={(excludeCashOnlyTolls) => onChange({ excludeCashOnlyTolls })}
       />
-      <ToggleField
+      <OnOffSegmented
         label="Allow HOV 2+"
-        checked={settings.includeHov2}
+        value={settings.includeHov2}
         onChange={(includeHov2) => onChange({ includeHov2 })}
       />
-      <ToggleField
+      <OnOffSegmented
         label="Allow HOV 3+"
-        checked={settings.includeHov3}
+        value={settings.includeHov3}
         onChange={(includeHov3) => onChange({ includeHov3 })}
       />
-      <ToggleField
+      <OnOffSegmented
         label="Allow HOT lanes"
-        checked={settings.includeHot}
+        value={settings.includeHot}
         onChange={(includeHot) => onChange({ includeHot })}
       />
       <EnumSelect
@@ -199,9 +213,9 @@ function AutoSettingsFields({ settings, onChange }: AutoSettingsFieldsProps) {
         labels={maneuverPenaltyLabels}
         onChange={(maneuverPenaltySeconds) => onChange({ maneuverPenaltySeconds })}
       />
-      <ToggleField
+      <OnOffSegmented
         label="Prefer shortest distance"
-        checked={settings.shortest}
+        value={settings.shortest}
         onChange={(shortest) => onChange({ shortest })}
         hint="May choose a shorter but slower route over the fastest option."
       />
@@ -265,7 +279,7 @@ interface PedestrianSettingsFieldsProps {
 function PedestrianSettingsFields({ settings, onChange }: PedestrianSettingsFieldsProps) {
   return (
     <div className="route-settings__mode-panel">
-      <h4 className="settings-subtitle">Walking / Pedestrian settings</h4>
+      <h4 className="settings-subtitle">Walking settings</h4>
       <label className="form-field">
         <span>Walking speed</span>
         <input
@@ -279,7 +293,7 @@ function PedestrianSettingsFields({ settings, onChange }: PedestrianSettingsFiel
             onChange({ walkingSpeedKph: Number(event.target.value) });
           }}
         />
-        <span className="form-note">Valhalla uses km/h (default 5.1 kph).</span>
+        <span className="form-note">Default 5.1 km/h.</span>
       </label>
       <ScaleSegmented
         label="Hill comfort"
@@ -320,14 +334,7 @@ export function RouteSettingsSection() {
   return (
     <section className="config-section route-settings">
       <h3 className="settings-title">Route Settings</h3>
-      <p className="form-note">
-        Route Settings are direct Valhalla routing controls. Route Preferences are
-        plain-English rules that RoadMuse interprets later. External navigators may
-        not preserve every Valhalla setting unless GPX/export or the selected provider
-        supports it.
-      </p>
 
-      <h4 className="settings-subtitle">Core route settings</h4>
       <div className="theme-toggle" role="radiogroup" aria-label="Travel mode">
         {routeTravelModes.map((mode) => (
           <label
@@ -347,39 +354,6 @@ export function RouteSettingsSection() {
           </label>
         ))}
       </div>
-
-      <h4 className="settings-subtitle route-settings__units-heading">Distance units</h4>
-      <div
-        className="theme-toggle route-settings__units"
-        role="radiogroup"
-        aria-label="Distance units"
-      >
-        {distanceUnits.map((unit) => (
-          <label
-            key={unit}
-            className={`theme-toggle__option${
-              routeSettings.units === unit ? " theme-toggle__option--active" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              name="distance-units"
-              value={unit}
-              checked={routeSettings.units === unit}
-              onChange={() => updateRouteSettings({ units: unit as DistanceUnits })}
-            />
-            <span>{distanceUnitLabels[unit]}</span>
-          </label>
-        ))}
-      </div>
-
-      <EnumSelect
-        label="Alternate routes"
-        value={routeSettings.alternates}
-        options={alternateCounts}
-        labels={alternateCountLabels}
-        onChange={(alternates) => updateRouteSettings({ alternates })}
-      />
 
       {routeSettings.travelMode === "auto" ? (
         <AutoSettingsFields

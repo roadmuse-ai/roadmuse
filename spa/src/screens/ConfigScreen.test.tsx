@@ -363,18 +363,44 @@ describe("ConfigScreen", () => {
     vi.useRealTimers();
   });
 
+  it("persists distance units after preferred navigator", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    expect(screen.getByRole("radiogroup", { name: "Distance units" })).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Kilometers" }));
+
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        routeSettings: { units: "kilometers" },
+      });
+    });
+  });
+
+  it("renders route settings after route preferences", () => {
+    renderConfigScreen();
+
+    const headings = screen
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent);
+    const preferencesIndex = headings.indexOf("Route Preferences");
+    const settingsIndex = headings.indexOf("Route Settings");
+
+    expect(preferencesIndex).toBeGreaterThanOrEqual(0);
+    expect(settingsIndex).toBeGreaterThan(preferencesIndex);
+  });
+
   it("renders route settings and persists travel mode changes", async () => {
     const user = userEvent.setup();
     renderConfigScreen();
 
     expect(screen.getByRole("heading", { name: "Route Settings" })).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Route Settings are direct Valhalla routing controls\. Route Preferences are plain-English rules that RoadMuse interprets later\./i,
-      ),
-    ).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Travel mode" })).toBeInTheDocument();
     expect(screen.getByRole("radiogroup", { name: "Toll roads" })).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Route Settings are direct Valhalla routing controls/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Alternate routes")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("radio", { name: "Bicycle" }));
     expect(screen.getByRole("radiogroup", { name: "Road comfort" })).toBeInTheDocument();
