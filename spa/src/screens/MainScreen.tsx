@@ -6,6 +6,7 @@ import {
   MapPin,
   Mic,
   Milestone,
+  Pencil,
   Play,
   RefreshCw,
   Square,
@@ -23,7 +24,7 @@ import { type PreviousTrip } from "../data/settings";
 const stubPrompt =
   "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.";
 
-type VoiceHomeMode = "initial" | "listening" | "review";
+type VoiceHomeMode = "initial" | "listening" | "review" | "manual";
 
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
@@ -211,7 +212,9 @@ export function MainScreen() {
   );
 
   const isListening = mode === "listening";
-  const isReviewing = mode === "review";
+  const isReviewing = mode === "review" || mode === "manual";
+  const reviewTitle =
+    mode === "manual" ? "Enter Your Route" : "Review Your Route Request";
   const primaryActionLabel = isListening ? "Next" : "Drive";
   const middleActionLabel = isListening ? "Stop" : "Rerecord";
   const normalizedTripSearch = tripSearch.trim().toLocaleLowerCase();
@@ -238,6 +241,11 @@ export function MainScreen() {
 
   const startListening = () => {
     setMode("listening");
+  };
+
+  const startManualEntry = () => {
+    setPrompt("");
+    setMode("manual");
   };
 
   const reviewPrompt = () => {
@@ -425,7 +433,7 @@ export function MainScreen() {
 
       {isReviewing ? (
         <div className="voice-home__review">
-          <h2 className="voice-home__review-title">Review Your Route Request</h2>
+          <h2 className="voice-home__review-title">{reviewTitle}</h2>
           <label className="sr-only" htmlFor={promptId}>
             Driving Request
           </label>
@@ -440,14 +448,25 @@ export function MainScreen() {
       ) : null}
 
       {mode === "initial" ? (
-        <button
-          type="button"
-          className="voice-home__mic-button"
-          aria-label="Start Voice Request"
-          onClick={startListening}
-        >
-          <Mic aria-hidden="true" />
-        </button>
+        <>
+          <button
+            type="button"
+            className="voice-home__manual-button"
+            aria-label="Enter Route"
+            title="Enter Route"
+            onClick={startManualEntry}
+          >
+            <Pencil aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="voice-home__mic-button"
+            aria-label="Start Voice Request"
+            onClick={startListening}
+          >
+            <Mic aria-hidden="true" />
+          </button>
+        </>
       ) : (
         <div className="voice-home__actions">
           <button

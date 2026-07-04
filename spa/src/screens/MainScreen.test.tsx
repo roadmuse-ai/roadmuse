@@ -40,6 +40,7 @@ describe("MainScreen", () => {
     expect(
       screen.getByRole("button", { name: "Start Voice Request" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enter Route" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "My Trips" }))
       .not.toBeInTheDocument();
     expect(screen.queryByLabelText("Search Previous Trips")).not.toBeInTheDocument();
@@ -48,6 +49,29 @@ describe("MainScreen", () => {
       .not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Drive" })).not.toBeInTheDocument();
+  });
+
+  it("opens manual route entry from the pencil control", async () => {
+    const user = userEvent.setup();
+    renderMainScreen();
+
+    await user.click(screen.getByRole("button", { name: "Enter Route" }));
+
+    expect(screen.getByRole("heading", { name: "Enter Your Route" }))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Review Your Route Request" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Voice waves animation" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start Voice Request" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Enter Route" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByLabelText("Driving Request")).toHaveValue("");
+    expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Rerecord" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Drive" })).toBeInTheDocument();
   });
 
   it("rotates the first-trip prompt while no trips are saved", () => {

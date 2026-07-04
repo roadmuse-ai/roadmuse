@@ -767,12 +767,10 @@ section {
   line-height: 1.05;
 }
 
+.voice-home__manual-button,
 .voice-home__mic-button {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--bottom-nav-height) + 2.25rem);
-  width: 5rem;
-  height: 5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -782,6 +780,7 @@ section {
   color: var(--control-fill-text);
   box-shadow: var(--bottom-nav-shadow);
   cursor: pointer;
+  z-index: 10;
   animation: mic-pop-in 0.24s ease-out;
   transform: translateX(-50%);
   transition:
@@ -790,12 +789,31 @@ section {
     transform 0.12s ease;
 }
 
+.voice-home__manual-button {
+  bottom: calc(var(--bottom-nav-height) + 8.15rem);
+  width: 3.6rem;
+  height: 3.6rem;
+}
+
+.voice-home__mic-button {
+  bottom: calc(var(--bottom-nav-height) + 2.25rem);
+  width: 5rem;
+  height: 5rem;
+}
+
+.voice-home__manual-button svg {
+  width: 1.45rem;
+  height: 1.45rem;
+  stroke-width: 2.35;
+}
+
 .voice-home__mic-button svg {
   width: 2.15rem;
   height: 2.15rem;
   stroke-width: 2.2;
 }
 
+.voice-home__manual-button:active,
 .voice-home__mic-button:active {
   transform: translateX(-50%) scale(1.07);
 }
