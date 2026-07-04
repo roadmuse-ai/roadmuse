@@ -41,7 +41,10 @@ function SettingsHarness() {
       </p>
       <p data-testid="previous-trip-details">
         {settings.previousTrips
-          .map((trip) => `${trip.startAddress}:${trip.endAddress}:${trip.stopCount}`)
+          .map(
+            (trip) =>
+              `${trip.startAddress}:${trip.endAddress}:${trip.durationMinutes}:${trip.distanceMiles}:${trip.stopCount}`,
+          )
           .join("|")}
       </p>
       <button type="button" onClick={() => setPreferredNavigator("apple-maps")}>
@@ -95,6 +98,8 @@ function SettingsHarness() {
           addPreviousTrip("Find lunch", {
             startAddress: "Home",
             endAddress: "Lunch spot",
+            durationMinutes: 55,
+            distanceMiles: 14,
             stopCount: 1,
           })
         }
@@ -199,7 +204,7 @@ describe("SettingsProvider", () => {
     await user.click(screen.getByRole("button", { name: "Add Trip" }));
     expect(screen.getByTestId("previous-trips")).toHaveTextContent("Find lunch");
     expect(screen.getByTestId("previous-trip-details")).toHaveTextContent(
-      "Home:Lunch spot:1",
+      "Home:Lunch spot:55:14:1",
     );
 
     await user.click(screen.getByRole("button", { name: "Remove Trip" }));

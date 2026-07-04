@@ -1,5 +1,18 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Mic, Play, RefreshCw, Square, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  CircleDot,
+  Clock3,
+  Flag,
+  MapPin,
+  Mic,
+  Milestone,
+  Play,
+  RefreshCw,
+  Square,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
 import { buildStubNavigatorDeepLink, stubVoiceRoute } from "../data/navigationLinks";
 import { type PreviousTrip } from "../data/settings";
@@ -9,6 +22,20 @@ const stubPrompt =
 
 type VoiceHomeMode = "initial" | "listening" | "review" | "returning";
 
+const defaultRouteDurationMinutes = 55;
+const defaultRouteDistanceMiles = 14;
+const routeDetailsTimeZone = "America/New_York";
+
+const routeDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: routeDetailsTimeZone,
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
 function getTripStartAddress(trip: PreviousTrip): string {
   return trip.startAddress ?? stubVoiceRoute.startLabel;
 }
@@ -17,23 +44,108 @@ function getTripEndAddress(trip: PreviousTrip): string {
   return trip.endAddress ?? trip.prompt;
 }
 
-function formatStopCount(stopCount = 0): string {
-  return `${stopCount} ${stopCount === 1 ? "stop" : "stops"} in between`;
+function getTripDurationMinutes(trip: PreviousTrip): number {
+  return trip.durationMinutes ?? defaultRouteDurationMinutes;
 }
 
-function formatTripRouteSummary(trip: PreviousTrip): string {
-  return `${getTripStartAddress(trip)} to ${getTripEndAddress(trip)} (${formatStopCount(
-    trip.stopCount,
-  )})`;
+function getTripDistanceMiles(trip: PreviousTrip): number {
+  return trip.distanceMiles ?? defaultRouteDistanceMiles;
+}
+
+function formatOrdinal(value: number): string {
+  const remainder = value % 100;
+
+  if (remainder >= 11 && remainder <= 13) {
+    return `${value}th`;
+  }
+
+  switch (value % 10) {
+    case 1:
+      return `${value}st`;
+    case 2:
+      return `${value}nd`;
+    case 3:
+      return `${value}rd`;
+    default:
+      return `${value}th`;
+  }
+}
+
+function getDatePart(parts: Intl.DateTimeFormatPart[], type: string): string {
+  return parts.find((part) => part.type === type)?.value ?? "";
+}
+
+function formatTripDateTime(timestamp: number): string {
+  const parts = routeDateTimeFormatter.formatToParts(new Date(timestamp));
+  const month = getDatePart(parts, "month");
+  const day = Number(getDatePart(parts, "day"));
+  const year = getDatePart(parts, "year");
+  const hour = getDatePart(parts, "hour");
+  const minute = getDatePart(parts, "minute");
+  const dayPeriod = getDatePart(parts, "dayPeriod");
+
+  return `${month} ${formatOrdinal(day)}, ${year}, ${hour}:${minute} ${dayPeriod}`;
+}
+
+function formatDuration(minutes: number): string {
+  return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+}
+
+function formatDistance(miles: number): string {
+  const roundedMiles = Number.isInteger(miles) ? String(miles) : miles.toFixed(1);
+  return `${roundedMiles} ${miles === 1 ? "mile" : "miles"}`;
+}
+
+function formatStopCount(stopCount = 0): string {
+  return `${stopCount} ${stopCount === 1 ? "Stop" : "Stops"}`;
+}
+
+interface TripDetail {
+  label: string;
+  value: string;
+  Icon: LucideIcon;
+  isAddress?: boolean;
+}
+
+function getTripDetails(trip: PreviousTrip): TripDetail[] {
+  return [
+    {
+      label: "From",
+      value: getTripStartAddress(trip),
+      Icon: MapPin,
+      isAddress: true,
+    },
+    {
+      label: "To",
+      value: getTripEndAddress(trip),
+      Icon: Flag,
+      isAddress: true,
+    },
+    {
+      label: "Datetime",
+      value: formatTripDateTime(trip.createdAt),
+      Icon: CalendarClock,
+    },
+    {
+      label: "Duration",
+      value: formatDuration(getTripDurationMinutes(trip)),
+      Icon: Clock3,
+    },
+    {
+      label: "Distance",
+      value: formatDistance(getTripDistanceMiles(trip)),
+      Icon: Milestone,
+    },
+    {
+      label: "Stops",
+      value: formatStopCount(trip.stopCount),
+      Icon: CircleDot,
+    },
+  ];
 }
 
 function getTripSearchText(trip: PreviousTrip): string {
-  return [
-    trip.prompt,
-    getTripStartAddress(trip),
-    getTripEndAddress(trip),
-    formatStopCount(trip.stopCount),
-  ]
+  return [trip.prompt, ...getTripDetails(trip).map((detail) => detail.value)]
     .join(" ")
     .toLocaleLowerCase();
 }
@@ -109,6 +221,8 @@ export function MainScreen() {
     addPreviousTrip(drivePrompt, {
       startAddress: stubVoiceRoute.startLabel,
       endAddress: drivePrompt,
+      durationMinutes: defaultRouteDurationMinutes,
+      distanceMiles: defaultRouteDistanceMiles,
       stopCount: 0,
     });
 
@@ -169,12 +283,24 @@ export function MainScreen() {
             <ul className="previous-trips__list" aria-label="Previous Trips">
               {filteredPreviousTrips.map((trip) => (
                 <li className="previous-trip" key={trip.id}>
-                  <div className="previous-trip__content">
-                    <p className="previous-trip__route">
-                      {formatTripRouteSummary(trip)}
-                    </p>
-                    <p className="previous-trip__prompt">{trip.prompt}</p>
-                  </div>
+                  <ul
+                    className="previous-trip__details"
+                    aria-label={`Route details for ${trip.prompt}`}
+                  >
+                    {getTripDetails(trip).map(({ label, value, Icon, isAddress }) => (
+                      <li
+                        className={`previous-trip__detail${isAddress ? " previous-trip__detail--address" : ""}`}
+                        key={label}
+                        aria-label={`${label} ${value}`}
+                      >
+                        <Icon
+                          aria-hidden="true"
+                          className="previous-trip__detail-icon"
+                        />
+                        <span>{value}</span>
+                      </li>
+                    ))}
+                  </ul>
                   <div className="previous-trip__actions">
                     <button
                       type="button"
@@ -183,7 +309,7 @@ export function MainScreen() {
                       title="Play"
                       onClick={() => playPreviousTrip(trip)}
                     >
-                      <Play aria-hidden="true" />
+                      <Play aria-hidden="true" size={17} strokeWidth={2.2} />
                     </button>
                     <button
                       type="button"
@@ -192,7 +318,7 @@ export function MainScreen() {
                       title="Remove"
                       onClick={() => removePreviousTrip(trip.id)}
                     >
-                      <Trash2 aria-hidden="true" />
+                      <Trash2 aria-hidden="true" size={17} strokeWidth={2.2} />
                     </button>
                   </div>
                 </li>

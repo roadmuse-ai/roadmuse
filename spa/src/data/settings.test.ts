@@ -41,6 +41,8 @@ describe("settings persistence", () => {
             createdAt: 1710000000000,
             startAddress: "  Rockville, MD  ",
             endAddress: "  Bethesda coffee stop  ",
+            durationMinutes: 55,
+            distanceMiles: 14,
             stopCount: 1,
           },
           {
@@ -69,6 +71,18 @@ describe("settings persistence", () => {
             prompt: "Bad stop count",
             createdAt: 1710000000004,
             stopCount: "two",
+          },
+          {
+            id: "bad-duration",
+            prompt: "Bad duration",
+            createdAt: 1710000000005,
+            durationMinutes: 55.5,
+          },
+          {
+            id: "bad-distance",
+            prompt: "Bad distance",
+            createdAt: 1710000000006,
+            distanceMiles: -14,
           },
         ],
         savedPlaces: [
@@ -193,6 +207,8 @@ describe("settings persistence", () => {
           createdAt: 1710000000000,
           startAddress: "Rockville, MD",
           endAddress: "Bethesda coffee stop",
+          durationMinutes: 55,
+          distanceMiles: 14,
           stopCount: 1,
         },
         {
@@ -305,6 +321,8 @@ describe("settings persistence", () => {
           createdAt: 1710000000000,
           startAddress: "Rockville, MD",
           endAddress: "National Mall",
+          durationMinutes: 55,
+          distanceMiles: 14,
           stopCount: 0,
         },
       ],

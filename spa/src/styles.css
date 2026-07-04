@@ -615,31 +615,41 @@ section {
   border-top: 1px dashed var(--color-border-subtle);
 }
 
-.previous-trip__content {
+.previous-trip__details {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   min-width: 0;
   flex: 1 1 auto;
   display: grid;
-  gap: 0.18rem;
+  gap: 0.34rem;
 }
 
-.previous-trip__route,
-.previous-trip__prompt {
+.previous-trip__detail {
   margin: 0;
   min-width: 0;
+  display: grid;
+  grid-template-columns: 1.15rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  font-weight: 500;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
 
-.previous-trip__route {
+.previous-trip__detail--address {
   color: var(--color-text);
   font-size: 0.96rem;
-  font-weight: 800;
+  font-weight: 750;
 }
 
-.previous-trip__prompt {
+.previous-trip__detail-icon {
+  width: 1rem;
+  height: 1rem;
   color: var(--color-text-secondary);
-  font-size: 0.92rem;
-  font-weight: 400;
+  stroke-width: 2.2;
 }
 
 .previous-trip__actions {
@@ -654,11 +664,6 @@ section {
 .previous-trip__actions .saved-place__icon-btn {
   width: 2rem;
   height: 2rem;
-}
-
-.previous-trip__actions .saved-place__icon-btn svg {
-  width: 1.25rem;
-  height: 1.25rem;
 }
 
 .previous-trips__empty {

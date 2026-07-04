@@ -29,7 +29,7 @@ interface SettingsContextValue {
   removeSavedPlace: (id: string) => void;
   addPreviousTrip: (
     prompt: string,
-    details?: Pick<PreviousTrip, "startAddress" | "endAddress" | "stopCount">,
+    details?: Omit<PreviousTrip, "id" | "prompt" | "createdAt">,
   ) => string | null;
   removePreviousTrip: (id: string) => void;
   addPreference: () => string;
@@ -95,7 +95,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   const addPreviousTrip = useCallback(
     (
       prompt: string,
-      details?: Pick<PreviousTrip, "startAddress" | "endAddress" | "stopCount">,
+      details?: Omit<PreviousTrip, "id" | "prompt" | "createdAt">,
     ) => {
       const normalizedPrompt = prompt.trim();
 
@@ -118,6 +118,22 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
 
       if (endAddress) {
         trip.endAddress = endAddress;
+      }
+
+      if (
+        details?.durationMinutes !== undefined &&
+        Number.isInteger(details.durationMinutes) &&
+        details.durationMinutes >= 0
+      ) {
+        trip.durationMinutes = details.durationMinutes;
+      }
+
+      if (
+        details?.distanceMiles !== undefined &&
+        Number.isFinite(details.distanceMiles) &&
+        details.distanceMiles >= 0
+      ) {
+        trip.distanceMiles = details.distanceMiles;
       }
 
       if (

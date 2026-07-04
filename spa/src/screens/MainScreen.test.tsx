@@ -6,6 +6,8 @@ import { SettingsProvider } from "../context/SettingsContext";
 import { storageKey } from "../data/settings";
 import { MainScreen } from "./MainScreen";
 
+const routeCreatedAt = Date.UTC(2026, 6, 4, 13, 0);
+
 function renderMainScreen() {
   return render(
     <MemoryRouter>
@@ -20,6 +22,7 @@ describe("MainScreen", () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.spyOn(window, "open").mockImplementation(() => null);
+    vi.spyOn(Date, "now").mockReturnValue(routeCreatedAt);
   });
 
   afterEach(() => {
@@ -116,16 +119,16 @@ describe("MainScreen", () => {
       ).toBeInTheDocument();
     });
     expect(screen.queryByLabelText("Driving Request")).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Rockville, MD to Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes. (0 stops in between)",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Rockville, MD")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByText("July 4th, 2026, 9:00 AM")).toBeInTheDocument();
+    expect(screen.getByText("55 minutes")).toBeInTheDocument();
+    expect(screen.getByText("14 miles")).toBeInTheDocument();
+    expect(screen.getByText("0 Stops")).toBeInTheDocument();
     expect(
       JSON.parse(window.localStorage.getItem(storageKey) ?? "{}").previousTrips[0],
     ).toMatchObject({
@@ -134,6 +137,8 @@ describe("MainScreen", () => {
       startAddress: "Rockville, MD",
       endAddress:
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
+      durationMinutes: 55,
+      distanceMiles: 14,
       stopCount: 0,
     });
   });
@@ -147,15 +152,17 @@ describe("MainScreen", () => {
           {
             id: "trip-1",
             prompt: "Find coffee and a restroom on the way",
-            createdAt: 1710000000000,
+            createdAt: routeCreatedAt,
             startAddress: "Rockville, MD",
             endAddress: "Bethesda coffee stop",
+            durationMinutes: 55,
+            distanceMiles: 14,
             stopCount: 1,
           },
           {
             id: "trip-2",
             prompt: "Take the scenic route to Ocean City",
-            createdAt: 1710000000001,
+            createdAt: routeCreatedAt + 1,
           },
         ],
       }),
@@ -164,18 +171,18 @@ describe("MainScreen", () => {
     renderMainScreen();
 
     expect(screen.getByLabelText("Search Previous Trips")).toBeInTheDocument();
-    expect(
-      screen.getByText("Rockville, MD to Bethesda coffee stop (1 stop in between)"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Find coffee and a restroom on the way"))
-      .toBeInTheDocument();
+    expect(screen.getAllByText("Rockville, MD")).toHaveLength(2);
+    expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
+    expect(screen.getAllByText("July 4th, 2026, 9:00 AM")).toHaveLength(2);
+    expect(screen.getAllByText("55 minutes")).toHaveLength(2);
+    expect(screen.getAllByText("14 miles")).toHaveLength(2);
+    expect(screen.getByText("1 Stop")).toBeInTheDocument();
     expect(screen.getByText("Take the scenic route to Ocean City"))
       .toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Search Previous Trips"), "coffee");
 
-    expect(screen.getByText("Find coffee and a restroom on the way"))
-      .toBeInTheDocument();
+    expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
     expect(screen.queryByText("Take the scenic route to Ocean City"))
       .not.toBeInTheDocument();
 

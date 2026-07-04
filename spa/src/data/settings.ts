@@ -66,11 +66,31 @@ export interface PreviousTrip {
   createdAt: number;
   startAddress?: string;
   endAddress?: string;
+  durationMinutes?: number;
+  distanceMiles?: number;
   stopCount?: number;
 }
 
 const isOptionalString = (value: unknown): value is string | undefined => {
   return value === undefined || typeof value === "string";
+};
+
+const isOptionalNonNegativeInteger = (
+  value: unknown,
+): value is number | undefined => {
+  return (
+    value === undefined ||
+    (typeof value === "number" && Number.isInteger(value) && value >= 0)
+  );
+};
+
+const isOptionalNonNegativeNumber = (
+  value: unknown,
+): value is number | undefined => {
+  return (
+    value === undefined ||
+    (typeof value === "number" && Number.isFinite(value) && value >= 0)
+  );
 };
 
 const isSavedPlaceEntryMode = (value: unknown): value is SavedPlaceEntryMode => {
@@ -138,10 +158,9 @@ const isPreviousTrip = (value: unknown): value is PreviousTrip => {
     Number.isFinite(candidate.createdAt) &&
     isOptionalString(candidate.startAddress) &&
     isOptionalString(candidate.endAddress) &&
-    (candidate.stopCount === undefined ||
-      (typeof candidate.stopCount === "number" &&
-        Number.isInteger(candidate.stopCount) &&
-        candidate.stopCount >= 0))
+    isOptionalNonNegativeInteger(candidate.durationMinutes) &&
+    isOptionalNonNegativeNumber(candidate.distanceMiles) &&
+    isOptionalNonNegativeInteger(candidate.stopCount)
   );
 };
 
@@ -205,6 +224,14 @@ const normalizePreviousTrip = (raw: PreviousTrip): PreviousTrip => {
 
   if (endAddress) {
     normalized.endAddress = endAddress;
+  }
+
+  if (raw.durationMinutes !== undefined) {
+    normalized.durationMinutes = raw.durationMinutes;
+  }
+
+  if (raw.distanceMiles !== undefined) {
+    normalized.distanceMiles = raw.distanceMiles;
   }
 
   if (raw.stopCount !== undefined) {
