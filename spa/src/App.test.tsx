@@ -22,7 +22,7 @@ describe("App", () => {
     window.localStorage.clear();
   });
 
-  it("renders saved settings on the main route", () => {
+  it("renders the voice-first main route without settings summary content", () => {
     window.localStorage.setItem(
       storageKey,
       JSON.stringify({
@@ -52,11 +52,15 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "RoadMuse" })).toBeInTheDocument();
     expect(screen.getByText("AI route planning for smarter road trips")).toBeInTheDocument();
-    expect(screen.getByText("Apple Maps")).toBeInTheDocument();
-    expect(screen.getByText("Home, Work")).toBeInTheDocument();
-    expect(screen.getByText("Avoid tolls")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Start Voice Request" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Apple Maps")).not.toBeInTheDocument();
+    expect(screen.queryByText("Home, Work")).not.toBeInTheDocument();
+    expect(screen.queryByText("Avoid tolls")).not.toBeInTheDocument();
     expect(screen.queryByText("Prefer scenic routes")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Start planning a route" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start planning a route" }))
+      .not.toBeInTheDocument();
   });
 
   it("navigates from help to the navigator comparison", async () => {
@@ -80,10 +84,10 @@ describe("App", () => {
   it("redirects unknown routes to the main route", () => {
     renderApp("/missing");
 
-    expect(screen.getByRole("heading", { name: "Current Settings" })).toBeInTheDocument();
-    expect(screen.getByText("Saved Places")).toBeInTheDocument();
-    expect(screen.getByText("Active Preferences")).toBeInTheDocument();
-    expect(screen.getAllByText("None yet")).toHaveLength(2);
+    expect(
+      screen.getByRole("button", { name: "Start Voice Request" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Current Settings")).not.toBeInTheDocument();
   });
 
   it("applies the saved theme mode and accent theme to the document", async () => {

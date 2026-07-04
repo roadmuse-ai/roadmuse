@@ -30,6 +30,7 @@ export const navigatorLabels: Record<NavigatorId, string> = {
 export interface RoadMuseSettings {
   preferredNavigator: NavigatorId;
   savedPlaces: SavedPlace[];
+  previousTrips: PreviousTrip[];
   preferences: TextPreference[];
   themeMode: ThemeMode;
   accentTheme: AccentTheme;
@@ -38,6 +39,7 @@ export interface RoadMuseSettings {
 export const defaultSettings: RoadMuseSettings = {
   preferredNavigator: "google-maps",
   savedPlaces: [],
+  previousTrips: [],
   preferences: [],
   themeMode: "auto",
   accentTheme: "ground",
@@ -56,6 +58,12 @@ export interface SavedPlace {
   zipCode?: string;
   latitude?: number;
   longitude?: number;
+}
+
+export interface PreviousTrip {
+  id: string;
+  prompt: string;
+  createdAt: number;
 }
 
 const isOptionalString = (value: unknown): value is string | undefined => {
@@ -112,6 +120,22 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
   );
 };
 
+const isPreviousTrip = (value: unknown): value is PreviousTrip => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.prompt === "string" &&
+    candidate.prompt.trim().length > 0 &&
+    typeof candidate.createdAt === "number" &&
+    Number.isFinite(candidate.createdAt)
+  );
+};
+
 const normalizeOptionalText = (value?: string): string | undefined => {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
@@ -156,6 +180,12 @@ const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => {
   return normalized;
 };
 
+const normalizePreviousTrip = (raw: PreviousTrip): PreviousTrip => ({
+  id: raw.id,
+  prompt: raw.prompt.trim(),
+  createdAt: raw.createdAt,
+});
+
 const isNavigatorId = (value: unknown): value is NavigatorId => {
   return typeof value === "string" && (navigatorIds as readonly string[]).includes(value);
 };
@@ -173,6 +203,7 @@ export function loadSettings(): RoadMuseSettings {
 
     const parsed = JSON.parse(raw) as Partial<RoadMuseSettings> & {
       savedPlaces?: unknown;
+      previousTrips?: unknown;
       preferences?: unknown;
     };
 
@@ -188,6 +219,10 @@ export function loadSettings(): RoadMuseSettings {
       ? parsed.preferences.filter(isTextPreference).map(normalizeTextPreference)
       : defaultSettings.preferences;
 
+    const previousTrips = Array.isArray(parsed.previousTrips)
+      ? parsed.previousTrips.filter(isPreviousTrip).map(normalizePreviousTrip)
+      : defaultSettings.previousTrips;
+
     const themeMode = isThemeMode(parsed.themeMode)
       ? parsed.themeMode
       : defaultSettings.themeMode;
@@ -199,6 +234,7 @@ export function loadSettings(): RoadMuseSettings {
     return {
       preferredNavigator,
       savedPlaces,
+      previousTrips,
       preferences,
       themeMode,
       accentTheme,

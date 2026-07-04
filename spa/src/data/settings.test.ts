@@ -34,6 +34,29 @@ describe("settings persistence", () => {
       JSON.stringify({
         preferredNavigator: "waze",
         accentTheme: "navy",
+        previousTrips: [
+          {
+            id: "trip-1",
+            prompt: "  Find coffee on the way  ",
+            createdAt: 1710000000000,
+          },
+          null,
+          {
+            id: "bad-prompt",
+            prompt: "",
+            createdAt: 1710000000001,
+          },
+          {
+            id: 123,
+            prompt: "Bad id",
+            createdAt: 1710000000002,
+          },
+          {
+            id: "bad-created-at",
+            prompt: "Bad created at",
+            createdAt: "now",
+          },
+        ],
         savedPlaces: [
           {
             id: "home",
@@ -149,6 +172,13 @@ describe("settings persistence", () => {
           longitude: -77.01,
         },
       ],
+      previousTrips: [
+        {
+          id: "trip-1",
+          prompt: "Find coffee on the way",
+          createdAt: 1710000000000,
+        },
+      ],
       preferences: [],
       themeMode: "auto",
       accentTheme: "navy",
@@ -244,6 +274,13 @@ describe("settings persistence", () => {
           zipCode: "20001",
           latitude: 38.8977,
           longitude: -77.0365,
+        },
+      ],
+      previousTrips: [
+        {
+          id: "trip-1",
+          prompt: "Find a quiet lunch stop",
+          createdAt: 1710000000000,
         },
       ],
       preferences: [],

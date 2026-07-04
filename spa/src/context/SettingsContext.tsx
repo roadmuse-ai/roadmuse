@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   type NavigatorId,
+  type PreviousTrip,
   type SavedPlace,
   type RoadMuseSettings,
   defaultSettings,
@@ -26,6 +27,8 @@ interface SettingsContextValue {
   addSavedPlace: (place: Omit<SavedPlace, "id">) => void;
   updateSavedPlace: (id: string, updates: Partial<SavedPlace>) => void;
   removeSavedPlace: (id: string) => void;
+  addPreviousTrip: (prompt: string) => string | null;
+  removePreviousTrip: (id: string) => void;
   addPreference: () => string;
   updatePreference: (id: string, updates: Partial<TextPreference>) => void;
   removePreference: (id: string) => void;
@@ -86,6 +89,37 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, []);
 
+  const addPreviousTrip = useCallback((prompt: string) => {
+    const normalizedPrompt = prompt.trim();
+
+    if (!normalizedPrompt) {
+      return null;
+    }
+
+    const trip: PreviousTrip = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      prompt: normalizedPrompt,
+      createdAt: Date.now(),
+    };
+
+    setSettings((current) => ({
+      ...current,
+      previousTrips: [
+        trip,
+        ...current.previousTrips.filter((entry) => entry.prompt !== normalizedPrompt),
+      ],
+    }));
+
+    return trip.id;
+  }, []);
+
+  const removePreviousTrip = useCallback((id: string) => {
+    setSettings((current) => ({
+      ...current,
+      previousTrips: current.previousTrips.filter((entry) => entry.id !== id),
+    }));
+  }, []);
+
   const addPreference = useCallback(() => {
     const preference = createEmptyPreference();
 
@@ -126,6 +160,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       addSavedPlace,
       updateSavedPlace,
       removeSavedPlace,
+      addPreviousTrip,
+      removePreviousTrip,
       addPreference,
       updatePreference,
       removePreference,
@@ -139,6 +175,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       addSavedPlace,
       updateSavedPlace,
       removeSavedPlace,
+      addPreviousTrip,
+      removePreviousTrip,
       addPreference,
       updatePreference,
       removePreference,
