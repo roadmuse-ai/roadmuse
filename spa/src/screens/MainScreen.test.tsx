@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -31,6 +31,8 @@ describe("MainScreen", () => {
   });
 
   it("opens with the first-trip prompt and primary voice control", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
     renderMainScreen();
 
     expect(screen.getByRole("heading", { name: "Dictate your first trip!" }))
@@ -46,6 +48,31 @@ describe("MainScreen", () => {
       .not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Drive" })).not.toBeInTheDocument();
+  });
+
+  it("rotates the first-trip prompt while no trips are saved", () => {
+    let intervalHandler: TimerHandler | undefined;
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    vi.spyOn(window, "setInterval").mockImplementation((handler) => {
+      intervalHandler = handler;
+      return 1;
+    });
+    vi.spyOn(window, "clearInterval").mockImplementation(() => undefined);
+
+    renderMainScreen();
+
+    expect(screen.getByRole("heading", { name: "Dictate your first trip!" }))
+      .toBeInTheDocument();
+    expect(window.setInterval).toHaveBeenCalledWith(expect.any(Function), 4000);
+
+    act(() => {
+      if (typeof intervalHandler === "function") {
+        intervalHandler();
+      }
+    });
+
+    expect(screen.getByRole("heading", { name: "Start with your voice!" }))
+      .toBeInTheDocument();
   });
 
   it("moves from listening to editable review and back to listening", async () => {

@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   CircleDot,
   Clock3,
@@ -28,6 +28,24 @@ type VoiceHomeMode = "initial" | "listening" | "review";
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
+const starterTripPrompts = [
+  "Dictate your first trip!",
+  "Start with your voice!",
+  "Say your first trip!",
+  "Tell us where to go!",
+  "Where to head?",
+] as const;
+const starterTripPromptRotationMs = 4000;
+
+function getRandomStarterTripPrompt(currentPrompt?: string): string {
+  const promptOptions =
+    currentPrompt && starterTripPrompts.length > 1
+      ? starterTripPrompts.filter((starterPrompt) => starterPrompt !== currentPrompt)
+      : starterTripPrompts;
+  const promptIndex = Math.floor(Math.random() * promptOptions.length);
+
+  return promptOptions[promptIndex] ?? starterTripPrompts[0];
+}
 
 function getTripStartAddress(trip: PreviousTrip): string {
   return trip.startAddress ?? stubVoiceRoute.startLabel;
@@ -188,6 +206,9 @@ export function MainScreen() {
   const [mode, setMode] = useState<VoiceHomeMode>("initial");
   const [prompt, setPrompt] = useState(stubPrompt);
   const [tripSearch, setTripSearch] = useState("");
+  const [starterTripPrompt, setStarterTripPrompt] = useState(
+    getRandomStarterTripPrompt,
+  );
 
   const isListening = mode === "listening";
   const isReviewing = mode === "review";
@@ -200,6 +221,20 @@ export function MainScreen() {
       )
     : settings.previousTrips;
   const previousTripGroups = groupTripsByTime(filteredPreviousTrips, Date.now());
+
+  useEffect(() => {
+    if (mode !== "initial" || settings.previousTrips.length > 0) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setStarterTripPrompt((currentPrompt) =>
+        getRandomStarterTripPrompt(currentPrompt),
+      );
+    }, starterTripPromptRotationMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [mode, settings.previousTrips.length]);
 
   const startListening = () => {
     setMode("listening");
@@ -370,7 +405,7 @@ export function MainScreen() {
 
       {mode === "initial" && settings.previousTrips.length === 0 ? (
         <div className="previous-trips__starter">
-          <h2>Dictate your first trip!</h2>
+          <h2 aria-live="polite">{starterTripPrompt}</h2>
         </div>
       ) : null}
 
