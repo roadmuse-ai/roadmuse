@@ -27,7 +27,10 @@ interface SettingsContextValue {
   addSavedPlace: (place: Omit<SavedPlace, "id">) => void;
   updateSavedPlace: (id: string, updates: Partial<SavedPlace>) => void;
   removeSavedPlace: (id: string) => void;
-  addPreviousTrip: (prompt: string) => string | null;
+  addPreviousTrip: (
+    prompt: string,
+    details?: Pick<PreviousTrip, "startAddress" | "endAddress" | "stopCount">,
+  ) => string | null;
   removePreviousTrip: (id: string) => void;
   addPreference: () => string;
   updatePreference: (id: string, updates: Partial<TextPreference>) => void;
@@ -89,29 +92,56 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, []);
 
-  const addPreviousTrip = useCallback((prompt: string) => {
-    const normalizedPrompt = prompt.trim();
+  const addPreviousTrip = useCallback(
+    (
+      prompt: string,
+      details?: Pick<PreviousTrip, "startAddress" | "endAddress" | "stopCount">,
+    ) => {
+      const normalizedPrompt = prompt.trim();
 
-    if (!normalizedPrompt) {
-      return null;
-    }
+      if (!normalizedPrompt) {
+        return null;
+      }
 
-    const trip: PreviousTrip = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      prompt: normalizedPrompt,
-      createdAt: Date.now(),
-    };
+      const startAddress = details?.startAddress?.trim();
+      const endAddress = details?.endAddress?.trim();
+      const createdAt = Date.now();
+      const trip: PreviousTrip = {
+        id: `${createdAt}-${Math.random().toString(36).slice(2, 8)}`,
+        prompt: normalizedPrompt,
+        createdAt,
+      };
 
-    setSettings((current) => ({
-      ...current,
-      previousTrips: [
-        trip,
-        ...current.previousTrips.filter((entry) => entry.prompt !== normalizedPrompt),
-      ],
-    }));
+      if (startAddress) {
+        trip.startAddress = startAddress;
+      }
 
-    return trip.id;
-  }, []);
+      if (endAddress) {
+        trip.endAddress = endAddress;
+      }
+
+      if (
+        details?.stopCount !== undefined &&
+        Number.isInteger(details.stopCount) &&
+        details.stopCount >= 0
+      ) {
+        trip.stopCount = details.stopCount;
+      }
+
+      setSettings((current) => ({
+        ...current,
+        previousTrips: [
+          trip,
+          ...current.previousTrips.filter(
+            (entry) => entry.prompt !== normalizedPrompt,
+          ),
+        ],
+      }));
+
+      return trip.id;
+    },
+    [],
+  );
 
   const removePreviousTrip = useCallback((id: string) => {
     setSettings((current) => ({

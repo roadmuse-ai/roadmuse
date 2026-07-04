@@ -2,11 +2,41 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Mic, Play, RefreshCw, Square, Trash2 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
 import { buildStubNavigatorDeepLink, stubVoiceRoute } from "../data/navigationLinks";
+import { type PreviousTrip } from "../data/settings";
 
 const stubPrompt =
   "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.";
 
 type VoiceHomeMode = "initial" | "listening" | "review" | "returning";
+
+function getTripStartAddress(trip: PreviousTrip): string {
+  return trip.startAddress ?? stubVoiceRoute.startLabel;
+}
+
+function getTripEndAddress(trip: PreviousTrip): string {
+  return trip.endAddress ?? trip.prompt;
+}
+
+function formatStopCount(stopCount = 0): string {
+  return `${stopCount} ${stopCount === 1 ? "stop" : "stops"} in between`;
+}
+
+function formatTripRouteSummary(trip: PreviousTrip): string {
+  return `${getTripStartAddress(trip)} to ${getTripEndAddress(trip)} (${formatStopCount(
+    trip.stopCount,
+  )})`;
+}
+
+function getTripSearchText(trip: PreviousTrip): string {
+  return [
+    trip.prompt,
+    getTripStartAddress(trip),
+    getTripEndAddress(trip),
+    formatStopCount(trip.stopCount),
+  ]
+    .join(" ")
+    .toLocaleLowerCase();
+}
 
 export function MainScreen() {
   const { settings, addPreviousTrip, removePreviousTrip } = useSettings();
@@ -26,7 +56,7 @@ export function MainScreen() {
   const normalizedTripSearch = tripSearch.trim().toLocaleLowerCase();
   const filteredPreviousTrips = normalizedTripSearch
     ? settings.previousTrips.filter((trip) =>
-        trip.prompt.toLocaleLowerCase().includes(normalizedTripSearch),
+        getTripSearchText(trip).includes(normalizedTripSearch),
       )
     : settings.previousTrips;
 
@@ -70,18 +100,17 @@ export function MainScreen() {
   };
 
   const drive = () => {
-    if (isListening) {
-      reviewPrompt();
-      return;
-    }
-
     const drivePrompt = prompt.trim() || stubPrompt;
     const deepLink = buildStubNavigatorDeepLink(settings.preferredNavigator, {
       ...stubVoiceRoute,
       destinationLabel: drivePrompt,
     });
 
-    addPreviousTrip(drivePrompt);
+    addPreviousTrip(drivePrompt, {
+      startAddress: stubVoiceRoute.startLabel,
+      endAddress: drivePrompt,
+      stopCount: 0,
+    });
 
     setMode("returning");
 
@@ -104,11 +133,11 @@ export function MainScreen() {
     }, 360);
   };
 
-  const playPreviousTrip = (tripPrompt: string) => {
+  const playPreviousTrip = (trip: PreviousTrip) => {
     window.open(
       buildStubNavigatorDeepLink(settings.preferredNavigator, {
         ...stubVoiceRoute,
-        destinationLabel: tripPrompt,
+        destinationLabel: getTripEndAddress(trip),
       }),
       "_blank",
       "noopener,noreferrer",
@@ -140,14 +169,19 @@ export function MainScreen() {
             <ul className="previous-trips__list" aria-label="Previous Trips">
               {filteredPreviousTrips.map((trip) => (
                 <li className="previous-trip" key={trip.id}>
-                  <p className="previous-trip__prompt">{trip.prompt}</p>
+                  <div className="previous-trip__content">
+                    <p className="previous-trip__route">
+                      {formatTripRouteSummary(trip)}
+                    </p>
+                    <p className="previous-trip__prompt">{trip.prompt}</p>
+                  </div>
                   <div className="previous-trip__actions">
                     <button
                       type="button"
                       className="saved-place__icon-btn"
                       aria-label={`Play ${trip.prompt}`}
                       title="Play"
-                      onClick={() => playPreviousTrip(trip.prompt)}
+                      onClick={() => playPreviousTrip(trip)}
                     >
                       <Play aria-hidden="true" />
                     </button>

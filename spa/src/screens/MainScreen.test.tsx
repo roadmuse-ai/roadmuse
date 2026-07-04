@@ -92,7 +92,7 @@ describe("MainScreen", () => {
     ).toBeInTheDocument();
   });
 
-  it("opens the preferred navigator deep link and resets after Drive", async () => {
+  it("opens the preferred navigator deep link and saves after Next from listening", async () => {
     const user = userEvent.setup();
     window.localStorage.setItem(
       storageKey,
@@ -102,7 +102,6 @@ describe("MainScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
     await user.click(screen.getByRole("button", { name: "Next" }));
-    await user.click(screen.getByRole("button", { name: "Drive" }));
 
     await waitFor(() => {
       expect(window.open).toHaveBeenCalledWith(
@@ -119,6 +118,11 @@ describe("MainScreen", () => {
     expect(screen.queryByLabelText("Driving Request")).not.toBeInTheDocument();
     expect(
       screen.getByText(
+        "Rockville, MD to Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes. (0 stops in between)",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
       ),
     ).toBeInTheDocument();
@@ -127,6 +131,10 @@ describe("MainScreen", () => {
     ).toMatchObject({
       prompt:
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
+      startAddress: "Rockville, MD",
+      endAddress:
+        "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
+      stopCount: 0,
     });
   });
 
@@ -140,6 +148,9 @@ describe("MainScreen", () => {
             id: "trip-1",
             prompt: "Find coffee and a restroom on the way",
             createdAt: 1710000000000,
+            startAddress: "Rockville, MD",
+            endAddress: "Bethesda coffee stop",
+            stopCount: 1,
           },
           {
             id: "trip-2",
@@ -153,6 +164,9 @@ describe("MainScreen", () => {
     renderMainScreen();
 
     expect(screen.getByLabelText("Search Previous Trips")).toBeInTheDocument();
+    expect(
+      screen.getByText("Rockville, MD to Bethesda coffee stop (1 stop in between)"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Find coffee and a restroom on the way"))
       .toBeInTheDocument();
     expect(screen.getByText("Take the scenic route to Ocean City"))
@@ -172,7 +186,7 @@ describe("MainScreen", () => {
     );
 
     expect(window.open).toHaveBeenCalledWith(
-      "https://www.google.com/maps/dir/?api=1&origin=39.084%2C-77.1528&destination=Find%20coffee%20and%20a%20restroom%20on%20the%20way&travelmode=driving",
+      "https://www.google.com/maps/dir/?api=1&origin=39.084%2C-77.1528&destination=Bethesda%20coffee%20stop&travelmode=driving",
       "_blank",
       "noopener,noreferrer",
     );

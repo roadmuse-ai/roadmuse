@@ -39,6 +39,11 @@ function SettingsHarness() {
       <p data-testid="previous-trips">
         {settings.previousTrips.map((trip) => trip.prompt).join("|")}
       </p>
+      <p data-testid="previous-trip-details">
+        {settings.previousTrips
+          .map((trip) => `${trip.startAddress}:${trip.endAddress}:${trip.stopCount}`)
+          .join("|")}
+      </p>
       <button type="button" onClick={() => setPreferredNavigator("apple-maps")}>
         Set Apple
       </button>
@@ -84,7 +89,16 @@ function SettingsHarness() {
       <button type="button" onClick={() => removeSavedPlace(firstPlaceId)}>
         Remove First
       </button>
-      <button type="button" onClick={() => addPreviousTrip("Find lunch")}>
+      <button
+        type="button"
+        onClick={() =>
+          addPreviousTrip("Find lunch", {
+            startAddress: "Home",
+            endAddress: "Lunch spot",
+            stopCount: 1,
+          })
+        }
+      >
         Add Trip
       </button>
       <button type="button" onClick={() => removePreviousTrip(firstTripId)}>
@@ -184,6 +198,9 @@ describe("SettingsProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "Add Trip" }));
     expect(screen.getByTestId("previous-trips")).toHaveTextContent("Find lunch");
+    expect(screen.getByTestId("previous-trip-details")).toHaveTextContent(
+      "Home:Lunch spot:1",
+    );
 
     await user.click(screen.getByRole("button", { name: "Remove Trip" }));
     expect(screen.getByTestId("previous-trips")).toBeEmptyDOMElement();

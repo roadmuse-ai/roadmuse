@@ -64,6 +64,9 @@ export interface PreviousTrip {
   id: string;
   prompt: string;
   createdAt: number;
+  startAddress?: string;
+  endAddress?: string;
+  stopCount?: number;
 }
 
 const isOptionalString = (value: unknown): value is string | undefined => {
@@ -132,7 +135,13 @@ const isPreviousTrip = (value: unknown): value is PreviousTrip => {
     typeof candidate.prompt === "string" &&
     candidate.prompt.trim().length > 0 &&
     typeof candidate.createdAt === "number" &&
-    Number.isFinite(candidate.createdAt)
+    Number.isFinite(candidate.createdAt) &&
+    isOptionalString(candidate.startAddress) &&
+    isOptionalString(candidate.endAddress) &&
+    (candidate.stopCount === undefined ||
+      (typeof candidate.stopCount === "number" &&
+        Number.isInteger(candidate.stopCount) &&
+        candidate.stopCount >= 0))
   );
 };
 
@@ -180,11 +189,30 @@ const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => {
   return normalized;
 };
 
-const normalizePreviousTrip = (raw: PreviousTrip): PreviousTrip => ({
-  id: raw.id,
-  prompt: raw.prompt.trim(),
-  createdAt: raw.createdAt,
-});
+const normalizePreviousTrip = (raw: PreviousTrip): PreviousTrip => {
+  const normalized: PreviousTrip = {
+    id: raw.id,
+    prompt: raw.prompt.trim(),
+    createdAt: raw.createdAt,
+  };
+
+  const startAddress = normalizeOptionalText(raw.startAddress);
+  const endAddress = normalizeOptionalText(raw.endAddress);
+
+  if (startAddress) {
+    normalized.startAddress = startAddress;
+  }
+
+  if (endAddress) {
+    normalized.endAddress = endAddress;
+  }
+
+  if (raw.stopCount !== undefined) {
+    normalized.stopCount = raw.stopCount;
+  }
+
+  return normalized;
+};
 
 const isNavigatorId = (value: unknown): value is NavigatorId => {
   return typeof value === "string" && (navigatorIds as readonly string[]).includes(value);
