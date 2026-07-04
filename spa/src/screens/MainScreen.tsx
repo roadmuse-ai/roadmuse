@@ -370,7 +370,7 @@ export function MainScreen() {
 
       {mode === "initial" && settings.previousTrips.length === 0 ? (
         <div className="previous-trips__starter">
-          <h2>Start your first trip!</h2>
+          <h2>Dictate your first trip!</h2>
         </div>
       ) : null}
 

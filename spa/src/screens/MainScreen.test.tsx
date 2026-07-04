@@ -33,7 +33,7 @@ describe("MainScreen", () => {
   it("opens with the first-trip prompt and primary voice control", () => {
     renderMainScreen();
 
-    expect(screen.getByRole("heading", { name: "Start your first trip!" }))
+    expect(screen.getByRole("heading", { name: "Dictate your first trip!" }))
       .toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Start Voice Request" }),
