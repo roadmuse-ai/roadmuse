@@ -928,6 +928,19 @@ section {
   stroke-width: 2.4;
 }
 
+.voice-home__action--left,
+.voice-home__action--right {
+  width: 3.6rem;
+  min-width: 3.6rem;
+  padding: 0.45rem;
+}
+
+.voice-home__action--left svg,
+.voice-home__action--right svg {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
 .voice-home__back-icon {
   transform: scaleX(-1);
 }
