@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   CircleDot,
   Clock3,
@@ -10,6 +10,7 @@ import {
   Play,
   Square,
   Trash2,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
@@ -288,6 +289,7 @@ export function MainScreen() {
   const { settings, addPreviousTrip, removePreviousTrip } = useSettings();
   const promptId = useId();
   const searchId = useId();
+  const promptRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<VoiceHomeMode>("initial");
   const [prompt, setPrompt] = useState(stubPrompt);
   const [tripSearch, setTripSearch] = useState("");
@@ -297,8 +299,9 @@ export function MainScreen() {
 
   const isListening = mode === "listening";
   const isReviewing = mode === "review" || mode === "manual";
+  const showsPromptEntry = isListening || isReviewing;
   const reviewTitle =
-    mode === "manual" ? "Enter Your Route" : "Review Your Route";
+    mode === "manual" || isListening ? "Enter Your Route" : "Review Your Route";
   const primaryActionLabel = isListening ? "Next" : "Drive";
   const middleActionLabel = isListening ? "Stop" : "Rerecord";
   const normalizedTripSearch = tripSearch.trim().toLocaleLowerCase();
@@ -323,7 +326,14 @@ export function MainScreen() {
     return () => window.clearInterval(intervalId);
   }, [mode, settings.previousTrips.length]);
 
+  useEffect(() => {
+    if (mode === "manual") {
+      promptRef.current?.focus();
+    }
+  }, [mode]);
+
   const startListening = () => {
+    setPrompt("");
     setMode("listening");
   };
 
@@ -338,7 +348,7 @@ export function MainScreen() {
   };
 
   const rerecord = () => {
-    setPrompt(stubPrompt);
+    setPrompt("");
     setMode("listening");
   };
 
@@ -394,14 +404,27 @@ export function MainScreen() {
             <label className="sr-only" htmlFor={searchId}>
               Search Previous Trips
             </label>
-            <input
-              id={searchId}
-              type="search"
-              value={tripSearch}
-              placeholder="Search previous trips"
-              aria-label="Search Previous Trips"
-              onChange={(event) => setTripSearch(event.target.value)}
-            />
+            <div className="previous-trips__search-control">
+              <input
+                id={searchId}
+                type="search"
+                value={tripSearch}
+                placeholder="Search previous trips"
+                aria-label="Search Previous Trips"
+                onChange={(event) => setTripSearch(event.target.value)}
+              />
+              {tripSearch ? (
+                <button
+                  type="button"
+                  className="previous-trips__search-clear"
+                  aria-label="Clear Previous Trips Search"
+                  title="Clear"
+                  onClick={() => setTripSearch("")}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
           </div>
 
           {filteredPreviousTrips.length > 0 ? (
@@ -502,42 +525,59 @@ export function MainScreen() {
 
       {mode === "initial" && settings.previousTrips.length === 0 ? (
         <div className="previous-trips__starter">
-          <h2 aria-live="polite">{starterTripPrompt}</h2>
+          <h2
+            aria-live="polite"
+            className="previous-trips__starter-title"
+            key={starterTripPrompt}
+          >
+            {starterTripPrompt}
+          </h2>
         </div>
       ) : null}
 
-      {isListening ? (
-        <div
-          className="voice-home__waves"
-          aria-label="Voice waves animation"
-          role="img"
-        >
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-      ) : null}
-
-      {isReviewing ? (
+      {showsPromptEntry ? (
         <div className="voice-home__review">
           <h2 className="voice-home__review-title">{reviewTitle}</h2>
           <label className="sr-only" htmlFor={promptId}>
             Driving Request
           </label>
-          <textarea
-            id={promptId}
-            aria-label="Driving Request"
-            className="voice-home__prompt"
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-          />
+          <div className="voice-home__prompt-shell">
+            <textarea
+              id={promptId}
+              ref={promptRef}
+              aria-label="Driving Request"
+              className="voice-home__prompt"
+              disabled={isListening}
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+            />
+            {isListening ? (
+              <div
+                className="voice-home__waves"
+                aria-label="Voice waves animation"
+                role="img"
+              >
+                <span />
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
       {mode === "initial" ? (
         <>
+          <button
+            type="button"
+            className="voice-home__mic-button"
+            aria-label="Start Voice Request"
+            onClick={startListening}
+          >
+            <Mic aria-hidden="true" />
+          </button>
           <button
             type="button"
             className="voice-home__manual-button"
@@ -546,14 +586,6 @@ export function MainScreen() {
             onClick={startManualEntry}
           >
             <Pencil aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="voice-home__mic-button"
-            aria-label="Start Voice Request"
-            onClick={startListening}
-          >
-            <Mic aria-hidden="true" />
           </button>
         </>
       ) : (

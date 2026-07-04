@@ -32,7 +32,8 @@ describe("MainScreen", () => {
     window.localStorage.clear();
   });
 
-  it("opens with the first-trip prompt and primary voice control", () => {
+  it("opens with the first-trip prompt and primary voice control", async () => {
+    const user = userEvent.setup();
     vi.spyOn(Math, "random").mockReturnValue(0);
 
     renderMainScreen();
@@ -51,6 +52,13 @@ describe("MainScreen", () => {
       .not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Drive" })).not.toBeInTheDocument();
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Start Voice Request" }))
+      .toHaveFocus();
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Enter Route" })).toHaveFocus();
   });
 
   it("opens manual route entry from the pencil control", async () => {
@@ -70,6 +78,7 @@ describe("MainScreen", () => {
     expect(screen.queryByRole("button", { name: "Enter Route" }))
       .not.toBeInTheDocument();
     expect(screen.getByLabelText("Driving Request")).toHaveValue("");
+    expect(screen.getByLabelText("Driving Request")).toHaveFocus();
     expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rerecord" })).toBeInTheDocument();
@@ -91,6 +100,8 @@ describe("MainScreen", () => {
 
     expect(screen.getByRole("heading", { name: "Dictate your first trip!" }))
       .toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Dictate your first trip!" }))
+      .toHaveClass("previous-trips__starter-title");
     expect(window.setInterval).toHaveBeenCalledWith(expect.any(Function), 4000);
 
     act(() => {
@@ -113,6 +124,12 @@ describe("MainScreen", () => {
       .not.toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Voice waves animation" }))
       .toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Enter Your Route" }))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Review Your Route" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByLabelText("Driving Request")).toHaveValue("");
+    expect(screen.getByLabelText("Driving Request")).toBeDisabled();
     expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
@@ -132,6 +149,7 @@ describe("MainScreen", () => {
       .not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Review Your Route" }))
       .toBeInTheDocument();
+    expect(prompt).not.toBeDisabled();
     expect(screen.getByRole("button", { name: "Back to Previous Trips" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rerecord" })).toBeInTheDocument();
@@ -146,7 +164,10 @@ describe("MainScreen", () => {
     expect(screen.getByRole("img", { name: "Voice waves animation" }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
-    expect(screen.queryByLabelText("Driving Request")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Enter Your Route" }))
+      .toBeInTheDocument();
+    expect(screen.getByLabelText("Driving Request")).toHaveValue("");
+    expect(screen.getByLabelText("Driving Request")).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "Back to Previous Trips" }));
 
@@ -348,13 +369,25 @@ describe("MainScreen", () => {
 
     await user.type(screen.getByLabelText("Search Previous Trips"), "coffee");
 
+    expect(
+      screen.getByRole("button", { name: "Clear Previous Trips Search" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
     expect(screen.getByText("Find coffee and a restroom on the way"))
       .toBeInTheDocument();
     expect(screen.queryByText("Take the scenic route to Ocean City"))
       .not.toBeInTheDocument();
 
-    await user.clear(screen.getByLabelText("Search Previous Trips"));
+    await user.click(
+      screen.getByRole("button", { name: "Clear Previous Trips Search" }),
+    );
+
+    expect(screen.getByLabelText("Search Previous Trips")).toHaveValue("");
+    expect(screen.getByText("Take the scenic route to Ocean City"))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Clear Previous Trips Search" }))
+      .not.toBeInTheDocument();
+
     await user.type(
       screen.getByLabelText("Search Previous Trips"),
       "NIH Clinical Center",
