@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -361,5 +361,87 @@ describe("ConfigScreen", () => {
     });
 
     vi.useRealTimers();
+  });
+
+  it("persists distance units after preferred navigator", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    expect(screen.getByRole("radiogroup", { name: "Distance units" })).toHaveClass(
+      "theme-toggle--two",
+    );
+    await user.click(screen.getByRole("radio", { name: "Kilometers" }));
+
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        routeSettings: { units: "kilometers" },
+      });
+    });
+  });
+
+  it("renders route settings after route preferences", () => {
+    renderConfigScreen();
+
+    const headings = screen
+      .getAllByRole("heading", { level: 3 })
+      .map((heading) => heading.textContent);
+    const preferencesIndex = headings.indexOf("Route Preferences");
+    const settingsIndex = headings.indexOf("Route Settings");
+
+    expect(preferencesIndex).toBeGreaterThanOrEqual(0);
+    expect(settingsIndex).toBeGreaterThan(preferencesIndex);
+  });
+
+  it("renders auto route settings only and persists driving changes", async () => {
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    expect(screen.getByRole("heading", { name: "Route Settings" })).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Travel mode" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Bicycle" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Walking" })).not.toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Toll roads" })).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Route Settings are direct Valhalla routing controls/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Alternate routes")).not.toBeInTheDocument();
+    expect(screen.queryByText("Bicycle settings")).not.toBeInTheDocument();
+    expect(screen.queryByText("Walking settings")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Walking speed")).not.toBeInTheDocument();
+
+    const tollRoads = screen.getByRole("radiogroup", { name: "Toll roads" });
+    await user.click(within(tollRoads).getByRole("radio", { name: "Avoid" }));
+
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        routeSettings: {
+          travelMode: "auto",
+          auto: { tollPreference: 0 },
+        },
+      });
+    });
+  });
+
+  it("normalizes old non-auto route modes to auto settings", async () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        routeSettings: {
+          travelMode: "pedestrian",
+          pedestrian: { walkingSpeedKph: 4.5, stepPenaltySeconds: 60 },
+        },
+      }),
+    );
+
+    renderConfigScreen();
+
+    expect(screen.queryByRole("radiogroup", { name: "Travel mode" })).not.toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Toll roads" })).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toMatchObject({
+        routeSettings: { travelMode: "auto" },
+      });
+    });
   });
 });

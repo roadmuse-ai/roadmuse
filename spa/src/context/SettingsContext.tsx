@@ -18,6 +18,7 @@ import {
   saveSettings,
 } from "../data/settings";
 import { type TextPreference, createEmptyPreference } from "../data/preferences";
+import { type RouteSettings, normalizeRouteSettings } from "../data/routeSettings";
 import { type AccentTheme, type ThemeMode } from "../data/theme";
 
 interface SettingsContextValue {
@@ -36,6 +37,7 @@ interface SettingsContextValue {
   addPreference: () => string;
   updatePreference: (id: string, updates: Partial<TextPreference>) => void;
   removePreference: (id: string) => void;
+  updateRouteSettings: (updates: Partial<RouteSettings>) => void;
   resetSettings: () => void;
 }
 
@@ -216,6 +218,19 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }));
   }, []);
 
+  const updateRouteSettings = useCallback((updates: Partial<RouteSettings>) => {
+    setSettings((current) => ({
+      ...current,
+      routeSettings: normalizeRouteSettings({
+        ...current.routeSettings,
+        ...updates,
+        auto: { ...current.routeSettings.auto, ...(updates.auto ?? {}) },
+        bicycle: { ...current.routeSettings.bicycle, ...(updates.bicycle ?? {}) },
+        pedestrian: { ...current.routeSettings.pedestrian, ...(updates.pedestrian ?? {}) },
+      }),
+    }));
+  }, []);
+
   const resetSettings = useCallback(() => {
     setSettings(defaultSettings);
   }, []);
@@ -234,6 +249,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       addPreference,
       updatePreference,
       removePreference,
+      updateRouteSettings,
       resetSettings,
     }),
     [
@@ -249,6 +265,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       addPreference,
       updatePreference,
       removePreference,
+      updateRouteSettings,
       resetSettings,
     ],
   );

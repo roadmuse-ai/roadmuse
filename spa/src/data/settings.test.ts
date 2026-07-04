@@ -8,6 +8,7 @@ import {
   saveSettings,
   storageKey,
 } from "./settings";
+import { defaultRouteSettings } from "./routeSettings";
 
 describe("settings persistence", () => {
   beforeEach(() => {
@@ -228,7 +229,45 @@ describe("settings persistence", () => {
       preferences: [],
       themeMode: "auto",
       accentTheme: "navy",
+      routeSettings: defaultRouteSettings,
     });
+  });
+
+  it("loads default route settings when older storage has no routeSettings", () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        preferredNavigator: "google-maps",
+        savedPlaces: [],
+        preferences: [],
+        themeMode: "auto",
+        accentTheme: "ground",
+      }),
+    );
+
+    expect(loadSettings().routeSettings).toEqual(defaultRouteSettings);
+  });
+
+  it("normalizes partial and invalid route settings", () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        routeSettings: {
+          travelMode: "pedestrian",
+          auto: { tollPreference: 99 },
+          pedestrian: { walkingSpeedKph: 40, stepPenaltySeconds: 60 },
+        },
+      }),
+    );
+
+    const loaded = loadSettings();
+
+    expect(loaded.routeSettings.travelMode).toBe("auto");
+    expect(loaded.routeSettings.auto.tollPreference).toBe(
+      defaultRouteSettings.auto.tollPreference,
+    );
+    expect(loaded.routeSettings.pedestrian.walkingSpeedKph).toBe(25);
+    expect(loaded.routeSettings.pedestrian.stepPenaltySeconds).toBe(60);
   });
 
   it("normalizes saved preferences and filters invalid entries", () => {
@@ -349,11 +388,18 @@ describe("settings persistence", () => {
       preferences: [],
       themeMode: "dark",
       accentTheme: "rock",
+      routeSettings: {
+        ...defaultRouteSettings,
+        travelMode: "pedestrian",
+        alternates: 2,
+      },
     };
 
     saveSettings(settings);
 
-    expect(window.localStorage.getItem(storageKey)).toEqual(JSON.stringify(settings));
+    expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toEqual(settings);
+    expect(loadSettings().routeSettings.travelMode).toBe("auto");
+    expect(loadSettings().routeSettings.alternates).toBe(2);
   });
 
   it("ignores local storage read and write failures", () => {

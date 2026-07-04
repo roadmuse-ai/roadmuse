@@ -3,9 +3,29 @@ import {
   isTextPreference,
   normalizeTextPreference,
 } from "./preferences";
+import {
+  type RouteSettings,
+  defaultRouteSettings,
+  normalizeRouteSettings,
+} from "./routeSettings";
 import { type AccentTheme, type ThemeMode, isAccentTheme, isThemeMode } from "./theme";
 
 export const storageKey = "roadmuse-settings-v1";
+
+export type {
+  AutoRouteSettings,
+  BicycleRouteSettings,
+  DistanceUnits,
+  PedestrianRouteSettings,
+  RouteSettings,
+  RouteTravelMode,
+  ValhallaScale,
+} from "./routeSettings";
+export {
+  compileValhallaRouteRequest,
+  defaultRouteSettings,
+  normalizeRouteSettings,
+} from "./routeSettings";
 
 export const navigatorIds = [
   "google-maps",
@@ -34,6 +54,7 @@ export interface RoadMuseSettings {
   preferences: TextPreference[];
   themeMode: ThemeMode;
   accentTheme: AccentTheme;
+  routeSettings: RouteSettings;
 }
 
 export const defaultSettings: RoadMuseSettings = {
@@ -43,6 +64,7 @@ export const defaultSettings: RoadMuseSettings = {
   preferences: [],
   themeMode: "auto",
   accentTheme: "ground",
+  routeSettings: defaultRouteSettings,
 };
 
 export type SavedPlaceEntryMode = "address" | "coordinates";
@@ -355,6 +377,8 @@ export function loadSettings(): RoadMuseSettings {
       ? parsed.accentTheme
       : defaultSettings.accentTheme;
 
+    const routeSettings = normalizeRouteSettings(parsed.routeSettings);
+
     return {
       preferredNavigator,
       savedPlaces,
@@ -362,6 +386,7 @@ export function loadSettings(): RoadMuseSettings {
       preferences,
       themeMode,
       accentTheme,
+      routeSettings,
     };
   } catch {
     // Swallow malformed data and fall back to defaults.

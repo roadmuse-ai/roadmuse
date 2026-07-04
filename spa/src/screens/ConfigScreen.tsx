@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PreferenceCard } from "../components/PreferenceCard";
+import { RouteSettingsSection } from "../components/RouteSettingsSection";
 import { useSettings } from "../context/SettingsContext";
 import {
   countryOptions,
@@ -16,6 +17,11 @@ import {
   type SavedPlace,
   type SavedPlaceEntryMode,
 } from "../data/settings";
+import {
+  type DistanceUnits,
+  distanceUnitLabels,
+  distanceUnits,
+} from "../data/routeSettings";
 import {
   type AccentTheme,
   type ThemeMode,
@@ -277,6 +283,7 @@ export function ConfigScreen() {
     addPreference,
     updatePreference,
     removePreference,
+    updateRouteSettings,
   } = useSettings();
 
   const emptyDraft: SavedPlaceDraft = {
@@ -548,6 +555,30 @@ export function ConfigScreen() {
           </span>
         </label>
         </form>
+        <h4 className="settings-subtitle route-settings__units-heading">Distance units</h4>
+        <div
+          className="theme-toggle theme-toggle--two route-settings__units"
+          role="radiogroup"
+          aria-label="Distance units"
+        >
+          {distanceUnits.map((unit) => (
+            <label
+              key={unit}
+              className={`theme-toggle__option${
+                settings.routeSettings.units === unit ? " theme-toggle__option--active" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name="distance-units"
+                value={unit}
+                checked={settings.routeSettings.units === unit}
+                onChange={() => updateRouteSettings({ units: unit as DistanceUnits })}
+              />
+              <span>{distanceUnitLabels[unit]}</span>
+            </label>
+          ))}
+        </div>
       </section>
 
       <section className="saved-places">
@@ -636,6 +667,8 @@ export function ConfigScreen() {
           Add Preference
         </button>
       </section>
+
+      <RouteSettingsSection />
 
       {isEditorOpen ? (
         <div className="saved-place__editor-overlay" onClick={closeEditor}>

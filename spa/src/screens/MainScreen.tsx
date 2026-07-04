@@ -18,7 +18,11 @@ import {
   buildAddressNavigatorDeepLink,
   stubVoiceRoute,
 } from "../data/navigationLinks";
-import { type PreviousTrip, type RouteWaypoint } from "../data/settings";
+import {
+  type DistanceUnits,
+  type PreviousTrip,
+  type RouteWaypoint,
+} from "../data/settings";
 
 const stubPrompt =
   "Route Rockville to National Mall via Bethesda Row and Georgetown Waterfront Park. Find kid-friendly lunch with easy parking; avoid the Beltway unless it saves 15+ min.";
@@ -27,6 +31,7 @@ type VoiceHomeMode = "initial" | "listening" | "review" | "manual";
 
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
+const kilometersPerMile = 1.609344;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
   {
@@ -146,9 +151,14 @@ function formatDuration(minutes: number): string {
   return `${minutes} min`;
 }
 
-function formatDistance(miles: number): string {
-  const roundedMiles = Number.isInteger(miles) ? String(miles) : miles.toFixed(1);
-  return `${roundedMiles} mi`;
+function formatDistance(miles: number, units: DistanceUnits): string {
+  const distance = units === "kilometers" ? miles * kilometersPerMile : miles;
+  const roundedDistance = Number.isInteger(distance)
+    ? String(distance)
+    : distance.toFixed(1);
+  const unitLabel = units === "kilometers" ? "km" : "mi";
+
+  return `${roundedDistance} ${unitLabel}`;
 }
 
 function formatStopCount(stopCount = 0): string {
@@ -255,7 +265,7 @@ function getTripAddressDetails(trip: PreviousTrip): TripDetail[] {
   ];
 }
 
-function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
+function getTripMetaDetails(trip: PreviousTrip, units: DistanceUnits): TripDetail[] {
   return [
     {
       label: "Duration",
@@ -264,7 +274,7 @@ function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
     },
     {
       label: "Distance",
-      value: formatDistance(getTripDistanceMiles(trip)),
+      value: formatDistance(getTripDistanceMiles(trip), units),
       Icon: Milestone,
     },
     {
@@ -275,11 +285,11 @@ function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
   ];
 }
 
-function getTripSearchText(trip: PreviousTrip): string {
+function getTripSearchText(trip: PreviousTrip, units: DistanceUnits): string {
   return [
     trip.prompt,
     ...getTripRoute(trip).flatMap((waypoint) => formatWaypoint(waypoint) ?? []),
-    ...getTripMetaDetails(trip).map((detail) => detail.value),
+    ...getTripMetaDetails(trip, units).map((detail) => detail.value),
   ]
     .join(" ")
     .toLocaleLowerCase();
@@ -304,10 +314,11 @@ export function MainScreen() {
     mode === "manual" || isListening ? "Enter Your Route" : "Review Your Route";
   const primaryActionLabel = isListening ? "Next" : "Drive";
   const middleActionLabel = isListening ? "Stop" : "Rerecord";
+  const distanceUnits = settings.routeSettings.units;
   const normalizedTripSearch = tripSearch.trim().toLocaleLowerCase();
   const filteredPreviousTrips = normalizedTripSearch
     ? settings.previousTrips.filter((trip) =>
-        getTripSearchText(trip).includes(normalizedTripSearch),
+        getTripSearchText(trip, distanceUnits).includes(normalizedTripSearch),
       )
     : settings.previousTrips;
   const previousTripGroups = groupTripsByTime(filteredPreviousTrips, Date.now());
@@ -466,7 +477,7 @@ export function MainScreen() {
                             className="previous-trip__meta"
                             aria-label={`Route stats for ${trip.prompt}`}
                           >
-                            {getTripMetaDetails(trip).map(
+                            {getTripMetaDetails(trip, distanceUnits).map(
                               ({ label, value, Icon }) => (
                                 <li
                                   className="previous-trip__meta-item"
