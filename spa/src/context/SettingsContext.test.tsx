@@ -251,7 +251,7 @@ describe("SettingsProvider", () => {
     expect(screen.getByTestId("preferences")).toBeEmptyDOMElement();
 
     await user.click(screen.getByRole("button", { name: "Update Route Settings" }));
-    expect(screen.getByTestId("travel-mode")).toHaveTextContent("bicycle");
+    expect(screen.getByTestId("travel-mode")).toHaveTextContent("auto");
     expect(screen.getByTestId("toll-preference")).toHaveTextContent("0");
 
     await user.click(screen.getByRole("button", { name: "Reset" }));

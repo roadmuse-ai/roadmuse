@@ -262,7 +262,7 @@ describe("settings persistence", () => {
 
     const loaded = loadSettings();
 
-    expect(loaded.routeSettings.travelMode).toBe("pedestrian");
+    expect(loaded.routeSettings.travelMode).toBe("auto");
     expect(loaded.routeSettings.auto.tollPreference).toBe(
       defaultRouteSettings.auto.tollPreference,
     );
@@ -398,7 +398,7 @@ describe("settings persistence", () => {
     saveSettings(settings);
 
     expect(JSON.parse(window.localStorage.getItem(storageKey) ?? "{}")).toEqual(settings);
-    expect(loadSettings().routeSettings.travelMode).toBe("pedestrian");
+    expect(loadSettings().routeSettings.travelMode).toBe("auto");
     expect(loadSettings().routeSettings.alternates).toBe(2);
   });
 

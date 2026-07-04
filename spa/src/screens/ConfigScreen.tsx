@@ -557,7 +557,7 @@ export function ConfigScreen() {
         </form>
         <h4 className="settings-subtitle route-settings__units-heading">Distance units</h4>
         <div
-          className="theme-toggle route-settings__units"
+          className="theme-toggle theme-toggle--two route-settings__units"
           role="radiogroup"
           aria-label="Distance units"
         >

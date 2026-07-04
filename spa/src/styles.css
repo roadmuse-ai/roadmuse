@@ -1279,6 +1279,10 @@ button.card--secondary:active,
   grid-template-columns: repeat(3, 1fr);
 }
 
+.theme-toggle--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .theme-toggle--accent {
   grid-template-columns: repeat(4, 1fr);
 }
@@ -1679,9 +1683,7 @@ button.card--secondary:active,
 .route-settings__mode-panel {
   display: grid;
   gap: 0.75rem;
-  margin-top: 0.85rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--color-border-subtle);
+  margin-top: 0;
 }
 
 .form-field--checkbox {

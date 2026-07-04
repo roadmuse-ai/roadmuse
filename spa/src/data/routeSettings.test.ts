@@ -57,7 +57,7 @@ describe("normalizeRouteSettings", () => {
     expect(normalizeRouteSettings("bad")).toEqual(defaultRouteSettings);
   });
 
-  it("preserves valid route settings and merges partial nested values", () => {
+  it("preserves valid route settings and resets unsupported travel modes", () => {
     const normalized = normalizeRouteSettings({
       travelMode: "bicycle",
       units: "kilometers",
@@ -67,7 +67,7 @@ describe("normalizeRouteSettings", () => {
       pedestrian: { stepPenaltySeconds: 300 },
     });
 
-    expect(normalized.travelMode).toBe("bicycle");
+    expect(normalized.travelMode).toBe("auto");
     expect(normalized.units).toBe("kilometers");
     expect(normalized.alternates).toBe(2);
     expect(normalized.auto.tollPreference).toBe(0);

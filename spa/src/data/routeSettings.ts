@@ -40,7 +40,7 @@ export interface PedestrianRouteSettings {
   stepPenaltySeconds: 0 | 60 | 300; // maps to costing_options.pedestrian.step_penalty
 }
 
-export const routeTravelModes: RouteTravelMode[] = ["auto", "bicycle", "pedestrian"];
+export const routeTravelModes: RouteTravelMode[] = ["auto"];
 
 export const routeTravelModeLabels: Record<RouteTravelMode, string> = {
   auto: "Driving",
