@@ -751,6 +751,7 @@ section {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.28rem 0.6rem;
+  margin-top: 5px;
   padding-left: 1.6rem;
 }
 
