@@ -180,9 +180,10 @@ describe("MainScreen", () => {
     });
     expect(screen.queryByLabelText("Driving Request")).not.toBeInTheDocument();
     expect(screen.getByText("Rockville, MD")).toBeInTheDocument();
-    expect(screen.getByText("Bethesda Row, Bethesda, MD")).toBeInTheDocument();
-    expect(screen.getByText("Georgetown Waterfront Park, Washington, DC"))
-      .toBeInTheDocument();
+    expect(screen.queryByText("Bethesda Row, Bethesda, MD"))
+      .not.toBeInTheDocument();
+    expect(screen.queryByText("Georgetown Waterfront Park, Washington, DC"))
+      .not.toBeInTheDocument();
     expect(screen.getByText("National Mall, Washington, DC")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -340,7 +341,8 @@ describe("MainScreen", () => {
     expect(screen.getByRole("heading", { name: "My Trips" })).toBeInTheDocument();
     expect(screen.getByLabelText("Search Previous Trips")).toBeInTheDocument();
     expect(screen.getAllByText("Rockville, MD")).toHaveLength(2);
-    expect(screen.getByText("NIH Clinical Center, Bethesda, MD")).toBeInTheDocument();
+    expect(screen.queryByText("NIH Clinical Center, Bethesda, MD"))
+      .not.toBeInTheDocument();
     expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
     expect(screen.queryByText("July 4th, 2026, 9:00 AM")).not.toBeInTheDocument();
     expect(screen.getAllByText("55 min")).toHaveLength(2);
@@ -357,6 +359,17 @@ describe("MainScreen", () => {
     expect(screen.getByText("Find coffee and a restroom on the way"))
       .toBeInTheDocument();
     expect(screen.queryByText("Take the scenic route to Ocean City"))
+      .not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("Search Previous Trips"));
+    await user.type(
+      screen.getByLabelText("Search Previous Trips"),
+      "NIH Clinical Center",
+    );
+
+    expect(screen.getByText("Find coffee and a restroom on the way"))
+      .toBeInTheDocument();
+    expect(screen.queryByText("NIH Clinical Center, Bethesda, MD"))
       .not.toBeInTheDocument();
 
     await user.click(

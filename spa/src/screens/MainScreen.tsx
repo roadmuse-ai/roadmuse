@@ -237,9 +237,8 @@ function groupTripsByTime(
 
 function getTripAddressDetails(trip: PreviousTrip): TripDetail[] {
   const route = getTripRoute(trip);
-  const [start, ...rest] = route;
-  const destination = rest[rest.length - 1];
-  const stops = rest.slice(0, -1);
+  const start = route[0];
+  const destination = route[route.length - 1];
 
   return [
     {
@@ -247,11 +246,6 @@ function getTripAddressDetails(trip: PreviousTrip): TripDetail[] {
       value: formatWaypoint(start) ?? getTripStartAddress(trip),
       Icon: MapPin,
     },
-    ...stops.map((stop, index) => ({
-      label: `Stop ${index + 1}`,
-      value: formatWaypoint(stop) ?? `Stop ${index + 1}`,
-      Icon: CircleDot,
-    })),
     {
       label: "To",
       value: formatWaypoint(destination) ?? getTripEndAddress(trip),
@@ -283,7 +277,7 @@ function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
 function getTripSearchText(trip: PreviousTrip): string {
   return [
     trip.prompt,
-    ...getTripAddressDetails(trip).map((detail) => detail.value),
+    ...getTripRoute(trip).flatMap((waypoint) => formatWaypoint(waypoint) ?? []),
     ...getTripMetaDetails(trip).map((detail) => detail.value),
   ]
     .join(" ")
