@@ -60,10 +60,17 @@ export interface SavedPlace {
   longitude?: number;
 }
 
+export interface RouteWaypoint {
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
 export interface PreviousTrip {
   id: string;
   prompt: string;
   createdAt: number;
+  route?: RouteWaypoint[];
   startAddress?: string;
   endAddress?: string;
   durationMinutes?: number;
@@ -143,6 +150,33 @@ const isSavedPlace = (value: unknown): value is SavedPlace => {
   );
 };
 
+const isRouteWaypoint = (value: unknown): value is RouteWaypoint => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  if (!isOptionalString(candidate.address)) {
+    return false;
+  }
+
+  if (candidate.latitude !== undefined && typeof candidate.latitude !== "number") {
+    return false;
+  }
+
+  if (candidate.longitude !== undefined && typeof candidate.longitude !== "number") {
+    return false;
+  }
+
+  const hasAddress =
+    typeof candidate.address === "string" && candidate.address.trim().length > 0;
+  const hasCoordinates =
+    Number.isFinite(candidate.latitude) && Number.isFinite(candidate.longitude);
+
+  return hasAddress || hasCoordinates;
+};
+
 const isPreviousTrip = (value: unknown): value is PreviousTrip => {
   if (!value || typeof value !== "object") {
     return false;
@@ -156,6 +190,8 @@ const isPreviousTrip = (value: unknown): value is PreviousTrip => {
     candidate.prompt.trim().length > 0 &&
     typeof candidate.createdAt === "number" &&
     Number.isFinite(candidate.createdAt) &&
+    (candidate.route === undefined ||
+      (Array.isArray(candidate.route) && candidate.route.every(isRouteWaypoint))) &&
     isOptionalString(candidate.startAddress) &&
     isOptionalString(candidate.endAddress) &&
     isOptionalNonNegativeInteger(candidate.durationMinutes) &&
@@ -208,6 +244,22 @@ const normalizeSavedPlace = (raw: SavedPlace): SavedPlace => {
   return normalized;
 };
 
+const normalizeRouteWaypoint = (raw: RouteWaypoint): RouteWaypoint => {
+  const normalized: RouteWaypoint = {};
+  const address = normalizeOptionalText(raw.address);
+
+  if (address) {
+    normalized.address = address;
+  }
+
+  if (Number.isFinite(raw.latitude) && Number.isFinite(raw.longitude)) {
+    normalized.latitude = raw.latitude;
+    normalized.longitude = raw.longitude;
+  }
+
+  return normalized;
+};
+
 const normalizePreviousTrip = (raw: PreviousTrip): PreviousTrip => {
   const normalized: PreviousTrip = {
     id: raw.id,
@@ -217,13 +269,30 @@ const normalizePreviousTrip = (raw: PreviousTrip): PreviousTrip => {
 
   const startAddress = normalizeOptionalText(raw.startAddress);
   const endAddress = normalizeOptionalText(raw.endAddress);
+  const route = Array.isArray(raw.route)
+    ? raw.route.map(normalizeRouteWaypoint).filter(isRouteWaypoint)
+    : [];
 
-  if (startAddress) {
-    normalized.startAddress = startAddress;
+  if (route.length > 0) {
+    normalized.route = route;
   }
 
-  if (endAddress) {
-    normalized.endAddress = endAddress;
+  const normalizedStartAddress = route[0]?.address ?? startAddress;
+  const normalizedEndAddress = route[route.length - 1]?.address ?? endAddress;
+
+  if (normalizedStartAddress) {
+    normalized.startAddress = normalizedStartAddress;
+  }
+
+  if (normalizedEndAddress) {
+    normalized.endAddress = normalizedEndAddress;
+  }
+
+  if (!normalized.route && normalizedStartAddress && normalizedEndAddress) {
+    normalized.route = [
+      { address: normalizedStartAddress },
+      { address: normalizedEndAddress },
+    ];
   }
 
   if (raw.durationMinutes !== undefined) {

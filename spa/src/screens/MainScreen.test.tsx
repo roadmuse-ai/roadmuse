@@ -180,6 +180,9 @@ describe("MainScreen", () => {
     });
     expect(screen.queryByLabelText("Driving Request")).not.toBeInTheDocument();
     expect(screen.getByText("Rockville, MD")).toBeInTheDocument();
+    expect(screen.getByText("Bethesda Row, Bethesda, MD")).toBeInTheDocument();
+    expect(screen.getByText("Georgetown Waterfront Park, Washington, DC"))
+      .toBeInTheDocument();
     expect(screen.getByText("National Mall, Washington, DC")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -189,18 +192,40 @@ describe("MainScreen", () => {
     expect(screen.queryByText("July 4th, 2026, 9:00 AM")).not.toBeInTheDocument();
     expect(screen.getByText("55 min")).toBeInTheDocument();
     expect(screen.getByText("14 mi")).toBeInTheDocument();
-    expect(screen.getByText("0 stops")).toBeInTheDocument();
+    expect(screen.getByText("2 stops")).toBeInTheDocument();
     expect(
       JSON.parse(window.localStorage.getItem(storageKey) ?? "{}").previousTrips[0],
     ).toMatchObject({
       prompt:
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
       createdAt: routeCreatedAt,
+      route: [
+        {
+          address: "Rockville, MD",
+          latitude: 39.084,
+          longitude: -77.1528,
+        },
+        {
+          address: "Bethesda Row, Bethesda, MD",
+          latitude: 38.9818,
+          longitude: -77.0969,
+        },
+        {
+          address: "Georgetown Waterfront Park, Washington, DC",
+          latitude: 38.9029,
+          longitude: -77.0625,
+        },
+        {
+          address: "National Mall, Washington, DC",
+          latitude: 38.8895,
+          longitude: -77.0353,
+        },
+      ],
       startAddress: "Rockville, MD",
       endAddress: "National Mall, Washington, DC",
       durationMinutes: 55,
       distanceMiles: 14,
-      stopCount: 0,
+      stopCount: 2,
     });
 
     await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
@@ -278,6 +303,23 @@ describe("MainScreen", () => {
             id: "trip-1",
             prompt: "Find coffee and a restroom on the way",
             createdAt: routeCreatedAt,
+            route: [
+              {
+                address: "Rockville, MD",
+                latitude: 39.084,
+                longitude: -77.1528,
+              },
+              {
+                address: "NIH Clinical Center, Bethesda, MD",
+                latitude: 39.0006,
+                longitude: -77.1014,
+              },
+              {
+                address: "Bethesda coffee stop",
+                latitude: 38.9847,
+                longitude: -77.0947,
+              },
+            ],
             startAddress: "Rockville, MD",
             endAddress: "Bethesda coffee stop",
             durationMinutes: 55,
@@ -298,6 +340,7 @@ describe("MainScreen", () => {
     expect(screen.getByRole("heading", { name: "My Trips" })).toBeInTheDocument();
     expect(screen.getByLabelText("Search Previous Trips")).toBeInTheDocument();
     expect(screen.getAllByText("Rockville, MD")).toHaveLength(2);
+    expect(screen.getByText("NIH Clinical Center, Bethesda, MD")).toBeInTheDocument();
     expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
     expect(screen.queryByText("July 4th, 2026, 9:00 AM")).not.toBeInTheDocument();
     expect(screen.getAllByText("55 min")).toHaveLength(2);
@@ -323,7 +366,7 @@ describe("MainScreen", () => {
     );
 
     expect(window.open).toHaveBeenCalledWith(
-      "https://www.google.com/maps/dir/?api=1&origin=Rockville%2C%20MD&destination=Bethesda%20coffee%20stop&travelmode=driving",
+      "https://www.google.com/maps/dir/?api=1&origin=Rockville%2C%20MD&destination=Bethesda%20coffee%20stop&waypoints=NIH%20Clinical%20Center%2C%20Bethesda%2C%20MD&travelmode=driving",
       "_blank",
       "noopener,noreferrer",
     );

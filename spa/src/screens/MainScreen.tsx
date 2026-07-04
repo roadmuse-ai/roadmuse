@@ -15,10 +15,9 @@ import {
 import { useSettings } from "../context/SettingsContext";
 import {
   buildAddressNavigatorDeepLink,
-  buildStubNavigatorDeepLink,
   stubVoiceRoute,
 } from "../data/navigationLinks";
-import { type PreviousTrip } from "../data/settings";
+import { type PreviousTrip, type RouteWaypoint } from "../data/settings";
 
 const stubPrompt =
   "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.";
@@ -28,6 +27,28 @@ type VoiceHomeMode = "initial" | "listening" | "review" | "manual";
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
+const defaultRouteWaypoints: RouteWaypoint[] = [
+  {
+    address: stubVoiceRoute.startLabel,
+    latitude: stubVoiceRoute.startLatitude,
+    longitude: stubVoiceRoute.startLongitude,
+  },
+  {
+    address: "Bethesda Row, Bethesda, MD",
+    latitude: 38.9818,
+    longitude: -77.0969,
+  },
+  {
+    address: "Georgetown Waterfront Park, Washington, DC",
+    latitude: 38.9029,
+    longitude: -77.0625,
+  },
+  {
+    address: defaultRouteTargetAddress,
+    latitude: 38.8895,
+    longitude: -77.0353,
+  },
+];
 const starterTripPrompts = [
   "Dictate your first trip!",
   "Start with your voice!",
@@ -55,15 +76,61 @@ function getRandomStarterTripPrompt(currentPrompt?: string): string {
   return promptOptions[promptIndex] ?? starterTripPrompts[0];
 }
 
+function formatWaypoint(waypoint?: RouteWaypoint): string | null {
+  if (!waypoint) {
+    return null;
+  }
+
+  const address = waypoint.address?.trim();
+  if (address) {
+    return address;
+  }
+
+  if (Number.isFinite(waypoint.latitude) && Number.isFinite(waypoint.longitude)) {
+    return `${waypoint.latitude},${waypoint.longitude}`;
+  }
+
+  return null;
+}
+
+function getStoredTripRoute(trip: PreviousTrip): RouteWaypoint[] {
+  return (
+    trip.route?.filter((waypoint) => formatWaypoint(waypoint) !== null) ?? []
+  );
+}
+
 function getTripStartAddress(trip: PreviousTrip): string {
-  return trip.startAddress ?? stubVoiceRoute.startLabel;
+  return (
+    formatWaypoint(getStoredTripRoute(trip)[0]) ??
+    trip.startAddress ??
+    stubVoiceRoute.startLabel
+  );
 }
 
 function getTripEndAddress(trip: PreviousTrip): string {
+  const route = getStoredTripRoute(trip);
+  const routeEnd = formatWaypoint(route[route.length - 1]);
+  if (routeEnd) {
+    return routeEnd;
+  }
+
   const endAddress = trip.endAddress?.trim();
   return endAddress && endAddress !== trip.prompt
     ? endAddress
     : defaultRouteTargetAddress;
+}
+
+function getTripRoute(trip: PreviousTrip): RouteWaypoint[] {
+  const route = getStoredTripRoute(trip);
+
+  if (route.length >= 2) {
+    return route;
+  }
+
+  return [
+    { address: getTripStartAddress(trip) },
+    { address: getTripEndAddress(trip) },
+  ];
 }
 
 function getTripDurationMinutes(trip: PreviousTrip): number {
@@ -85,6 +152,12 @@ function formatDistance(miles: number): string {
 
 function formatStopCount(stopCount = 0): string {
   return `${stopCount} ${stopCount === 1 ? "stop" : "stops"}`;
+}
+
+function getTripStopCount(trip: PreviousTrip): number {
+  const route = getStoredTripRoute(trip);
+
+  return route.length >= 2 ? Math.max(0, route.length - 2) : (trip.stopCount ?? 0);
 }
 
 interface TripDetail {
@@ -163,15 +236,25 @@ function groupTripsByTime(
 }
 
 function getTripAddressDetails(trip: PreviousTrip): TripDetail[] {
+  const route = getTripRoute(trip);
+  const [start, ...rest] = route;
+  const destination = rest[rest.length - 1];
+  const stops = rest.slice(0, -1);
+
   return [
     {
       label: "From",
-      value: getTripStartAddress(trip),
+      value: formatWaypoint(start) ?? getTripStartAddress(trip),
       Icon: MapPin,
     },
+    ...stops.map((stop, index) => ({
+      label: `Stop ${index + 1}`,
+      value: formatWaypoint(stop) ?? `Stop ${index + 1}`,
+      Icon: CircleDot,
+    })),
     {
       label: "To",
-      value: getTripEndAddress(trip),
+      value: formatWaypoint(destination) ?? getTripEndAddress(trip),
       Icon: Flag,
     },
   ];
@@ -191,7 +274,7 @@ function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
     },
     {
       label: "stops",
-      value: formatStopCount(trip.stopCount),
+      value: formatStopCount(getTripStopCount(trip)),
       Icon: CircleDot,
     },
   ];
@@ -272,17 +355,21 @@ export function MainScreen() {
 
   const drive = () => {
     const drivePrompt = prompt.trim() || stubPrompt;
-    const deepLink = buildStubNavigatorDeepLink(settings.preferredNavigator, {
-      ...stubVoiceRoute,
-      destinationLabel: defaultRouteTargetAddress,
+    const deepLink = buildAddressNavigatorDeepLink(settings.preferredNavigator, {
+      startAddress: defaultRouteWaypoints[0]?.address ?? stubVoiceRoute.startLabel,
+      destinationAddress:
+        defaultRouteWaypoints[defaultRouteWaypoints.length - 1]?.address ??
+        defaultRouteTargetAddress,
+      waypoints: defaultRouteWaypoints,
     });
 
     addPreviousTrip(drivePrompt, {
+      route: defaultRouteWaypoints,
       startAddress: stubVoiceRoute.startLabel,
       endAddress: defaultRouteTargetAddress,
       durationMinutes: defaultRouteDurationMinutes,
       distanceMiles: defaultRouteDistanceMiles,
-      stopCount: 0,
+      stopCount: 2,
     });
 
     setPrompt(stubPrompt);
@@ -295,6 +382,7 @@ export function MainScreen() {
       buildAddressNavigatorDeepLink(settings.preferredNavigator, {
         startAddress: getTripStartAddress(trip),
         destinationAddress: getTripEndAddress(trip),
+        waypoints: getTripRoute(trip),
       }),
       "_blank",
       "noopener,noreferrer",

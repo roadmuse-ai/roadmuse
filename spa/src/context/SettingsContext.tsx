@@ -10,6 +10,7 @@ import {
 import {
   type NavigatorId,
   type PreviousTrip,
+  type RouteWaypoint,
   type SavedPlace,
   type RoadMuseSettings,
   defaultSettings,
@@ -43,6 +44,22 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 interface SettingsProviderProps {
   children: ReactNode;
 }
+
+const normalizeRouteWaypoint = (waypoint: RouteWaypoint): RouteWaypoint | null => {
+  const address = waypoint.address?.trim();
+  const hasCoordinates =
+    Number.isFinite(waypoint.latitude) && Number.isFinite(waypoint.longitude);
+
+  if (!address && !hasCoordinates) {
+    return null;
+  }
+
+  return {
+    address: address || undefined,
+    latitude: hasCoordinates ? waypoint.latitude : undefined,
+    longitude: hasCoordinates ? waypoint.longitude : undefined,
+  };
+};
 
 export function SettingsProvider({ children }: SettingsProviderProps) {
   const [settings, setSettings] = useState<RoadMuseSettings>(loadSettings);
@@ -103,14 +120,23 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         return null;
       }
 
-      const startAddress = details?.startAddress?.trim();
-      const endAddress = details?.endAddress?.trim();
+      const route =
+        details?.route
+          ?.map(normalizeRouteWaypoint)
+          .filter((waypoint): waypoint is RouteWaypoint => waypoint !== null) ?? [];
+      const startAddress = details?.startAddress?.trim() || route[0]?.address;
+      const endAddress =
+        details?.endAddress?.trim() || route[route.length - 1]?.address;
       const createdAt = Date.now();
       const trip: PreviousTrip = {
         id: `${createdAt}-${Math.random().toString(36).slice(2, 8)}`,
         prompt: normalizedPrompt,
         createdAt,
       };
+
+      if (route.length > 0) {
+        trip.route = route;
+      }
 
       if (startAddress) {
         trip.startAddress = startAddress;
@@ -142,6 +168,8 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
         details.stopCount >= 0
       ) {
         trip.stopCount = details.stopCount;
+      } else if (route.length >= 2) {
+        trip.stopCount = Math.max(0, route.length - 2);
       }
 
       setSettings((current) => ({

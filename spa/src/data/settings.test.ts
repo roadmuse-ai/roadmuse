@@ -205,6 +205,14 @@ describe("settings persistence", () => {
           id: "trip-1",
           prompt: "Find coffee on the way",
           createdAt: 1710000000000,
+          route: [
+            {
+              address: "Rockville, MD",
+            },
+            {
+              address: "Bethesda coffee stop",
+            },
+          ],
           startAddress: "Rockville, MD",
           endAddress: "Bethesda coffee stop",
           durationMinutes: 55,
@@ -319,6 +327,18 @@ describe("settings persistence", () => {
           id: "trip-1",
           prompt: "Find a quiet lunch stop",
           createdAt: 1710000000000,
+          route: [
+            {
+              address: "Rockville, MD",
+              latitude: 39.084,
+              longitude: -77.1528,
+            },
+            {
+              address: "National Mall",
+              latitude: 38.8895,
+              longitude: -77.0353,
+            },
+          ],
           startAddress: "Rockville, MD",
           endAddress: "National Mall",
           durationMinutes: 55,

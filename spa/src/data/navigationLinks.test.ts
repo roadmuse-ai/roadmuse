@@ -59,6 +59,45 @@ describe("navigation link helpers", () => {
     );
   });
 
+  it("adds intermediate waypoints to route providers that support them", () => {
+    const route = {
+      startAddress: "Rockville, MD",
+      destinationAddress: "National Mall, Washington, DC",
+      waypoints: [
+        {
+          address: "Rockville, MD",
+          latitude: 39.084,
+          longitude: -77.1528,
+        },
+        {
+          address: "Bethesda Row, Bethesda, MD",
+          latitude: 38.9818,
+          longitude: -77.0969,
+        },
+        {
+          address: "Georgetown Waterfront Park, Washington, DC",
+          latitude: 38.9029,
+          longitude: -77.0625,
+        },
+        {
+          address: "National Mall, Washington, DC",
+          latitude: 38.8895,
+          longitude: -77.0353,
+        },
+      ],
+    };
+
+    expect(buildAddressNavigatorDeepLink("google-maps", route)).toBe(
+      "https://www.google.com/maps/dir/?api=1&origin=Rockville%2C%20MD&destination=National%20Mall%2C%20Washington%2C%20DC&waypoints=Bethesda%20Row%2C%20Bethesda%2C%20MD%7CGeorgetown%20Waterfront%20Park%2C%20Washington%2C%20DC&travelmode=driving",
+    );
+    expect(buildAddressNavigatorDeepLink("here-wego", route)).toBe(
+      "https://wego.here.com/directions/drive/39.084%2C-77.1528/38.9818%2C-77.0969/38.9029%2C-77.0625/38.8895%2C-77.0353",
+    );
+    expect(buildAddressNavigatorDeepLink("waze", route)).toBe(
+      "https://waze.com/ul?q=National%20Mall%2C%20Washington%2C%20DC&navigate=yes",
+    );
+  });
+
   it("uses Apple Maps as the iOS fallback when no navigator is configured", () => {
     expect(buildStubNavigatorDeepLink(undefined, stubVoiceRoute, "ios")).toContain(
       "https://maps.apple.com/",
@@ -84,5 +123,34 @@ describe("navigation link helpers", () => {
     expect(decodeURIComponent(link)).toContain(
       "<desc>Rockville, MD to Bethesda coffee stop</desc>",
     );
+  });
+
+  it("exports coordinate waypoints in GPX route data", () => {
+    const link = buildAddressNavigatorDeepLink("gpx-export", {
+      startAddress: "Rockville, MD",
+      destinationAddress: "National Mall, Washington, DC",
+      waypoints: [
+        {
+          address: "Rockville, MD",
+          latitude: 39.084,
+          longitude: -77.1528,
+        },
+        {
+          address: "Bethesda Row, Bethesda, MD",
+          latitude: 38.9818,
+          longitude: -77.0969,
+        },
+        {
+          address: "National Mall, Washington, DC",
+          latitude: 38.8895,
+          longitude: -77.0353,
+        },
+      ],
+    });
+    const decodedLink = decodeURIComponent(link);
+
+    expect(decodedLink).toContain('<wpt lat="39.084" lon="-77.1528">');
+    expect(decodedLink).toContain("<name>Bethesda Row, Bethesda, MD</name>");
+    expect(decodedLink).toContain('<wpt lat="38.8895" lon="-77.0353">');
   });
 });
