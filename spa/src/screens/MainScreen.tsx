@@ -101,7 +101,7 @@ function formatDistance(miles: number): string {
 }
 
 function formatStopCount(stopCount = 0): string {
-  return `${stopCount} ${stopCount === 1 ? "Stop" : "Stops"}`;
+  return `${stopCount} ${stopCount === 1 ? "stop" : "stops"}`;
 }
 
 interface TripDetail {
@@ -143,7 +143,7 @@ function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
       Icon: Milestone,
     },
     {
-      label: "Stops",
+      label: "stops",
       value: formatStopCount(trip.stopCount),
       Icon: CircleDot,
     },

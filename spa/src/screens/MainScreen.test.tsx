@@ -129,7 +129,7 @@ describe("MainScreen", () => {
     expect(screen.getByText("July 4th, 2026, 9:00 AM")).toBeInTheDocument();
     expect(screen.getByText("55 min")).toBeInTheDocument();
     expect(screen.getByText("14 mi")).toBeInTheDocument();
-    expect(screen.getByText("0 Stops")).toBeInTheDocument();
+    expect(screen.getByText("0 stops")).toBeInTheDocument();
     expect(
       JSON.parse(window.localStorage.getItem(storageKey) ?? "{}").previousTrips[0],
     ).toMatchObject({
@@ -176,7 +176,7 @@ describe("MainScreen", () => {
     expect(screen.getAllByText("July 4th, 2026, 9:00 AM")).toHaveLength(2);
     expect(screen.getAllByText("55 min")).toHaveLength(2);
     expect(screen.getAllByText("14 mi")).toHaveLength(2);
-    expect(screen.getByText("1 Stop")).toBeInTheDocument();
+    expect(screen.getByText("1 stop")).toBeInTheDocument();
     expect(screen.getByText("Find coffee and a restroom on the way"))
       .toBeInTheDocument();
     expect(screen.getByText("Take the scenic route to Ocean City"))
