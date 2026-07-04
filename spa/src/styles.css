@@ -840,7 +840,7 @@ section {
 }
 
 .voice-home__manual-button {
-  left: calc(50% - 5.05rem);
+  left: calc(50% + 5.05rem);
   bottom: calc(var(--bottom-nav-height) + 2.95rem);
   width: 3.6rem;
   height: 3.6rem;
