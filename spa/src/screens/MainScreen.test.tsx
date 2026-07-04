@@ -108,7 +108,7 @@ describe("MainScreen", () => {
 
     await waitFor(() => {
       expect(window.open).toHaveBeenCalledWith(
-        "https://waze.com/ul?q=Find%20a%20kid-friendly%20lunch%20stop%20near%20the%20National%20Mall%20with%20easy%20parking%2C%20and%20avoid%20the%20Beltway%20unless%20it%20saves%20more%20than%2015%20minutes.&navigate=yes",
+        "https://waze.com/ul?q=National%20Mall%2C%20Washington%2C%20DC&navigate=yes",
         "_blank",
         "noopener,noreferrer",
       );
@@ -120,14 +120,15 @@ describe("MainScreen", () => {
     });
     expect(screen.queryByLabelText("Driving Request")).not.toBeInTheDocument();
     expect(screen.getByText("Rockville, MD")).toBeInTheDocument();
+    expect(screen.getByText("National Mall, Washington, DC")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("July 4th, 2026, 9:00 AM")).toBeInTheDocument();
-    expect(screen.getByText("55 minutes")).toBeInTheDocument();
-    expect(screen.getByText("14 miles")).toBeInTheDocument();
+    expect(screen.getByText("55 min")).toBeInTheDocument();
+    expect(screen.getByText("14 mi")).toBeInTheDocument();
     expect(screen.getByText("0 Stops")).toBeInTheDocument();
     expect(
       JSON.parse(window.localStorage.getItem(storageKey) ?? "{}").previousTrips[0],
@@ -135,8 +136,7 @@ describe("MainScreen", () => {
       prompt:
         "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
       startAddress: "Rockville, MD",
-      endAddress:
-        "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
+      endAddress: "National Mall, Washington, DC",
       durationMinutes: 55,
       distanceMiles: 14,
       stopCount: 0,
@@ -174,15 +174,19 @@ describe("MainScreen", () => {
     expect(screen.getAllByText("Rockville, MD")).toHaveLength(2);
     expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
     expect(screen.getAllByText("July 4th, 2026, 9:00 AM")).toHaveLength(2);
-    expect(screen.getAllByText("55 minutes")).toHaveLength(2);
-    expect(screen.getAllByText("14 miles")).toHaveLength(2);
+    expect(screen.getAllByText("55 min")).toHaveLength(2);
+    expect(screen.getAllByText("14 mi")).toHaveLength(2);
     expect(screen.getByText("1 Stop")).toBeInTheDocument();
+    expect(screen.getByText("Find coffee and a restroom on the way"))
+      .toBeInTheDocument();
     expect(screen.getByText("Take the scenic route to Ocean City"))
       .toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Search Previous Trips"), "coffee");
 
     expect(screen.getByText("Bethesda coffee stop")).toBeInTheDocument();
+    expect(screen.getByText("Find coffee and a restroom on the way"))
+      .toBeInTheDocument();
     expect(screen.queryByText("Take the scenic route to Ocean City"))
       .not.toBeInTheDocument();
 

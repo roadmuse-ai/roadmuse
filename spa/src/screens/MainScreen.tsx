@@ -24,6 +24,7 @@ type VoiceHomeMode = "initial" | "listening" | "review" | "returning";
 
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
+const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const routeDetailsTimeZone = "America/New_York";
 
 const routeDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
@@ -41,7 +42,10 @@ function getTripStartAddress(trip: PreviousTrip): string {
 }
 
 function getTripEndAddress(trip: PreviousTrip): string {
-  return trip.endAddress ?? trip.prompt;
+  const endAddress = trip.endAddress?.trim();
+  return endAddress && endAddress !== trip.prompt
+    ? endAddress
+    : defaultRouteTargetAddress;
 }
 
 function getTripDurationMinutes(trip: PreviousTrip): number {
@@ -88,12 +92,12 @@ function formatTripDateTime(timestamp: number): string {
 }
 
 function formatDuration(minutes: number): string {
-  return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  return `${minutes} min`;
 }
 
 function formatDistance(miles: number): string {
   const roundedMiles = Number.isInteger(miles) ? String(miles) : miles.toFixed(1);
-  return `${roundedMiles} ${miles === 1 ? "mile" : "miles"}`;
+  return `${roundedMiles} mi`;
 }
 
 function formatStopCount(stopCount = 0): string {
@@ -104,23 +108,25 @@ interface TripDetail {
   label: string;
   value: string;
   Icon: LucideIcon;
-  isAddress?: boolean;
 }
 
-function getTripDetails(trip: PreviousTrip): TripDetail[] {
+function getTripAddressDetails(trip: PreviousTrip): TripDetail[] {
   return [
     {
       label: "From",
       value: getTripStartAddress(trip),
       Icon: MapPin,
-      isAddress: true,
     },
     {
       label: "To",
       value: getTripEndAddress(trip),
       Icon: Flag,
-      isAddress: true,
     },
+  ];
+}
+
+function getTripMetaDetails(trip: PreviousTrip): TripDetail[] {
+  return [
     {
       label: "Datetime",
       value: formatTripDateTime(trip.createdAt),
@@ -145,7 +151,11 @@ function getTripDetails(trip: PreviousTrip): TripDetail[] {
 }
 
 function getTripSearchText(trip: PreviousTrip): string {
-  return [trip.prompt, ...getTripDetails(trip).map((detail) => detail.value)]
+  return [
+    trip.prompt,
+    ...getTripAddressDetails(trip).map((detail) => detail.value),
+    ...getTripMetaDetails(trip).map((detail) => detail.value),
+  ]
     .join(" ")
     .toLocaleLowerCase();
 }
@@ -215,12 +225,12 @@ export function MainScreen() {
     const drivePrompt = prompt.trim() || stubPrompt;
     const deepLink = buildStubNavigatorDeepLink(settings.preferredNavigator, {
       ...stubVoiceRoute,
-      destinationLabel: drivePrompt,
+      destinationLabel: defaultRouteTargetAddress,
     });
 
     addPreviousTrip(drivePrompt, {
       startAddress: stubVoiceRoute.startLabel,
-      endAddress: drivePrompt,
+      endAddress: defaultRouteTargetAddress,
       durationMinutes: defaultRouteDurationMinutes,
       distanceMiles: defaultRouteDistanceMiles,
       stopCount: 0,
@@ -283,24 +293,50 @@ export function MainScreen() {
             <ul className="previous-trips__list" aria-label="Previous Trips">
               {filteredPreviousTrips.map((trip) => (
                 <li className="previous-trip" key={trip.id}>
-                  <ul
-                    className="previous-trip__details"
-                    aria-label={`Route details for ${trip.prompt}`}
-                  >
-                    {getTripDetails(trip).map(({ label, value, Icon, isAddress }) => (
-                      <li
-                        className={`previous-trip__detail${isAddress ? " previous-trip__detail--address" : ""}`}
-                        key={label}
-                        aria-label={`${label} ${value}`}
-                      >
-                        <Icon
-                          aria-hidden="true"
-                          className="previous-trip__detail-icon"
-                        />
-                        <span>{value}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="previous-trip__body">
+                    <ul
+                      className="previous-trip__details"
+                      aria-label={`Route details for ${trip.prompt}`}
+                    >
+                      {getTripAddressDetails(trip).map(({ label, value, Icon }) => (
+                        <li
+                          className="previous-trip__detail previous-trip__detail--address"
+                          key={label}
+                          aria-label={`${label} ${value}`}
+                        >
+                          <Icon
+                            aria-hidden="true"
+                            className="previous-trip__detail-icon"
+                          />
+                          <span>{value}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p
+                      className="previous-trip__prompt"
+                      aria-label={`Prompt ${trip.prompt}`}
+                    >
+                      {trip.prompt}
+                    </p>
+                    <ul
+                      className="previous-trip__meta"
+                      aria-label={`Route stats for ${trip.prompt}`}
+                    >
+                      {getTripMetaDetails(trip).map(({ label, value, Icon }) => (
+                        <li
+                          className="previous-trip__meta-item"
+                          key={label}
+                          aria-label={`${label} ${value}`}
+                        >
+                          <Icon
+                            aria-hidden="true"
+                            className="previous-trip__meta-icon"
+                          />
+                          <span>{value}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   <div className="previous-trip__actions">
                     <button
                       type="button"
