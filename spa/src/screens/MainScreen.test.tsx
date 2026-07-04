@@ -7,6 +7,8 @@ import { storageKey } from "../data/settings";
 import { MainScreen } from "./MainScreen";
 
 const routeCreatedAt = Date.UTC(2026, 6, 4, 13, 0);
+const routePrompt =
+  "Route Rockville to National Mall via Bethesda Row and Georgetown Waterfront Park. Find kid-friendly lunch with easy parking; avoid the Beltway unless it saves 15+ min.";
 
 function renderMainScreen() {
   return render(
@@ -125,9 +127,7 @@ describe("MainScreen", () => {
     await user.click(screen.getByRole("button", { name: "Stop" }));
 
     const prompt = screen.getByLabelText("Driving Request");
-    expect(prompt).toHaveValue(
-      "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
-    );
+    expect(prompt).toHaveValue(routePrompt);
     expect(screen.queryByRole("img", { name: "Voice waves animation" }))
       .not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Review Your Route" }))
@@ -185,11 +185,7 @@ describe("MainScreen", () => {
     expect(screen.queryByText("Georgetown Waterfront Park, Washington, DC"))
       .not.toBeInTheDocument();
     expect(screen.getByText("National Mall, Washington, DC")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(routePrompt)).toBeInTheDocument();
     expect(screen.queryByText("July 4th, 2026, 9:00 AM")).not.toBeInTheDocument();
     expect(screen.getByText("55 min")).toBeInTheDocument();
     expect(screen.getByText("14 mi")).toBeInTheDocument();
@@ -197,8 +193,7 @@ describe("MainScreen", () => {
     expect(
       JSON.parse(window.localStorage.getItem(storageKey) ?? "{}").previousTrips[0],
     ).toMatchObject({
-      prompt:
-        "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
+      prompt: routePrompt,
       createdAt: routeCreatedAt,
       route: [
         {
@@ -241,9 +236,7 @@ describe("MainScreen", () => {
       ).toHaveLength(2);
     });
     expect(
-      screen.getAllByText(
-        "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.",
-      ),
+      screen.getAllByText(routePrompt),
     ).toHaveLength(2);
   });
 

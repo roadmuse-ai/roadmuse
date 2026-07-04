@@ -20,7 +20,7 @@ import {
 import { type PreviousTrip, type RouteWaypoint } from "../data/settings";
 
 const stubPrompt =
-  "Find a kid-friendly lunch stop near the National Mall with easy parking, and avoid the Beltway unless it saves more than 15 minutes.";
+  "Route Rockville to National Mall via Bethesda Row and Georgetown Waterfront Park. Find kid-friendly lunch with easy parking; avoid the Beltway unless it saves 15+ min.";
 
 type VoiceHomeMode = "initial" | "listening" | "review" | "manual";
 
