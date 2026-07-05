@@ -135,7 +135,7 @@ Notes:
 
 ```
 {
-  preferred_navigator: "google-maps"|"waze"|...,
+  preferred_navigator: NavigatorProvider,
   saved_places[]: SavedPlaceInput[],
   preferences[]: PreferenceInput[]
 }
@@ -184,52 +184,19 @@ Notes:
   options[]: RouteOption[]
   applied_preferences[]: RoutePreference[]
   warnings[]: ProviderWarning[],
-  recommended_navigator: "google-maps" | "waze" | ...
+  recommended_navigator: NavigatorProvider
   explanation?: text,
 }
 ```
 
-See [docs/backend/RoutePlanResponse.md](./backend/RoutePlanResponse.md)
+See [docs/backend/RoutePlanResponse.md](./backend/RoutePlanResponse.md), it also defines:
+* `RouteOption`: route metadata, an item in the array of possible options
+* `RouteLeg`: a "leg" of the route (part of the trip between breaks)
+* `ProviderWarning`: a warning for specific map providers (when some features are not supported)
+* `NavigatorProvider`: enum of external navigator IDs (kebab values, matches the SPA `navigatorIds`); also used by `RoutePlanSettings.preferred_navigator`
 
-**`RouteOption`**: route metadata, an item in the array of possible options
-
-```
-{
-  kind: "baseline" | "preference_shaped" | "alternative",
-  legs[]: RouteLeg[]
-  eta_minutes: number,
-  eta_delta_vs_baseline: number,
-  distance_km: number,
-  navigator_links: {[provider]: url},
-  stops: LocationRef[]
-}
-```
-
-**`RouteLeg`**: route metadata, an item in the array of possible options
-
-```
-{
-  mode: "drive" | "walk" | "bicycle", // future "transit", "multimodal"
-  eta_minutes: number,
-  distance_km: number
-}
-```
-
-Note: "leg" a standard Valhalla term:
-* > A trip contains one or more legs. For n number of break locations, there are n-1 legs. Through locations do not create separate legs.
-* See: https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/#trip-legs-and-maneuvers
-
-**`ProviderWarning`**: warnings for specific map providers.
-
-```
-{
-  message: text,
-  navigator: "google-maps" | "waze" | ...
-}
-```
-
-**`RouteIntent`**: machine-readable form of what the user asked for
-See [docs/backend/RouteIntent.md](./backend/RouteIntent.md)
+**`RouteIntent`** is a machine-readable form of what the user asked for.
+See [docs/backend/RouteIntent.md](./backend/RouteIntent.md), also defines `TravelMode`, `Waypoint`, `WaypointKind`.
 
 **`LocationRef` and `Coordinate`**:
 See [docs/backend/LocationRef.md](./backend/LocationRef.md)
