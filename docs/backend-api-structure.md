@@ -324,28 +324,3 @@ HTTP GET in              (API input)
   (`spa/src/data/settings.ts`, `preferences.ts`, `preferenceValidation.ts`,
   localStorage migration for existing users) — a frontend change outside #11's
   scope. Discuss whether the consistency is worth the SPA churn.
-
----
-
--- Mapping of the logic to existing issues (to add as issue comment) --
-
-API Methods:
-* `GET /health` - #10
-* `POST /api/route/plan` - #12
-  * business-logic: #15–#25
-  * RoutePlanRequest (input schema): ? (TODO, maybe #11)
-  * Business logic: agent call = prompt + dependencies (RunContext)
-  * RouteIntentAgent (AI logic): #12
-  * RouteIntent (AI output schema): #11
-  * LocationResolver -> ValhallaCompiler -> Valhalla -> CandidateGen/Scorer -> NavigatorUrlBuilder (business-logic): #15–#18, #19–25/#38
-  * RoutePlanResponse (API output schema): #11 (initial structure)
-* `POST /api/route/intent` - #12
-* `POST /api/preferences/validate` - #13
-  * PreferenceValidationRequest (input schema) - ? (maybe #13)
-  * business logic: agent call = text + deps (RunContext) (+ future route context) - ? (maybe #13)
-  * PreferenceValidationAgent (AI logic: classify): #13
-  * preference classification (AI output schema): #13
-  * CapabilityMatrix (business-logic check): #13
-  * PreferenceValidationResponse (API output schema): ? (maybe #13)
-* Generic schemas - #11
- * `RouteIntent`, `LocationRef`, `RoutePreference`, `RoutePlanResponse`.
