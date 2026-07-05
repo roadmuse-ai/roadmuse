@@ -1,5 +1,9 @@
 # RoutePlanResponse model
 
+## Overview
+
+**`RoutePlanResponse` = the answer sheet.** It echoes the interpreted intent, provides scored route options (each a set of legs with ETAs and navigator links), explains the choice in plain language, and warns about provider limitations.
+
 ## What `RoutePlanResponse` is for
 
 `RoutePlanResponse` is the final answer the backend sends back to the app after it has planned a route. The [RouteIntent](./RouteIntent.md) is "what the user asked for," the `RoutePlanResponse` is "here's what we came up with, why, and how to actually drive it."
@@ -7,10 +11,6 @@
 It's the payload that powers the main result screen in the app and, ultimately, the "Open in your navigator" buttons.
 
 It is built by deterministic code: candidate generation -> scoring -> URL/warning building (see the [main flow in the architecture.md](../architecture.md#main-flow)) and never by the LLM directly (the LLM only contributes the *explanation text*, per the parse/explain split).
-
-## Mental model
-
-**`RoutePlanResponse` = the answer sheet.** It echoes the interpreted intent, provides scored route options (each a set of legs with ETAs and navigator links), explains the choice in plain language, and warns about provider limitations.
 
 ## Model structure
 
@@ -121,7 +121,7 @@ from pydantic import BaseModel, Field
 
 class RouteOptionKind(str, Enum):
     baseline = "baseline"
-    preference_shaped = "preference_shaped"
+    preference_shaped = "preference-shaped"
     alternative = "alternative"
 
 

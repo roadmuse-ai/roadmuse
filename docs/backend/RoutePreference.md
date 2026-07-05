@@ -1,5 +1,9 @@
 # RoutePreference model
 
+## Overview
+
+**`RoutePreference` = one costing/scoring rule.** `LocationRef` says where to go; `RoutePreference` says how to weigh the ways of getting there. Enforcement = how strict, applicability = when it works, support = whether we can actually apply it.
+
 ## What `RoutePreference` is for
 
 `RoutePreference` is the **structured form of a single rule the user has about *how* the route should go** (as opposed to *where* it goes, that's [LocationRef](./LocationRef.md)).
@@ -17,10 +21,6 @@ Examples of the natural-language rules it has to capture (from the [requirements
 - "Paved roads only." (use-case 31)
 
 Each of those becomes one `RoutePreference`. The `RouteIntentAgent` (#12) extracts them; deterministic code later turns them into Valhalla costing options (`use_tolls`, `exclude_polygons`, `maneuver_penalty`, etc., see [architecture.md](../architecture.md#core-backend-services)).
-
-## Mental model
-
-**`RoutePreference` = one costing/scoring rule.** `LocationRef` says where to go; `RoutePreference` says how to weigh the ways of getting there. Enforcement = how strict, applicability = when it works, support = whether we can actually apply it.
 
 ## Model structure
 

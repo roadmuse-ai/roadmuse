@@ -1,5 +1,9 @@
 # RouteIntent model
 
+## Overview
+
+**`RouteIntent` = the normalized order slip.** The user speaks freely; the agent fills in this form; deterministic code reads the form and never has to re-interpret free-form text.
+
 ## What `RouteIntent` is for
 
 `RouteIntent` is the **structured, machine-readable form of what the user asked for in plain language.**
@@ -27,10 +31,6 @@ RoutePlanResponse (api output)
 `RouteIntent` is the *only* thing the LLM produces after processing the input and everything after it is deterministic.
 
 That's why it matters that it's a strict Pydantic model: it's the point where we stop trusting free-form model output and start validating (see [requirements.md](../requirements.md#backend), "Deterministic capability matrix after AI parsing").
-
-## Mental model
-
-**`RouteIntent` = the normalized order slip.** The user speaks freely; the agent fills in this form; deterministic code reads the form and never has to re-interpret free-form text.
 
 ## Model structure
 
@@ -69,7 +69,7 @@ model RouteIntent:
 Notes:
 
 - **`origin`** is optional on purpose. In the main flow PWA sends "prompt + current location" separately ([../architecture.md](../architecture.md#main-flow)), so a missing origin means "start from where I am" and the resolver fills it in later. The schema shouldn't force it.
-- **`waypoints`** list has two types of items: `break` and `through`. These are different and `break` represens a real stop where you get out while `through` is a point to route through, but without a stop.
+- **`waypoints`** list has two types of items: `break` and `through`. These are different and `break` represents a real stop where you get out while `through` is a point to route through, but without a stop.
 - **`RouteIntent` contains *parsed* preferences, not the *validated* ones.** The AI extracts intent; `PreferenceValidationAgent` (#13) later marks each preference with a support level (supported, partially supported, etc). So in #11, `RouteIntent.preferences` is the "what the user wants" list; the "can we actually do it" decision is a separate concern layered on top.
 
 ## The model in code (draft)

@@ -168,7 +168,7 @@ Notes:
 ```
 {
   id: text,
-  text: text
+  text: text,
   enabled: boolean
 }
 ```
@@ -176,7 +176,7 @@ Notes:
 Notes:
 * mirrors the SPA `TextPreference` input subset.
 
-**`RoutePlanResponse`**: The "Plan Route" enpoint output.
+**`RoutePlanResponse`**: The "Plan Route" endpoint output.
 
 ```
 {
@@ -342,7 +342,7 @@ API Methods:
 * `POST /api/route/intent` - #12
 * `POST /api/preferences/validate` - #13
   * PreferenceValidationRequest (input schema) - ? (maybe #13)
-  * busness logic: agent call = text + deps (RunContext) (+ future route context) - ? (maybe #13)
+  * business logic: agent call = text + deps (RunContext) (+ future route context) - ? (maybe #13)
   * PreferenceValidationAgent (AI logic: classify): #13
   * preference classification (AI output schema): #13
   * CapabilityMatrix (business-logic check): #13

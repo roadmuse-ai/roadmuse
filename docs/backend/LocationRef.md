@@ -1,5 +1,9 @@
 # LocationRef model
 
+## Overview
+
+**`LocationRef` = a labeled envelope for a place that starts vague and gets resolved to the coordinate.** It preserves the original label, and it gains a coordinate when the resolver gets to it.
+
 ## What `LocationRef` is for
 
 `LocationRef` describes a place before we know exactly where that place is. It's a reference, not a precise coordinate.
@@ -9,7 +13,7 @@ This model is used everywhere a location is needed: `RouteIntent.origin`, `Route
 It captures the whole lifecycle of a place in the app, from "vague thing the user said" to "exact lat/lon we hand to Valhalla." When the AI first produces it, a `LocationRef` might just be the string `"daycare"`. Later, `LocationResolver` (#15) turns that into coordinates. Same object, progressively filled in:
 
 ```
-"daycare"  ──RouteIntentAgent──▶  LocationRef(kind=saved_place, label="daycare")
+"daycare" ─ RouteIntentAgent ──▶ LocationRef(kind=saved_place, label="daycare")
                                         │
                                         │  LocationResolver (#15)
                                         ▼
@@ -21,10 +25,6 @@ This structure supports the [design principle in ai-agent-build-guide.md](../ai-
 > LLMs parse and explain. Deterministic code validates, routes, scores, and generates navigator links.
 
 The `LocationRef` contains both the fuzzy input and the precise output.
-
-## Mental model
-
-**`LocationRef` = a labeled envelope for a place that starts vague and gets resolved to the coordinate.** It preserves the original label, and it gains a coordinate when the resolver gets to it.
 
 ## Model structure
 
