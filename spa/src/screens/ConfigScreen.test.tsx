@@ -225,12 +225,31 @@ describe("ConfigScreen", () => {
     });
   });
 
+  it("lists theme mode options in System, Light, Dark order", () => {
+    renderConfigScreen();
+
+    const options = within(screen.getByRole("radiogroup", { name: "Theme mode" })).getAllByRole(
+      "radio",
+    );
+
+    expect(options.map((option) => option.getAttribute("value"))).toEqual([
+      "auto",
+      "light",
+      "dark",
+    ]);
+    expect(options.map((option) => option.closest("label")?.textContent?.trim())).toEqual([
+      "System",
+      "Light",
+      "Dark",
+    ]);
+  });
+
   it("selects and persists the theme mode", async () => {
     const user = userEvent.setup();
     renderConfigScreen();
 
-    const autoOption = screen.getByRole("radio", { name: "Auto" });
-    expect(autoOption).toBeChecked();
+    const systemOption = screen.getByRole("radio", { name: "System" });
+    expect(systemOption).toBeChecked();
     expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
 
     await user.click(screen.getByRole("radio", { name: "Dark" }));
@@ -361,6 +380,74 @@ describe("ConfigScreen", () => {
     });
 
     vi.useRealTimers();
+  });
+
+  it("rejects blank and whitespace-only preference values", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    await user.click(screen.getByRole("button", { name: "Add Preference" }));
+
+    const preferenceField = screen.getByLabelText("Preference text");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Preference text is required.");
+    expect(preferenceField).toHaveAttribute("aria-invalid", "true");
+
+    await user.type(preferenceField, "   ");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Preference text is required.");
+    expect(screen.getByRole("dialog", { name: "Add route preference" })).toBeInTheDocument();
+
+    await user.clear(preferenceField);
+    await user.type(preferenceField, "Avoid tolls");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Avoid tolls")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Edit preference: Avoid tolls" }));
+    const editPreferenceField = screen.getByLabelText("Preference text");
+    await user.clear(editPreferenceField);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Preference text is required.");
+    expect(screen.getByRole("dialog", { name: "Edit route preference" })).toBeInTheDocument();
+
+    await user.type(editPreferenceField, "\t  \n");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Preference text is required.");
+
+    vi.useRealTimers();
+  });
+
+  it("locks background scroll while an editor overlay is open", async () => {
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 180,
+    });
+    const scrollTo = vi.fn();
+    vi.stubGlobal("scrollTo", scrollTo);
+
+    const user = userEvent.setup();
+    renderConfigScreen();
+
+    await user.click(screen.getByRole("button", { name: "Add Preference" }));
+
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.body.style.position).toBe("fixed");
+    expect(document.body.style.top).toBe("-180px");
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(document.body.style.overflow).toBe("");
+    expect(document.body.style.position).toBe("");
+    expect(scrollTo).toHaveBeenCalledWith(0, 180);
+
+    vi.unstubAllGlobals();
   });
 
   it("persists distance units after preferred navigator", async () => {

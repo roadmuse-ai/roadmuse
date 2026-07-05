@@ -34,7 +34,7 @@
   --control-border: var(--bottom-nav-separator);
   --brand-road-wordmark-color: var(--bottom-nav-bg);
   --brand-road-wordmark-shadow: 0 1px 0 rgb(255 207 50 / 0.18);
-  --brand-muse-color: var(--bottom-nav-active-bg);
+  --brand-muse-color: var(--brand-road-amber);
   --brand-muse-shadow: 0 1px 0 rgb(76 44 0 / 0.42);
   --control-height: 2.75rem;
   --content-gap: 0.6rem;
@@ -179,6 +179,7 @@
   --control-secondary-fill-bg: #0f3155;
   --control-border: var(--bottom-nav-separator);
   --brand-road-wordmark-shadow: 0 1px 0 rgb(95 215 255 / 0.2);
+  --brand-muse-color: var(--brand-road-amber);
   --bottom-nav-bg: #0f3155;
   --bottom-nav-separator: rgb(95 215 255 / 0.3);
   --bottom-nav-text: #d7f6ff;
@@ -259,6 +260,7 @@
   --control-secondary-fill-bg: #12191f;
   --control-border: var(--bottom-nav-separator);
   --brand-road-wordmark-shadow: 0 1px 0 rgb(183 204 216 / 0.26);
+  --brand-muse-color: var(--brand-road-amber);
   --bottom-nav-bg: #12191f;
   --bottom-nav-separator: rgb(231 241 247 / 0.34);
   --bottom-nav-text: #f4f8fb;
@@ -339,6 +341,7 @@
   --control-secondary-fill-bg: #0a3161;
   --control-border: var(--bottom-nav-separator);
   --brand-road-wordmark-shadow: 0 1px 0 rgb(179 25 66 / 0.2);
+  --brand-muse-color: var(--brand-road-gold);
   --brand-muse-shadow: 0 1px 0 rgb(8 31 77 / 0.32);
   --bottom-nav-bg: #0a3161;
   --bottom-nav-separator: rgb(255 255 255 / 0.28);

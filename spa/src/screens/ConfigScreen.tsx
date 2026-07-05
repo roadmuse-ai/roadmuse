@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { PreferenceCard } from "../components/PreferenceCard";
 import { RouteSettingsSection } from "../components/RouteSettingsSection";
 import { useSettings } from "../context/SettingsContext";
+import { useScrollLock } from "../hooks/useScrollLock";
 import {
   countryOptions,
   getCountryOption,
@@ -101,11 +102,6 @@ function getLookupOption(options: readonly string[], value: string): string | un
   const normalized = value.trim().toLocaleLowerCase();
 
   return options.find((option) => option.toLocaleLowerCase() === normalized);
-}
-
-function scrollToPageTop() {
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
 }
 
 type LookupFieldProps = {
@@ -306,6 +302,9 @@ export function ConfigScreen() {
   const [editingPreferenceId, setEditingPreferenceId] = useState<string | null>(null);
   const [preferenceDraft, setPreferenceDraft] = useState("");
   const [preferenceEditorError, setPreferenceEditorError] = useState("");
+  const preferenceErrorId = useId();
+  const isOverlayOpen = isEditorOpen || isPreferenceEditorOpen;
+  useScrollLock(isOverlayOpen);
   const isAddressMode = draft.entryMode === "address";
   const selectedCountry = getCountryOption(draft.country);
   const stateOptions = getStateOptions(draft.country);
@@ -313,7 +312,6 @@ export function ConfigScreen() {
   const statePlaceholder = draft.country ? "Not required" : "Select country first";
 
   const openAddPlace = () => {
-    scrollToPageTop();
     setEditingId(null);
     setDraft(emptyDraft);
     setEditorError("");
@@ -321,7 +319,6 @@ export function ConfigScreen() {
   };
 
   const openEditPlace = (place: SavedPlace) => {
-    scrollToPageTop();
     setEditingId(place.id);
     setDraft({
       entryMode: place.entryMode ?? "address",
@@ -424,7 +421,6 @@ export function ConfigScreen() {
   };
 
   const openAddPreference = () => {
-    scrollToPageTop();
     setEditingPreferenceId(null);
     setPreferenceDraft("");
     setPreferenceEditorError("");
@@ -432,7 +428,6 @@ export function ConfigScreen() {
   };
 
   const openEditPreference = (preference: TextPreference) => {
-    scrollToPageTop();
     setEditingPreferenceId(preference.id);
     setPreferenceDraft(preference.text);
     setPreferenceEditorError("");
@@ -473,7 +468,7 @@ export function ConfigScreen() {
       <section className="config-section">
         <h3 className="settings-title">Theme</h3>
         <p className="form-note">
-          Auto follows your device's light or dark appearance.
+          System follows your device's light or dark appearance.
         </p>
         <div
           className="theme-toggle"
@@ -865,16 +860,30 @@ export function ConfigScreen() {
               </span>
               <textarea
                 aria-label="Preference text"
+                aria-required="true"
+                aria-invalid={preferenceEditorError ? true : undefined}
+                aria-describedby={preferenceEditorError ? preferenceErrorId : undefined}
                 className="preference-editor__textarea"
                 value={preferenceDraft}
-                onChange={(event) => setPreferenceDraft(event.target.value)}
+                onChange={(event) => {
+                  setPreferenceDraft(event.target.value);
+                  if (preferenceEditorError) {
+                    setPreferenceEditorError("");
+                  }
+                }}
                 placeholder='e.g., "Avoid tolls unless they save 20 minutes"'
                 rows={4}
               />
             </label>
 
             {preferenceEditorError ? (
-              <p className="form-note form-note--error">{preferenceEditorError}</p>
+              <p
+                id={preferenceErrorId}
+                className="form-note form-note--error"
+                role="alert"
+              >
+                {preferenceEditorError}
+              </p>
             ) : null}
 
             <div className="saved-place__actions saved-place__editor-actions">

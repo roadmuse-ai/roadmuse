@@ -113,10 +113,10 @@ describe("App", () => {
     expect(document.documentElement.dataset.accentTheme).toBe("patriotic");
   });
 
-  it("defaults to auto theme mode resolved as light without system dark preference", () => {
+  it("defaults to system theme mode resolved as light without system dark preference", () => {
     renderApp("/config");
 
-    expect(screen.getByRole("radio", { name: "Auto" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "System" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
     expect(document.documentElement.dataset.theme).toBe("light");
     expect(document.documentElement.dataset.accentTheme).toBe("ground");

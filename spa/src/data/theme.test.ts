@@ -38,6 +38,8 @@ describe("theme helpers", () => {
 
   it("keeps labels for every theme mode", () => {
     expect(Object.keys(themeModeLabels)).toEqual([...themeModes]);
+    expect(themeModes).toEqual(["auto", "light", "dark"]);
+    expect(themeModeLabels.auto).toBe("System");
   });
 
   it("recognizes accent themes and keeps their labels aligned", () => {
