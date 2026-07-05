@@ -298,29 +298,13 @@ HTTP GET in              (API input)
 
 ## Open questions
 
-- Add optional route context (origin/destination) to `/api/preferences/validate`
-  so `needs-route-context` preferences can be validated in context?
+- Add optional route context (origin/destination) to `/api/preferences/validate` so `needs-route-context` preferences can be validated in context?
 - Batch preference validation vs single-text only?
-- Should `/api/route/plan` optionally accept an already-parsed `RouteIntent`
-  (skip the agent) for testing/replay?
-- Keep `/api/route/intent` (parse-only) or drop it? It's useful to ship/verify
-  #12 before Valhalla exists, but the SPA will never call it in production —
-  alternative is to verify the agent via unit tests instead of a live endpoint.
+- Should `/api/route/plan` optionally accept an already-parsed `RouteIntent` (skip the agent) for testing/replay?
+- Keep `/api/route/intent` (parse-only) or drop it? It's useful to ship/verify #12 before Valhalla exists, but the SPA will never call it in production — alternative is to verify the agent via unit tests instead of a live endpoint.
 - Where do we implement the input/output schemas + route-stub **code** live (there is no separate issue, so either create issues or include in existing ones, #12 / #13)?
-- **RESOLVED:** the API-structure doc + per-model design notes move **into the
-  repo** (`roadmuse/docs/`) as the deliverable of the planning story.
-- **Doc layout — undecided:** split (`docs/backend-api-structure.md` +
-  `docs/backend/LocationRef.md`, `RouteIntent.md`, …, dropping the `11-` prefix)
-  vs merge everything into one doc.
-- **snake_case everywhere (backend + frontend) for consistency?** Today we mix
-  conventions: backend uses snake_case field names but the wire keeps kebab-case
-  enum *values* (`SupportLevel`, navigator IDs) and the SPA stores camelCase
-  (`preferredNavigator`, `entryMode`, `zipCode`) + kebab enum values — so a request
-  needs a camel→snake mapping and the backend special-cases kebab values. Proposal:
-  standardize on snake_case for *everything* on the wire (field names AND enum
-  values), and migrate the SPA to match (localStorage keys + status/navigator
-  values). Pros: one convention, no mapping layer, no kebab special-case (revisits
-  the `SupportLevel`/navigator-ID decisions). Cons: touches shipped SPA code
-  (`spa/src/data/settings.ts`, `preferences.ts`, `preferenceValidation.ts`,
-  localStorage migration for existing users) — a frontend change outside #11's
-  scope. Discuss whether the consistency is worth the SPA churn.
+- **snake_case everywhere (backend + frontend) for consistency?**
+  - Today we mix conventions: backend uses snake_case field names but the wire keeps kebab-case enum *values* (`SupportLevel`, navigator IDs) and the SPA stores camelCase (`preferredNavigator`, `entryMode`, `zipCode`) + kebab enum values — so a request needs a camel→snake mapping and the backend special-cases kebab values.
+  - Proposal: standardize on snake_case for *everything* on the wire (field names AND enum values), and migrate the SPA to match (localStorage keys + status/navigator values).
+  - Pros: one convention, no mapping layer, no kebab special-case (revisits the `SupportLevel`/navigator-ID decisions).
+  - Cons: touches shipped SPA code (`spa/src/data/settings.ts`, `preferences.ts`, `preferenceValidation.ts`, localStorage migration for existing users) — a frontend change outside #11's scope. Discuss whether the consistency is worth the SPA churn.
