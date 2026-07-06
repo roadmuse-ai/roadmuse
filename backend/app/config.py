@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     environment: str = "development"
     cors_origins: list[str] = ["http://localhost:5173"]
+    route_agent_model: str = "claude-opus-4-8"
 
 
 @lru_cache

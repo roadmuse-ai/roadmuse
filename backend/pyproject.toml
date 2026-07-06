@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
     "pydantic-settings>=2.6",
+    "pydantic-ai-slim[anthropic]>=0.0.14",
 ]
 
 [dependency-groups]

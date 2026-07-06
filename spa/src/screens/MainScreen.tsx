@@ -14,7 +14,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
+import { planRoute } from "../api/routePlan";
 import {
+  type AddressRoute,
   buildAddressNavigatorDeepLink,
   stubVoiceRoute,
 } from "../data/navigationLinks";
@@ -368,28 +370,42 @@ export function MainScreen() {
     setMode("initial");
   };
 
-  const drive = () => {
-    const drivePrompt = prompt.trim() || stubPrompt;
-    const deepLink = buildAddressNavigatorDeepLink(settings.preferredNavigator, {
-      startAddress: defaultRouteWaypoints[0]?.address ?? stubVoiceRoute.startLabel,
-      destinationAddress:
-        defaultRouteWaypoints[defaultRouteWaypoints.length - 1]?.address ??
-        defaultRouteTargetAddress,
-      waypoints: defaultRouteWaypoints,
-    });
+  const fallbackRoute: AddressRoute = {
+    startAddress: defaultRouteWaypoints[0]?.address ?? stubVoiceRoute.startLabel,
+    destinationAddress:
+      defaultRouteWaypoints[defaultRouteWaypoints.length - 1]?.address ??
+      defaultRouteTargetAddress,
+    waypoints: defaultRouteWaypoints,
+  };
 
+  const drive = async () => {
+    const drivePrompt = prompt.trim() || stubPrompt;
+    // Open the tab synchronously (inside the click) so it isn't popup-blocked;
+    // fill its URL once the backend returns the parsed route.
+    const pendingTab = window.open("about:blank", "_blank");
+
+    const planned = await planRoute(drivePrompt, undefined, settings.savedPlaces);
+    const route = planned?.route ?? fallbackRoute;
+    const deepLink = buildAddressNavigatorDeepLink(settings.preferredNavigator, route);
+
+    if (pendingTab) {
+      pendingTab.location.href = deepLink;
+    } else {
+      window.open(deepLink, "_blank", "noopener,noreferrer");
+    }
+
+    const waypoints = route.waypoints ?? defaultRouteWaypoints;
     addPreviousTrip(drivePrompt, {
-      route: defaultRouteWaypoints,
-      startAddress: stubVoiceRoute.startLabel,
-      endAddress: defaultRouteTargetAddress,
+      route: waypoints,
+      startAddress: route.startAddress,
+      endAddress: route.destinationAddress,
       durationMinutes: defaultRouteDurationMinutes,
       distanceMiles: defaultRouteDistanceMiles,
-      stopCount: 2,
+      stopCount: Math.max(0, waypoints.length - 2),
     });
 
     setPrompt(stubPrompt);
     setMode("initial");
-    window.open(deepLink, "_blank", "noopener,noreferrer");
   };
 
   const playPreviousTrip = (trip: PreviousTrip) => {
@@ -633,7 +649,7 @@ export function MainScreen() {
             className="voice-home__action voice-home__action--primary voice-home__action--right"
             aria-label={primaryActionLabel}
             title="Drive"
-            onClick={drive}
+            onClick={() => void drive()}
           >
             <Play aria-hidden="true" />
           </button>
