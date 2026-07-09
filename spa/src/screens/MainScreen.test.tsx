@@ -352,14 +352,23 @@ describe("MainScreen", () => {
     const quietMaxLevel = getMaxVoiceLevel(voiceBars);
     microphoneAmplitude = 18;
 
-    for (const nextTime of [1080, 1150, 1220, 1290]) {
+    currentTime = 1080;
+    act(() => {
+      animationFrameHandler?.(currentTime);
+    });
+
+    const firstLoudMaxLevel = getMaxVoiceLevel(voiceBars);
+
+    expect(firstLoudMaxLevel).toBeGreaterThan(quietMaxLevel + 0.12);
+
+    for (const nextTime of [1150, 1220, 1290]) {
       currentTime = nextTime;
       act(() => {
         animationFrameHandler?.(currentTime);
       });
     }
 
-    expect(getMaxVoiceLevel(voiceBars)).toBeGreaterThan(quietMaxLevel + 0.08);
+    expect(getMaxVoiceLevel(voiceBars)).toBeGreaterThan(quietMaxLevel + 0.25);
   });
 
   it("lets recording bars trail across the two-second graph after speech stops", async () => {

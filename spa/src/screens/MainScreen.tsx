@@ -34,13 +34,13 @@ const defaultRouteDistanceMiles = 14;
 const kilometersPerMile = 1.609344;
 const voiceActivityThreshold = 0.008;
 const voiceBarCount = 32;
-const voiceBarHistorySampleMs = 70;
+const voiceBarHistorySampleMs = 50;
 const voiceBarHistoryWindowMs = 2_000;
-const voiceBarInputResponse = 0.24;
+const voiceBarInputResponse = 0.72;
 const voiceBarRenderDeadband = 0.003;
-const voiceBarRenderResponse = 0.2;
+const voiceBarRenderResponse = 0.62;
 const stillVoiceBarLevel = 0.16;
-const voiceBarSensitivity = 18;
+const voiceBarSensitivity = 42;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
   {
@@ -222,7 +222,8 @@ function getVoiceBarState(
   );
   const previousHistoryPoint = recentHistory[recentHistory.length - 1];
   const rawCurrentLevel = clampVoiceBarLevel(
-    stillVoiceBarLevel + audioVolume * voiceBarSensitivity,
+    stillVoiceBarLevel +
+      Math.max(0, audioVolume - voiceActivityThreshold) * voiceBarSensitivity,
   );
   const currentLevel =
     previousHistoryPoint === undefined
@@ -334,8 +335,8 @@ function useVoiceBars(isListening: boolean): {
         }
 
         const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 1024;
-        analyser.smoothingTimeConstant = 0.82;
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.35;
         const timeDomainData = new Uint8Array(analyser.fftSize);
         audioSource = audioContext.createMediaStreamSource(stream);
         audioSource.connect(analyser);
