@@ -882,7 +882,7 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.13rem, 0.9vw, 0.28rem);
+  gap: clamp(0.08rem, 0.55vw, 0.18rem);
   width: min(20rem, 78vw);
   height: min(8.75rem, 31vh);
   pointer-events: none;
@@ -893,7 +893,7 @@ section {
   --voice-index: 0;
   --voice-level: 0.16;
 
-  width: clamp(0.22rem, 1.1vw, 0.38rem);
+  width: clamp(0.16rem, 0.8vw, 0.28rem);
   height: 100%;
   border-radius: 999px;
   background: var(--control-fill-bg);

@@ -271,7 +271,7 @@ describe("MainScreen", () => {
       Number(bar.style.getPropertyValue("--voice-level")),
     );
 
-    expect(bars).toHaveLength(21);
+    expect(bars).toHaveLength(32);
     expect(levels.some((level) => level > 0.28)).toBe(true);
     expect(new Set(levels).size).toBeGreaterThan(1);
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
@@ -287,7 +287,7 @@ describe("MainScreen", () => {
     expect(cancelAnimationFrameSpy).toHaveBeenCalledWith(88);
   });
 
-  it("lets recording bars trail across the two-minute graph after speech stops", async () => {
+  it("lets recording bars trail across the two-second graph after speech stops", async () => {
     const user = userEvent.setup();
     const mediaStream = {
       getTracks: () => [{ stop: vi.fn() }],
@@ -360,7 +360,7 @@ describe("MainScreen", () => {
     expect(voiceBars).toHaveAttribute("data-voice-active", "false");
     expect(trailingLevels.some((level) => level > 0.2)).toBe(true);
 
-    currentTime = 119_500;
+    currentTime = 2850;
     act(() => {
       animationFrameHandler?.(currentTime);
     });
@@ -370,7 +370,7 @@ describe("MainScreen", () => {
     );
 
     expect(analyser.getByteTimeDomainData).toHaveBeenCalledTimes(3);
-    expect(longTrailingLevels.slice(0, 3).some((level) => level > 0.18)).toBe(
+    expect(longTrailingLevels.slice(0, 6).some((level) => level > 0.18)).toBe(
       true,
     );
   });
@@ -425,9 +425,9 @@ describe("MainScreen", () => {
     );
 
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
-    expect(bars).toHaveLength(21);
+    expect(bars).toHaveLength(32);
     expect(voiceBars).toHaveAttribute("data-voice-active", "false");
-    expect(levels).toEqual(Array.from({ length: 21 }, () => "0.160"));
+    expect(levels).toEqual(Array.from({ length: 32 }, () => "0.160"));
   });
 
   it("opens the preferred navigator deep link and saves after Next from listening", async () => {
