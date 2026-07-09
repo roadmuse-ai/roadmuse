@@ -271,7 +271,7 @@ describe("MainScreen", () => {
       Number(bar.style.getPropertyValue("--voice-level")),
     );
 
-    expect(bars).toHaveLength(13);
+    expect(bars).toHaveLength(21);
     expect(levels.some((level) => level > 0.28)).toBe(true);
     expect(new Set(levels).size).toBeGreaterThan(1);
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
@@ -337,9 +337,9 @@ describe("MainScreen", () => {
     );
 
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
-    expect(bars).toHaveLength(13);
+    expect(bars).toHaveLength(21);
     expect(voiceBars).toHaveAttribute("data-voice-active", "false");
-    expect(levels).toEqual(Array.from({ length: 13 }, () => "0.160"));
+    expect(levels).toEqual(Array.from({ length: 21 }, () => "0.160"));
   });
 
   it("opens the preferred navigator deep link and saves after Next from listening", async () => {

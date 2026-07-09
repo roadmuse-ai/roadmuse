@@ -33,7 +33,8 @@ const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
 const kilometersPerMile = 1.609344;
 const voiceActivityThreshold = 0.008;
-const voiceBarCount = 13;
+const voiceBarCount = 21;
+const voiceBarSampleSpanMultiplier = 2.6;
 const stillVoiceBarLevel = 0.16;
 const voiceBarSensitivity = 3.6;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
@@ -125,6 +126,23 @@ function smoothVoiceBarLevels(levels: number[]): number[] {
   });
 }
 
+function getAverageVoiceSample(
+  timeDomainData: Uint8Array,
+  sampleIndex: number,
+  sampleSpan: number,
+): number {
+  const sampleRadius = Math.floor(sampleSpan / 2);
+  const startIndex = Math.max(0, sampleIndex - sampleRadius);
+  const endIndex = Math.min(timeDomainData.length - 1, sampleIndex + sampleRadius);
+  let totalSamples = 0;
+
+  for (let index = startIndex; index <= endIndex; index += 1) {
+    totalSamples += Math.abs(((timeDomainData[index] ?? 128) - 128) / 128);
+  }
+
+  return totalSamples / Math.max(1, endIndex - startIndex + 1);
+}
+
 function getVoiceBarState(timeDomainData: Uint8Array): {
   isVoiceActive: boolean;
   levels: number[];
@@ -137,9 +155,13 @@ function getVoiceBarState(timeDomainData: Uint8Array): {
 
   const maxBarIndex = Math.max(1, voiceBarCount - 1);
   const maxSampleIndex = Math.max(0, timeDomainData.length - 1);
+  const sampleSpan = Math.max(
+    5,
+    Math.round((timeDomainData.length / voiceBarCount) * voiceBarSampleSpanMultiplier),
+  );
   const levels = Array.from({ length: voiceBarCount }, (_, barIndex) => {
     const sampleIndex = Math.round((barIndex / maxBarIndex) * maxSampleIndex);
-    const sample = Math.abs(((timeDomainData[sampleIndex] ?? 128) - 128) / 128);
+    const sample = getAverageVoiceSample(timeDomainData, sampleIndex, sampleSpan);
     const responsiveSample = sample * 0.7 + audioVolume * 1.4;
     const envelope = 0.42 + Math.sin((barIndex / maxBarIndex) * Math.PI) * 0.58;
 
