@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   CircleDot,
   Clock3,
@@ -37,10 +31,14 @@ type VoiceHomeMode = "initial" | "listening" | "review" | "manual";
 
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
-const equalizerBarCount = 11;
 const kilometersPerMile = 1.609344;
-const stillVoiceLevel = 0.16;
-const voiceActivityThreshold = 0.045;
+const voiceActivityThreshold = 0.025;
+const waveformHeight = 120;
+const waveformPointCount = 36;
+const waveformSensitivity = 3.6;
+const waveformWidth = 320;
+const waveformCenterY = waveformHeight / 2;
+const waveformAmplitude = waveformHeight * 0.42;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
   {
@@ -96,14 +94,6 @@ function getRandomStarterTripPrompt(currentPrompt?: string): string {
   return promptOptions[promptIndex] ?? starterTripPrompts[0];
 }
 
-function getStillVoiceLevels(barCount = equalizerBarCount): number[] {
-  return Array.from({ length: barCount }, () => stillVoiceLevel);
-}
-
-function clampLevel(level: number): number {
-  return Math.max(0.16, Math.min(1, level));
-}
-
 function getAudioVolume(timeDomainData: Uint8Array): number {
   if (timeDomainData.length === 0) {
     return 0;
@@ -119,32 +109,53 @@ function getAudioVolume(timeDomainData: Uint8Array): number {
   return Math.sqrt(totalSquares / timeDomainData.length);
 }
 
-function getEqualizerLevels(
-  frequencyData: Uint8Array,
-  audioVolume: number,
-  barCount = equalizerBarCount,
-): number[] {
-  if (frequencyData.length === 0 || audioVolume < voiceActivityThreshold) {
-    return getStillVoiceLevels(barCount);
+function clampWaveformY(y: number): number {
+  return Math.max(6, Math.min(waveformHeight - 6, y));
+}
+
+function buildWaveformPath(yValues: number[]): string {
+  const maxPointIndex = Math.max(1, yValues.length - 1);
+
+  return yValues
+    .map((y, pointIndex) => {
+      const command = pointIndex === 0 ? "M" : "L";
+      const x = (pointIndex / maxPointIndex) * waveformWidth;
+
+      return `${command} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function getStillWaveformPath(): string {
+  return buildWaveformPath(
+    Array.from({ length: waveformPointCount }, () => waveformCenterY),
+  );
+}
+
+function getWaveformState(timeDomainData: Uint8Array): {
+  isVoiceActive: boolean;
+  path: string;
+} {
+  const audioVolume = getAudioVolume(timeDomainData);
+
+  if (timeDomainData.length === 0 || audioVolume < voiceActivityThreshold) {
+    return { isVoiceActive: false, path: getStillWaveformPath() };
   }
 
-  return Array.from({ length: barCount }, (_, barIndex) => {
-    const lowBand = Math.pow(barIndex / barCount, 1.6);
-    const highBand = Math.pow((barIndex + 1) / barCount, 1.6);
-    const start = Math.floor(lowBand * frequencyData.length);
-    const end = Math.min(
-      frequencyData.length,
-      Math.max(start + 1, Math.floor(highBand * frequencyData.length)),
-    );
-    let total = 0;
+  const maxPointIndex = Math.max(1, waveformPointCount - 1);
+  const maxSampleIndex = Math.max(0, timeDomainData.length - 1);
+  const yValues = Array.from({ length: waveformPointCount }, (_, pointIndex) => {
+    const sampleIndex = Math.round((pointIndex / maxPointIndex) * maxSampleIndex);
+    const sample = ((timeDomainData[sampleIndex] ?? 128) - 128) / 128;
+    const envelope = Math.sin((pointIndex / maxPointIndex) * Math.PI);
+    const y =
+      waveformCenterY -
+      sample * waveformAmplitude * waveformSensitivity * envelope;
 
-    for (let index = start; index < end; index += 1) {
-      total += frequencyData[index] ?? 0;
-    }
-
-    const average = total / (end - start) / 255;
-    return clampLevel(0.18 + average * 3.1);
+    return clampWaveformY(y);
   });
+
+  return { isVoiceActive: true, path: buildWaveformPath(yValues) };
 }
 
 function stopAudioStream(stream?: MediaStream): void {
@@ -155,17 +166,20 @@ function getAudioContextConstructor(): typeof AudioContext | undefined {
   return window.AudioContext ?? (window as AudioEnabledWindow).webkitAudioContext;
 }
 
-function useVoiceEqualizerLevels(isListening: boolean): {
+function useVoiceWaveform(isListening: boolean): {
   isAudioResponsive: boolean;
-  levels: number[];
+  isVoiceActive: boolean;
+  path: string;
 } {
-  const [levels, setLevels] = useState(getStillVoiceLevels);
+  const [path, setPath] = useState(getStillWaveformPath);
   const [isAudioResponsive, setIsAudioResponsive] = useState(false);
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
 
   useEffect(() => {
     if (!isListening) {
-      setLevels(getStillVoiceLevels());
+      setPath(getStillWaveformPath());
       setIsAudioResponsive(false);
+      setIsVoiceActive(false);
       return undefined;
     }
 
@@ -189,8 +203,9 @@ function useVoiceEqualizerLevels(isListening: boolean): {
       const AudioContextConstructor = getAudioContextConstructor();
 
       if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
-        setLevels(getStillVoiceLevels());
+        setPath(getStillWaveformPath());
         setIsAudioResponsive(false);
+        setIsVoiceActive(false);
         return;
       }
 
@@ -219,9 +234,8 @@ function useVoiceEqualizerLevels(isListening: boolean): {
         }
 
         const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
+        analyser.fftSize = 512;
         analyser.smoothingTimeConstant = 0.64;
-        const frequencyData = new Uint8Array(analyser.frequencyBinCount);
         const timeDomainData = new Uint8Array(analyser.fftSize);
         audioSource = audioContext.createMediaStreamSource(stream);
         audioSource.connect(analyser);
@@ -232,11 +246,10 @@ function useVoiceEqualizerLevels(isListening: boolean): {
             return;
           }
 
-          analyser.getByteFrequencyData(frequencyData);
           analyser.getByteTimeDomainData(timeDomainData);
-          setLevels(
-            getEqualizerLevels(frequencyData, getAudioVolume(timeDomainData)),
-          );
+          const waveformState = getWaveformState(timeDomainData);
+          setPath(waveformState.path);
+          setIsVoiceActive(waveformState.isVoiceActive);
           animationFrameId = window.requestAnimationFrame(updateLevels);
         };
 
@@ -248,8 +261,9 @@ function useVoiceEqualizerLevels(isListening: boolean): {
 
         stopAudioStream(stream);
         stream = undefined;
-        setLevels(getStillVoiceLevels());
+        setPath(getStillWaveformPath());
         setIsAudioResponsive(false);
+        setIsVoiceActive(false);
       }
     };
 
@@ -261,14 +275,7 @@ function useVoiceEqualizerLevels(isListening: boolean): {
     };
   }, [isListening]);
 
-  return { isAudioResponsive, levels };
-}
-
-function getEqualizerBarStyle(level: number, index: number): CSSProperties {
-  return {
-    "--voice-level": level.toFixed(3),
-    "--voice-index": index,
-  } as CSSProperties;
+  return { isAudioResponsive, isVoiceActive, path };
 }
 
 function formatWaypoint(waypoint?: RouteWaypoint): string | null {
@@ -497,8 +504,11 @@ export function MainScreen() {
   );
 
   const isListening = mode === "listening";
-  const { isAudioResponsive, levels: voiceLevels } =
-    useVoiceEqualizerLevels(isListening);
+  const {
+    isAudioResponsive,
+    isVoiceActive,
+    path: voiceWaveformPath,
+  } = useVoiceWaveform(isListening);
   const isReviewing = mode === "review" || mode === "manual";
   const showsPromptEntry = isListening || isReviewing;
   const reviewTitle =
@@ -758,21 +768,30 @@ export function MainScreen() {
             />
             {isListening ? (
               <div
-                className={`voice-home__equalizer${
+                className={`voice-home__waveform${
                   isAudioResponsive
-                    ? " voice-home__equalizer--responsive"
-                    : " voice-home__equalizer--fallback"
+                    ? " voice-home__waveform--responsive"
+                    : " voice-home__waveform--fallback"
                 }`}
-                aria-label="Sound-responsive voice equalizer"
+                aria-label="Sound-responsive voice waveform"
                 data-audio-responsive={isAudioResponsive}
+                data-voice-active={isVoiceActive}
                 role="img"
               >
-                {voiceLevels.map((level, index) => (
-                  <span
-                    key={index}
-                    style={getEqualizerBarStyle(level, index)}
+                <svg
+                  aria-hidden="true"
+                  preserveAspectRatio="none"
+                  viewBox={`0 0 ${waveformWidth} ${waveformHeight}`}
+                >
+                  <path
+                    className="voice-home__waveform-shadow"
+                    d={voiceWaveformPath}
                   />
-                ))}
+                  <path
+                    className="voice-home__waveform-line"
+                    d={voiceWaveformPath}
+                  />
+                </svg>
               </div>
             ) : null}
           </div>
