@@ -287,6 +287,81 @@ describe("MainScreen", () => {
     expect(cancelAnimationFrameSpy).toHaveBeenCalledWith(88);
   });
 
+  it("scales recording bar amplitude with microphone volume", async () => {
+    const user = userEvent.setup();
+    const mediaStream = {
+      getTracks: () => [{ stop: vi.fn() }],
+    } as unknown as MediaStream;
+    const getUserMedia = vi
+      .fn<(constraints: MediaStreamConstraints) => Promise<MediaStream>>()
+      .mockResolvedValue(mediaStream);
+    let microphoneAmplitude = 2;
+    const analyser = {
+      fftSize: 0,
+      getByteTimeDomainData: vi.fn((data: Uint8Array) => {
+        data.forEach((_, index) => {
+          data[index] = Math.round(
+            128 + Math.sin(index / 9) * microphoneAmplitude,
+          );
+        });
+      }),
+      smoothingTimeConstant: 0,
+    } as unknown as AnalyserNode;
+    const audioContext = {
+      close: vi.fn().mockResolvedValue(undefined),
+      createAnalyser: vi.fn(() => analyser),
+      createMediaStreamSource: vi.fn(() => ({
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+      resume: vi.fn().mockResolvedValue(undefined),
+      state: "running",
+    } as unknown as AudioContext;
+    const AudioContextConstructor = vi.fn(function MockAudioContext() {
+      return audioContext;
+    });
+    let currentTime = 1000;
+    let animationFrameHandler: FrameRequestCallback | undefined;
+    const getMaxVoiceLevel = (voiceBars: HTMLElement) =>
+      Math.max(
+        ...Array.from(voiceBars.querySelectorAll("span")).map((bar) =>
+          Number(bar.style.getPropertyValue("--voice-level")),
+        ),
+      );
+
+    vi.spyOn(window.performance, "now").mockImplementation(() => currentTime);
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((handler) => {
+      animationFrameHandler = handler;
+      return 91;
+    });
+    Object.defineProperty(window.navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal("AudioContext", AudioContextConstructor);
+
+    renderMainScreen();
+
+    await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
+
+    const voiceBars = screen.getByRole("img", { name: voiceBarsName });
+    await waitFor(() => {
+      expect(voiceBars).toHaveAttribute("data-voice-active", "true");
+    });
+
+    const quietMaxLevel = getMaxVoiceLevel(voiceBars);
+    microphoneAmplitude = 18;
+
+    for (const nextTime of [1080, 1150, 1220, 1290]) {
+      currentTime = nextTime;
+      act(() => {
+        animationFrameHandler?.(currentTime);
+      });
+    }
+
+    expect(getMaxVoiceLevel(voiceBars)).toBeGreaterThan(quietMaxLevel + 0.08);
+  });
+
   it("lets recording bars trail across the two-second graph after speech stops", async () => {
     const user = userEvent.setup();
     const mediaStream = {

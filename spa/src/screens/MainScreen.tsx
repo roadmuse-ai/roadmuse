@@ -40,7 +40,7 @@ const voiceBarInputResponse = 0.24;
 const voiceBarRenderDeadband = 0.003;
 const voiceBarRenderResponse = 0.2;
 const stillVoiceBarLevel = 0.16;
-const voiceBarSensitivity = 3.6;
+const voiceBarSensitivity = 18;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
   {
@@ -222,7 +222,7 @@ function getVoiceBarState(
   );
   const previousHistoryPoint = recentHistory[recentHistory.length - 1];
   const rawCurrentLevel = clampVoiceBarLevel(
-    stillVoiceBarLevel + audioVolume * voiceBarSensitivity * 3.4,
+    stillVoiceBarLevel + audioVolume * voiceBarSensitivity,
   );
   const currentLevel =
     previousHistoryPoint === undefined
