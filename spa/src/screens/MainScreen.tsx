@@ -34,8 +34,11 @@ const defaultRouteDistanceMiles = 14;
 const kilometersPerMile = 1.609344;
 const voiceActivityThreshold = 0.008;
 const voiceBarCount = 21;
+const voiceBarHistorySampleMs = 80;
 const voiceBarHistoryWindowMs = 1800;
-const voiceBarRenderResponse = 0.62;
+const voiceBarInputResponse = 0.38;
+const voiceBarRenderDeadband = 0.01;
+const voiceBarRenderResponse = 0.34;
 const stillVoiceBarLevel = 0.16;
 const voiceBarSensitivity = 3.6;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
@@ -138,6 +141,10 @@ function dampVoiceBarLevels(
   return targetLevels.map((targetLevel, index) => {
     const previousLevel = previousLevels[index] ?? stillVoiceBarLevel;
 
+    if (Math.abs(targetLevel - previousLevel) < voiceBarRenderDeadband) {
+      return previousLevel;
+    }
+
     return clampVoiceBarLevel(
       previousLevel * (1 - voiceBarRenderResponse) +
         targetLevel * voiceBarRenderResponse,
@@ -210,13 +217,26 @@ function getVoiceBarState(
     };
   }
 
-  const currentLevel = clampVoiceBarLevel(
+  const recentHistory = history.filter(
+    (point) => currentTime - point.time <= voiceBarHistoryWindowMs,
+  );
+  const previousHistoryPoint = recentHistory[recentHistory.length - 1];
+  const rawCurrentLevel = clampVoiceBarLevel(
     stillVoiceBarLevel + audioVolume * voiceBarSensitivity * 3.4,
   );
-  const nextHistory = [
-    ...history,
-    { level: currentLevel, time: currentTime },
-  ].filter((point) => currentTime - point.time <= voiceBarHistoryWindowMs);
+  const currentLevel =
+    previousHistoryPoint === undefined
+      ? rawCurrentLevel
+      : clampVoiceBarLevel(
+          previousHistoryPoint.level * (1 - voiceBarInputResponse) +
+            rawCurrentLevel * voiceBarInputResponse,
+        );
+  const shouldAddHistoryPoint =
+    previousHistoryPoint === undefined ||
+    currentTime - previousHistoryPoint.time >= voiceBarHistorySampleMs;
+  const nextHistory = shouldAddHistoryPoint
+    ? [...recentHistory, { level: currentLevel, time: currentTime }]
+    : recentHistory;
 
   return {
     history: nextHistory,
@@ -332,14 +352,15 @@ function useVoiceBars(isListening: boolean): {
             voiceLevelHistoryRef.current,
             window.performance.now(),
           );
+          const hadVoiceHistory = voiceLevelHistoryRef.current.length > 0;
           voiceLevelHistoryRef.current = voiceBarState.history;
           renderedVoiceLevelsRef.current =
-            voiceBarState.history.length > 0
-              ? dampVoiceBarLevels(
+            !hadVoiceHistory && voiceBarState.history.length > 0
+              ? voiceBarState.levels
+              : dampVoiceBarLevels(
                   renderedVoiceLevelsRef.current,
                   voiceBarState.levels,
-                )
-              : voiceBarState.levels;
+                );
           setLevels(renderedVoiceLevelsRef.current);
           setIsVoiceActive(voiceBarState.isVoiceActive);
           animationFrameId = window.requestAnimationFrame(updateLevels);
