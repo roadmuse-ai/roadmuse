@@ -34,11 +34,11 @@ const defaultRouteDistanceMiles = 14;
 const kilometersPerMile = 1.609344;
 const voiceActivityThreshold = 0.008;
 const voiceBarCount = 21;
-const voiceBarHistorySampleMs = 80;
-const voiceBarHistoryWindowMs = 1800;
-const voiceBarInputResponse = 0.38;
-const voiceBarRenderDeadband = 0.01;
-const voiceBarRenderResponse = 0.34;
+const voiceBarHistorySampleMs = 300;
+const voiceBarHistoryWindowMs = 120_000;
+const voiceBarInputResponse = 0.24;
+const voiceBarRenderDeadband = 0.02;
+const voiceBarRenderResponse = 0.2;
 const stillVoiceBarLevel = 0.16;
 const voiceBarSensitivity = 3.6;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
@@ -334,8 +334,8 @@ function useVoiceBars(isListening: boolean): {
         }
 
         const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.64;
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.82;
         const timeDomainData = new Uint8Array(analyser.fftSize);
         audioSource = audioContext.createMediaStreamSource(stream);
         audioSource.connect(analyser);

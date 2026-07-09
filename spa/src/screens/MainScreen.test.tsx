@@ -287,7 +287,7 @@ describe("MainScreen", () => {
     expect(cancelAnimationFrameSpy).toHaveBeenCalledWith(88);
   });
 
-  it("lets recording bars trail across the graph after speech stops", async () => {
+  it("lets recording bars trail across the two-minute graph after speech stops", async () => {
     const user = userEvent.setup();
     const mediaStream = {
       getTracks: () => [{ stop: vi.fn() }],
@@ -359,6 +359,20 @@ describe("MainScreen", () => {
     expect(analyser.getByteTimeDomainData).toHaveBeenCalledTimes(2);
     expect(voiceBars).toHaveAttribute("data-voice-active", "false");
     expect(trailingLevels.some((level) => level > 0.2)).toBe(true);
+
+    currentTime = 119_500;
+    act(() => {
+      animationFrameHandler?.(currentTime);
+    });
+
+    const longTrailingLevels = Array.from(voiceBars.querySelectorAll("span")).map(
+      (bar) => Number(bar.style.getPropertyValue("--voice-level")),
+    );
+
+    expect(analyser.getByteTimeDomainData).toHaveBeenCalledTimes(3);
+    expect(longTrailingLevels.slice(0, 3).some((level) => level > 0.18)).toBe(
+      true,
+    );
   });
 
   it("keeps the recording bars still while microphone input is silent", async () => {
