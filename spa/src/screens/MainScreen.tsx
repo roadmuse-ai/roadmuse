@@ -32,10 +32,10 @@ type VoiceHomeMode = "initial" | "listening" | "review" | "manual";
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
 const kilometersPerMile = 1.609344;
-const voiceActivityThreshold = 0.025;
+const voiceActivityThreshold = 0.008;
 const voiceBarCount = 13;
 const stillVoiceBarLevel = 0.16;
-const voiceBarSensitivity = 1.7;
+const voiceBarSensitivity = 3.6;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
   {
@@ -140,10 +140,11 @@ function getVoiceBarState(timeDomainData: Uint8Array): {
   const levels = Array.from({ length: voiceBarCount }, (_, barIndex) => {
     const sampleIndex = Math.round((barIndex / maxBarIndex) * maxSampleIndex);
     const sample = Math.abs(((timeDomainData[sampleIndex] ?? 128) - 128) / 128);
+    const responsiveSample = sample * 0.7 + audioVolume * 1.4;
     const envelope = 0.42 + Math.sin((barIndex / maxBarIndex) * Math.PI) * 0.58;
 
     return clampVoiceBarLevel(
-      stillVoiceBarLevel + sample * voiceBarSensitivity * envelope,
+      stillVoiceBarLevel + responsiveSample * voiceBarSensitivity * envelope,
     );
   });
 

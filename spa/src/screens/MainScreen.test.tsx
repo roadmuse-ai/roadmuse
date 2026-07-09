@@ -214,7 +214,7 @@ describe("MainScreen", () => {
       fftSize: 0,
       getByteTimeDomainData: vi.fn((data: Uint8Array) => {
         data.forEach((_, index) => {
-          data[index] = Math.round(128 + Math.sin(index / 9) * 90);
+          data[index] = Math.round(128 + Math.sin(index / 9) * 4);
         });
       }),
       smoothingTimeConstant: 0,
@@ -272,7 +272,7 @@ describe("MainScreen", () => {
     );
 
     expect(bars).toHaveLength(13);
-    expect(levels.some((level) => level > 0.45)).toBe(true);
+    expect(levels.some((level) => level > 0.28)).toBe(true);
     expect(new Set(levels).size).toBeGreaterThan(1);
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
     expect(requestAnimationFrameSpy).toHaveBeenCalled();
