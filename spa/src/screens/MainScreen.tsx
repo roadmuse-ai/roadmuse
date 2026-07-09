@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import {
   CircleDot,
   Clock3,
@@ -33,12 +33,9 @@ const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
 const kilometersPerMile = 1.609344;
 const voiceActivityThreshold = 0.025;
-const waveformHeight = 120;
-const waveformPointCount = 36;
-const waveformSensitivity = 3.6;
-const waveformWidth = 320;
-const waveformCenterY = waveformHeight / 2;
-const waveformAmplitude = waveformHeight * 0.42;
+const voiceBarCount = 13;
+const stillVoiceBarLevel = 0.16;
+const voiceBarSensitivity = 1.7;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
   {
@@ -109,92 +106,58 @@ function getAudioVolume(timeDomainData: Uint8Array): number {
   return Math.sqrt(totalSquares / timeDomainData.length);
 }
 
-function clampWaveformY(y: number): number {
-  return Math.max(6, Math.min(waveformHeight - 6, y));
+function clampVoiceBarLevel(level: number): number {
+  return Math.max(stillVoiceBarLevel, Math.min(1, level));
 }
 
-function buildWaveformPath(yValues: number[]): string {
-  const maxPointIndex = Math.max(1, yValues.length - 1);
-  const points = yValues.map((y, pointIndex) => ({
-    x: (pointIndex / maxPointIndex) * waveformWidth,
-    y,
-  }));
-
-  if (points.length === 0) {
-    return "";
-  }
-
-  if (points.length === 1) {
-    return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
-  }
-
-  const [firstPoint] = points;
-  let path = `M ${firstPoint.x.toFixed(1)} ${firstPoint.y.toFixed(1)}`;
-
-  for (let pointIndex = 1; pointIndex < points.length - 1; pointIndex += 1) {
-    const currentPoint = points[pointIndex];
-    const nextPoint = points[pointIndex + 1];
-    const midPoint = {
-      x: (currentPoint.x + nextPoint.x) / 2,
-      y: (currentPoint.y + nextPoint.y) / 2,
-    };
-
-    path += ` Q ${currentPoint.x.toFixed(1)} ${currentPoint.y.toFixed(
-      1,
-    )} ${midPoint.x.toFixed(1)} ${midPoint.y.toFixed(1)}`;
-  }
-
-  const controlPoint = points[points.length - 2];
-  const lastPoint = points[points.length - 1];
-  path += ` Q ${controlPoint.x.toFixed(1)} ${controlPoint.y.toFixed(
-    1,
-  )} ${lastPoint.x.toFixed(1)} ${lastPoint.y.toFixed(1)}`;
-
-  return path;
+function getStillVoiceBarLevels(): number[] {
+  return Array.from({ length: voiceBarCount }, () => stillVoiceBarLevel);
 }
 
-function getStillWaveformPath(): string {
-  return buildWaveformPath(
-    Array.from({ length: waveformPointCount }, () => waveformCenterY),
-  );
-}
+function smoothVoiceBarLevels(levels: number[]): number[] {
+  return levels.map((level, index) => {
+    const previousLevel = levels[index - 1] ?? level;
+    const nextLevel = levels[index + 1] ?? level;
 
-function smoothWaveformYValues(yValues: number[]): number[] {
-  return yValues.map((y, index) => {
-    const previousY = yValues[index - 1] ?? y;
-    const nextY = yValues[index + 1] ?? y;
-
-    return previousY * 0.24 + y * 0.52 + nextY * 0.24;
+    return clampVoiceBarLevel(
+      previousLevel * 0.2 + level * 0.6 + nextLevel * 0.2,
+    );
   });
 }
 
-function getWaveformState(timeDomainData: Uint8Array): {
+function getVoiceBarState(timeDomainData: Uint8Array): {
   isVoiceActive: boolean;
-  path: string;
+  levels: number[];
 } {
   const audioVolume = getAudioVolume(timeDomainData);
 
   if (timeDomainData.length === 0 || audioVolume < voiceActivityThreshold) {
-    return { isVoiceActive: false, path: getStillWaveformPath() };
+    return { isVoiceActive: false, levels: getStillVoiceBarLevels() };
   }
 
-  const maxPointIndex = Math.max(1, waveformPointCount - 1);
+  const maxBarIndex = Math.max(1, voiceBarCount - 1);
   const maxSampleIndex = Math.max(0, timeDomainData.length - 1);
-  const yValues = Array.from({ length: waveformPointCount }, (_, pointIndex) => {
-    const sampleIndex = Math.round((pointIndex / maxPointIndex) * maxSampleIndex);
-    const sample = ((timeDomainData[sampleIndex] ?? 128) - 128) / 128;
-    const envelope = Math.sin((pointIndex / maxPointIndex) * Math.PI);
-    const y =
-      waveformCenterY -
-      sample * waveformAmplitude * waveformSensitivity * envelope;
+  const levels = Array.from({ length: voiceBarCount }, (_, barIndex) => {
+    const sampleIndex = Math.round((barIndex / maxBarIndex) * maxSampleIndex);
+    const sample = Math.abs(((timeDomainData[sampleIndex] ?? 128) - 128) / 128);
+    const envelope = 0.42 + Math.sin((barIndex / maxBarIndex) * Math.PI) * 0.58;
 
-    return clampWaveformY(y);
+    return clampVoiceBarLevel(
+      stillVoiceBarLevel + sample * voiceBarSensitivity * envelope,
+    );
   });
 
   return {
     isVoiceActive: true,
-    path: buildWaveformPath(smoothWaveformYValues(yValues)),
+    levels: smoothVoiceBarLevels(levels),
   };
+}
+
+function getVoiceBarStyle(level: number, index: number): CSSProperties {
+  return {
+    "--voice-index": index.toString(),
+    "--voice-level": level.toFixed(3),
+  } as CSSProperties;
 }
 
 function stopAudioStream(stream?: MediaStream): void {
@@ -205,18 +168,18 @@ function getAudioContextConstructor(): typeof AudioContext | undefined {
   return window.AudioContext ?? (window as AudioEnabledWindow).webkitAudioContext;
 }
 
-function useVoiceWaveform(isListening: boolean): {
+function useVoiceBars(isListening: boolean): {
   isAudioResponsive: boolean;
   isVoiceActive: boolean;
-  path: string;
+  levels: number[];
 } {
-  const [path, setPath] = useState(getStillWaveformPath);
+  const [levels, setLevels] = useState(getStillVoiceBarLevels);
   const [isAudioResponsive, setIsAudioResponsive] = useState(false);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
 
   useEffect(() => {
     if (!isListening) {
-      setPath(getStillWaveformPath());
+      setLevels(getStillVoiceBarLevels());
       setIsAudioResponsive(false);
       setIsVoiceActive(false);
       return undefined;
@@ -242,7 +205,7 @@ function useVoiceWaveform(isListening: boolean): {
       const AudioContextConstructor = getAudioContextConstructor();
 
       if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
-        setPath(getStillWaveformPath());
+        setLevels(getStillVoiceBarLevels());
         setIsAudioResponsive(false);
         setIsVoiceActive(false);
         return;
@@ -286,9 +249,9 @@ function useVoiceWaveform(isListening: boolean): {
           }
 
           analyser.getByteTimeDomainData(timeDomainData);
-          const waveformState = getWaveformState(timeDomainData);
-          setPath(waveformState.path);
-          setIsVoiceActive(waveformState.isVoiceActive);
+          const voiceBarState = getVoiceBarState(timeDomainData);
+          setLevels(voiceBarState.levels);
+          setIsVoiceActive(voiceBarState.isVoiceActive);
           animationFrameId = window.requestAnimationFrame(updateLevels);
         };
 
@@ -300,7 +263,7 @@ function useVoiceWaveform(isListening: boolean): {
 
         stopAudioStream(stream);
         stream = undefined;
-        setPath(getStillWaveformPath());
+        setLevels(getStillVoiceBarLevels());
         setIsAudioResponsive(false);
         setIsVoiceActive(false);
       }
@@ -314,7 +277,7 @@ function useVoiceWaveform(isListening: boolean): {
     };
   }, [isListening]);
 
-  return { isAudioResponsive, isVoiceActive, path };
+  return { isAudioResponsive, isVoiceActive, levels };
 }
 
 function formatWaypoint(waypoint?: RouteWaypoint): string | null {
@@ -546,8 +509,8 @@ export function MainScreen() {
   const {
     isAudioResponsive,
     isVoiceActive,
-    path: voiceWaveformPath,
-  } = useVoiceWaveform(isListening);
+    levels: voiceBarLevels,
+  } = useVoiceBars(isListening);
   const isReviewing = mode === "review" || mode === "manual";
   const showsPromptEntry = isListening || isReviewing;
   const reviewTitle =
@@ -807,30 +770,19 @@ export function MainScreen() {
             />
             {isListening ? (
               <div
-                className={`voice-home__waveform${
+                className={`voice-home__voice-bars${
                   isAudioResponsive
-                    ? " voice-home__waveform--responsive"
-                    : " voice-home__waveform--fallback"
+                    ? " voice-home__voice-bars--responsive"
+                    : " voice-home__voice-bars--fallback"
                 }`}
-                aria-label="Sound-responsive voice waveform"
+                aria-label="Sound-responsive voice bars"
                 data-audio-responsive={isAudioResponsive}
                 data-voice-active={isVoiceActive}
                 role="img"
               >
-                <svg
-                  aria-hidden="true"
-                  preserveAspectRatio="none"
-                  viewBox={`0 0 ${waveformWidth} ${waveformHeight}`}
-                >
-                  <path
-                    className="voice-home__waveform-shadow"
-                    d={voiceWaveformPath}
-                  />
-                  <path
-                    className="voice-home__waveform-line"
-                    d={voiceWaveformPath}
-                  />
-                </svg>
+                {voiceBarLevels.map((level, index) => (
+                  <span key={index} style={getVoiceBarStyle(level, index)} />
+                ))}
               </div>
             ) : null}
           </div>

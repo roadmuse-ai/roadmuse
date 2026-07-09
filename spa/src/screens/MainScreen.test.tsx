@@ -9,14 +9,8 @@ import { MainScreen } from "./MainScreen";
 const routeCreatedAt = Date.UTC(2026, 6, 4, 13, 0);
 const routePrompt =
   "Route Rockville to National Mall via Bethesda Row and Georgetown Waterfront Park. Find kid-friendly lunch with easy parking; avoid the Beltway unless it saves 15+ min.";
-const waveformName = "Sound-responsive voice waveform";
+const voiceBarsName = "Sound-responsive voice bars";
 let mediaDevicesDescriptor: PropertyDescriptor | undefined;
-
-function getWaveformYValues(path = ""): number[] {
-  const coordinates = path.match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
-
-  return coordinates.filter((_, index) => index % 2 === 1);
-}
 
 function renderMainScreen() {
   return render(
@@ -99,7 +93,7 @@ describe("MainScreen", () => {
       .toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Review Your Route" }))
       .not.toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: waveformName }))
+    expect(screen.queryByRole("img", { name: voiceBarsName }))
       .not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Start Voice Request" }))
       .not.toBeInTheDocument();
@@ -153,7 +147,7 @@ describe("MainScreen", () => {
     );
     expect(screen.queryByRole("button", { name: "Start Voice Request" }))
       .not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: waveformName }))
+    expect(screen.getByRole("img", { name: voiceBarsName }))
       .toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Enter Your Route" }))
       .toBeInTheDocument();
@@ -176,7 +170,7 @@ describe("MainScreen", () => {
 
     const prompt = screen.getByLabelText("Driving Request");
     expect(prompt).toHaveValue(routePrompt);
-    expect(screen.queryByRole("img", { name: waveformName }))
+    expect(screen.queryByRole("img", { name: voiceBarsName }))
       .not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Review Your Route" }))
       .toBeInTheDocument();
@@ -192,7 +186,7 @@ describe("MainScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Rerecord" }));
 
-    expect(screen.getByRole("img", { name: waveformName }))
+    expect(screen.getByRole("img", { name: voiceBarsName }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Enter Your Route" }))
@@ -207,7 +201,7 @@ describe("MainScreen", () => {
     ).toBeInTheDocument();
   });
 
-  it("drives the recording waveform from microphone audio and stops the stream", async () => {
+  it("drives the recording bars from microphone audio and stops the stream", async () => {
     const user = userEvent.setup();
     const stopTrack = vi.fn();
     const mediaStream = {
@@ -265,21 +259,21 @@ describe("MainScreen", () => {
         },
       });
     });
-    const waveform = screen.getByRole("img", { name: waveformName });
+    const voiceBars = screen.getByRole("img", { name: voiceBarsName });
     await waitFor(() => {
-      expect(waveform).toHaveAttribute("data-audio-responsive", "true");
+      expect(voiceBars).toHaveAttribute("data-audio-responsive", "true");
     });
     await waitFor(() => {
-      expect(waveform).toHaveAttribute("data-voice-active", "true");
+      expect(voiceBars).toHaveAttribute("data-voice-active", "true");
     });
-    const waveformLine = waveform.querySelector(".voice-home__waveform-line");
-    const waveformPath = waveformLine?.getAttribute("d") ?? "";
-    const yValues = getWaveformYValues(waveformPath);
+    const bars = Array.from(voiceBars.querySelectorAll("span"));
+    const levels = bars.map((bar) =>
+      Number(bar.style.getPropertyValue("--voice-level")),
+    );
 
-    expect(waveformPath).toContain("Q");
-    expect(
-      yValues.some((yValue) => Math.abs(yValue - 60) > 8),
-    ).toBe(true);
+    expect(bars).toHaveLength(13);
+    expect(levels.some((level) => level > 0.45)).toBe(true);
+    expect(new Set(levels).size).toBeGreaterThan(1);
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
     expect(requestAnimationFrameSpy).toHaveBeenCalled();
 
@@ -293,7 +287,7 @@ describe("MainScreen", () => {
     expect(cancelAnimationFrameSpy).toHaveBeenCalledWith(88);
   });
 
-  it("keeps the recording waveform still while microphone input is silent", async () => {
+  it("keeps the recording bars still while microphone input is silent", async () => {
     const user = userEvent.setup();
     const mediaStream = {
       getTracks: () => [{ stop: vi.fn() }],
@@ -333,18 +327,19 @@ describe("MainScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
 
-    const waveform = screen.getByRole("img", { name: waveformName });
+    const voiceBars = screen.getByRole("img", { name: voiceBarsName });
     await waitFor(() => {
-      expect(waveform).toHaveAttribute("data-audio-responsive", "true");
+      expect(voiceBars).toHaveAttribute("data-audio-responsive", "true");
     });
-    const waveformLine = waveform.querySelector(".voice-home__waveform-line");
-    const waveformPath = waveformLine?.getAttribute("d") ?? "";
-    const yValues = getWaveformYValues(waveformPath);
+    const bars = Array.from(voiceBars.querySelectorAll("span"));
+    const levels = bars.map((bar) =>
+      bar.style.getPropertyValue("--voice-level"),
+    );
 
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
-    expect(waveformPath).toContain("Q");
-    expect(waveform).toHaveAttribute("data-voice-active", "false");
-    expect(new Set(yValues)).toEqual(new Set([60]));
+    expect(bars).toHaveLength(13);
+    expect(voiceBars).toHaveAttribute("data-voice-active", "false");
+    expect(levels).toEqual(Array.from({ length: 13 }, () => "0.160"));
   });
 
   it("opens the preferred navigator deep link and saves after Next from listening", async () => {
