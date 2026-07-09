@@ -35,6 +35,7 @@ const kilometersPerMile = 1.609344;
 const voiceActivityThreshold = 0.008;
 const voiceBarCount = 21;
 const voiceBarHistoryWindowMs = 1800;
+const voiceBarRenderResponse = 0.62;
 const stillVoiceBarLevel = 0.16;
 const voiceBarSensitivity = 3.6;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
@@ -130,31 +131,55 @@ function smoothVoiceBarLevels(levels: number[]): number[] {
   });
 }
 
+function dampVoiceBarLevels(
+  previousLevels: number[],
+  targetLevels: number[],
+): number[] {
+  return targetLevels.map((targetLevel, index) => {
+    const previousLevel = previousLevels[index] ?? stillVoiceBarLevel;
+
+    return clampVoiceBarLevel(
+      previousLevel * (1 - voiceBarRenderResponse) +
+        targetLevel * voiceBarRenderResponse,
+    );
+  });
+}
+
 function getVoiceHistoryLevels(
   history: VoiceLevelHistoryPoint[],
   currentTime: number,
 ): number[] {
-  const bucketDurationMs = voiceBarHistoryWindowMs / voiceBarCount;
+  const maxBarIndex = Math.max(1, voiceBarCount - 1);
+  const weightedLevels = Array.from({ length: voiceBarCount }, () => 0);
+  const barWeights = Array.from({ length: voiceBarCount }, () => 0);
 
-  return Array.from({ length: voiceBarCount }, (_, barIndex) => {
-    const bucketStart =
-      currentTime - voiceBarHistoryWindowMs + barIndex * bucketDurationMs;
-    const bucketEnd = bucketStart + bucketDurationMs;
-    let totalLevel = 0;
-    let bucketPointCount = 0;
+  for (const point of history) {
+    const pointAge = currentTime - point.time;
 
-    for (const point of history) {
-      if (point.time >= bucketStart && point.time <= bucketEnd) {
-        totalLevel += point.level;
-        bucketPointCount += 1;
-      }
+    if (pointAge < 0 || pointAge > voiceBarHistoryWindowMs) {
+      continue;
     }
 
-    if (bucketPointCount === 0) {
-      return stillVoiceBarLevel;
-    }
+    const barPosition =
+      maxBarIndex - (pointAge / voiceBarHistoryWindowMs) * maxBarIndex;
+    const lowerBarIndex = Math.floor(barPosition);
+    const upperBarIndex = Math.ceil(barPosition);
+    const upperBarWeight = barPosition - lowerBarIndex;
+    const lowerBarWeight = 1 - upperBarWeight;
 
-    return clampVoiceBarLevel(totalLevel / bucketPointCount);
+    weightedLevels[lowerBarIndex] += point.level * lowerBarWeight;
+    barWeights[lowerBarIndex] += lowerBarWeight;
+
+    if (upperBarIndex !== lowerBarIndex) {
+      weightedLevels[upperBarIndex] += point.level * upperBarWeight;
+      barWeights[upperBarIndex] += upperBarWeight;
+    }
+  }
+
+  return weightedLevels.map((level, index) => {
+    const weight = barWeights[index];
+
+    return weight > 0 ? clampVoiceBarLevel(level / weight) : stillVoiceBarLevel;
   });
 }
 
@@ -224,10 +249,12 @@ function useVoiceBars(isListening: boolean): {
   const [isAudioResponsive, setIsAudioResponsive] = useState(false);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const voiceLevelHistoryRef = useRef<VoiceLevelHistoryPoint[]>([]);
+  const renderedVoiceLevelsRef = useRef(getStillVoiceBarLevels());
 
   useEffect(() => {
     if (!isListening) {
       voiceLevelHistoryRef.current = [];
+      renderedVoiceLevelsRef.current = getStillVoiceBarLevels();
       setLevels(getStillVoiceBarLevels());
       setIsAudioResponsive(false);
       setIsVoiceActive(false);
@@ -255,6 +282,7 @@ function useVoiceBars(isListening: boolean): {
 
       if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
         voiceLevelHistoryRef.current = [];
+        renderedVoiceLevelsRef.current = getStillVoiceBarLevels();
         setLevels(getStillVoiceBarLevels());
         setIsAudioResponsive(false);
         setIsVoiceActive(false);
@@ -305,7 +333,14 @@ function useVoiceBars(isListening: boolean): {
             window.performance.now(),
           );
           voiceLevelHistoryRef.current = voiceBarState.history;
-          setLevels(voiceBarState.levels);
+          renderedVoiceLevelsRef.current =
+            voiceBarState.history.length > 0
+              ? dampVoiceBarLevels(
+                  renderedVoiceLevelsRef.current,
+                  voiceBarState.levels,
+                )
+              : voiceBarState.levels;
+          setLevels(renderedVoiceLevelsRef.current);
           setIsVoiceActive(voiceBarState.isVoiceActive);
           animationFrameId = window.requestAnimationFrame(updateLevels);
         };
@@ -319,6 +354,7 @@ function useVoiceBars(isListening: boolean): {
         stopAudioStream(stream);
         stream = undefined;
         voiceLevelHistoryRef.current = [];
+        renderedVoiceLevelsRef.current = getStillVoiceBarLevels();
         setLevels(getStillVoiceBarLevels());
         setIsAudioResponsive(false);
         setIsVoiceActive(false);

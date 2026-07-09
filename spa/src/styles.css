@@ -902,8 +902,8 @@ section {
   transform: scaleY(var(--voice-level));
   transform-origin: center;
   transition:
-    opacity 90ms linear,
-    transform 90ms linear;
+    opacity 140ms ease-out,
+    transform 140ms ease-out;
 }
 
 .voice-home__voice-bars[data-voice-active="true"] span {
