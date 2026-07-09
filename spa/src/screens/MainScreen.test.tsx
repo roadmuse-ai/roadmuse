@@ -273,8 +273,10 @@ describe("MainScreen", () => {
       expect(waveform).toHaveAttribute("data-voice-active", "true");
     });
     const waveformLine = waveform.querySelector(".voice-home__waveform-line");
-    const yValues = getWaveformYValues(waveformLine?.getAttribute("d") ?? "");
+    const waveformPath = waveformLine?.getAttribute("d") ?? "";
+    const yValues = getWaveformYValues(waveformPath);
 
+    expect(waveformPath).toContain("Q");
     expect(
       yValues.some((yValue) => Math.abs(yValue - 60) > 8),
     ).toBe(true);
@@ -336,9 +338,11 @@ describe("MainScreen", () => {
       expect(waveform).toHaveAttribute("data-audio-responsive", "true");
     });
     const waveformLine = waveform.querySelector(".voice-home__waveform-line");
-    const yValues = getWaveformYValues(waveformLine?.getAttribute("d") ?? "");
+    const waveformPath = waveformLine?.getAttribute("d") ?? "";
+    const yValues = getWaveformYValues(waveformPath);
 
     expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
+    expect(waveformPath).toContain("Q");
     expect(waveform).toHaveAttribute("data-voice-active", "false");
     expect(new Set(yValues)).toEqual(new Set([60]));
   });

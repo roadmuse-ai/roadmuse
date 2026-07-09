@@ -115,21 +115,57 @@ function clampWaveformY(y: number): number {
 
 function buildWaveformPath(yValues: number[]): string {
   const maxPointIndex = Math.max(1, yValues.length - 1);
+  const points = yValues.map((y, pointIndex) => ({
+    x: (pointIndex / maxPointIndex) * waveformWidth,
+    y,
+  }));
 
-  return yValues
-    .map((y, pointIndex) => {
-      const command = pointIndex === 0 ? "M" : "L";
-      const x = (pointIndex / maxPointIndex) * waveformWidth;
+  if (points.length === 0) {
+    return "";
+  }
 
-      return `${command} ${x.toFixed(1)} ${y.toFixed(1)}`;
-    })
-    .join(" ");
+  if (points.length === 1) {
+    return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  }
+
+  const [firstPoint] = points;
+  let path = `M ${firstPoint.x.toFixed(1)} ${firstPoint.y.toFixed(1)}`;
+
+  for (let pointIndex = 1; pointIndex < points.length - 1; pointIndex += 1) {
+    const currentPoint = points[pointIndex];
+    const nextPoint = points[pointIndex + 1];
+    const midPoint = {
+      x: (currentPoint.x + nextPoint.x) / 2,
+      y: (currentPoint.y + nextPoint.y) / 2,
+    };
+
+    path += ` Q ${currentPoint.x.toFixed(1)} ${currentPoint.y.toFixed(
+      1,
+    )} ${midPoint.x.toFixed(1)} ${midPoint.y.toFixed(1)}`;
+  }
+
+  const controlPoint = points[points.length - 2];
+  const lastPoint = points[points.length - 1];
+  path += ` Q ${controlPoint.x.toFixed(1)} ${controlPoint.y.toFixed(
+    1,
+  )} ${lastPoint.x.toFixed(1)} ${lastPoint.y.toFixed(1)}`;
+
+  return path;
 }
 
 function getStillWaveformPath(): string {
   return buildWaveformPath(
     Array.from({ length: waveformPointCount }, () => waveformCenterY),
   );
+}
+
+function smoothWaveformYValues(yValues: number[]): number[] {
+  return yValues.map((y, index) => {
+    const previousY = yValues[index - 1] ?? y;
+    const nextY = yValues[index + 1] ?? y;
+
+    return previousY * 0.24 + y * 0.52 + nextY * 0.24;
+  });
 }
 
 function getWaveformState(timeDomainData: Uint8Array): {
@@ -155,7 +191,10 @@ function getWaveformState(timeDomainData: Uint8Array): {
     return clampWaveformY(y);
   });
 
-  return { isVoiceActive: true, path: buildWaveformPath(yValues) };
+  return {
+    isVoiceActive: true,
+    path: buildWaveformPath(smoothWaveformYValues(yValues)),
+  };
 }
 
 function stopAudioStream(stream?: MediaStream): void {
