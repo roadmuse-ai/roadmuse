@@ -34,7 +34,7 @@ const defaultRouteDistanceMiles = 14;
 const kilometersPerMile = 1.609344;
 const voiceActivityThreshold = 0.008;
 const voiceBarCount = 21;
-const voiceBarSampleSpanMultiplier = 2.6;
+const voiceBarHistoryWindowMs = 1800;
 const stillVoiceBarLevel = 0.16;
 const voiceBarSensitivity = 3.6;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
@@ -81,6 +81,10 @@ type AudioEnabledWindow = Window &
   typeof globalThis & {
     webkitAudioContext?: typeof AudioContext;
   };
+type VoiceLevelHistoryPoint = {
+  level: number;
+  time: number;
+};
 
 function getRandomStarterTripPrompt(currentPrompt?: string): string {
   const promptOptions =
@@ -126,53 +130,65 @@ function smoothVoiceBarLevels(levels: number[]): number[] {
   });
 }
 
-function getAverageVoiceSample(
-  timeDomainData: Uint8Array,
-  sampleIndex: number,
-  sampleSpan: number,
-): number {
-  const sampleRadius = Math.floor(sampleSpan / 2);
-  const startIndex = Math.max(0, sampleIndex - sampleRadius);
-  const endIndex = Math.min(timeDomainData.length - 1, sampleIndex + sampleRadius);
-  let totalSamples = 0;
+function getVoiceHistoryLevels(
+  history: VoiceLevelHistoryPoint[],
+  currentTime: number,
+): number[] {
+  const bucketDurationMs = voiceBarHistoryWindowMs / voiceBarCount;
 
-  for (let index = startIndex; index <= endIndex; index += 1) {
-    totalSamples += Math.abs(((timeDomainData[index] ?? 128) - 128) / 128);
-  }
+  return Array.from({ length: voiceBarCount }, (_, barIndex) => {
+    const bucketStart =
+      currentTime - voiceBarHistoryWindowMs + barIndex * bucketDurationMs;
+    const bucketEnd = bucketStart + bucketDurationMs;
+    let totalLevel = 0;
+    let bucketPointCount = 0;
 
-  return totalSamples / Math.max(1, endIndex - startIndex + 1);
+    for (const point of history) {
+      if (point.time >= bucketStart && point.time <= bucketEnd) {
+        totalLevel += point.level;
+        bucketPointCount += 1;
+      }
+    }
+
+    if (bucketPointCount === 0) {
+      return stillVoiceBarLevel;
+    }
+
+    return clampVoiceBarLevel(totalLevel / bucketPointCount);
+  });
 }
 
-function getVoiceBarState(timeDomainData: Uint8Array): {
+function getVoiceBarState(
+  timeDomainData: Uint8Array,
+  history: VoiceLevelHistoryPoint[],
+  currentTime: number,
+): {
+  history: VoiceLevelHistoryPoint[];
   isVoiceActive: boolean;
   levels: number[];
 } {
   const audioVolume = getAudioVolume(timeDomainData);
 
   if (timeDomainData.length === 0 || audioVolume < voiceActivityThreshold) {
-    return { isVoiceActive: false, levels: getStillVoiceBarLevels() };
+    return {
+      history: [],
+      isVoiceActive: false,
+      levels: getStillVoiceBarLevels(),
+    };
   }
 
-  const maxBarIndex = Math.max(1, voiceBarCount - 1);
-  const maxSampleIndex = Math.max(0, timeDomainData.length - 1);
-  const sampleSpan = Math.max(
-    5,
-    Math.round((timeDomainData.length / voiceBarCount) * voiceBarSampleSpanMultiplier),
+  const currentLevel = clampVoiceBarLevel(
+    stillVoiceBarLevel + audioVolume * voiceBarSensitivity * 3.4,
   );
-  const levels = Array.from({ length: voiceBarCount }, (_, barIndex) => {
-    const sampleIndex = Math.round((barIndex / maxBarIndex) * maxSampleIndex);
-    const sample = getAverageVoiceSample(timeDomainData, sampleIndex, sampleSpan);
-    const responsiveSample = sample * 0.7 + audioVolume * 1.4;
-    const envelope = 0.42 + Math.sin((barIndex / maxBarIndex) * Math.PI) * 0.58;
-
-    return clampVoiceBarLevel(
-      stillVoiceBarLevel + responsiveSample * voiceBarSensitivity * envelope,
-    );
-  });
+  const nextHistory = [
+    ...history,
+    { level: currentLevel, time: currentTime },
+  ].filter((point) => currentTime - point.time <= voiceBarHistoryWindowMs);
 
   return {
+    history: nextHistory,
     isVoiceActive: true,
-    levels: smoothVoiceBarLevels(levels),
+    levels: smoothVoiceBarLevels(getVoiceHistoryLevels(nextHistory, currentTime)),
   };
 }
 
@@ -199,9 +215,11 @@ function useVoiceBars(isListening: boolean): {
   const [levels, setLevels] = useState(getStillVoiceBarLevels);
   const [isAudioResponsive, setIsAudioResponsive] = useState(false);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const voiceLevelHistoryRef = useRef<VoiceLevelHistoryPoint[]>([]);
 
   useEffect(() => {
     if (!isListening) {
+      voiceLevelHistoryRef.current = [];
       setLevels(getStillVoiceBarLevels());
       setIsAudioResponsive(false);
       setIsVoiceActive(false);
@@ -228,6 +246,7 @@ function useVoiceBars(isListening: boolean): {
       const AudioContextConstructor = getAudioContextConstructor();
 
       if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
+        voiceLevelHistoryRef.current = [];
         setLevels(getStillVoiceBarLevels());
         setIsAudioResponsive(false);
         setIsVoiceActive(false);
@@ -272,7 +291,12 @@ function useVoiceBars(isListening: boolean): {
           }
 
           analyser.getByteTimeDomainData(timeDomainData);
-          const voiceBarState = getVoiceBarState(timeDomainData);
+          const voiceBarState = getVoiceBarState(
+            timeDomainData,
+            voiceLevelHistoryRef.current,
+            window.performance.now(),
+          );
+          voiceLevelHistoryRef.current = voiceBarState.history;
           setLevels(voiceBarState.levels);
           setIsVoiceActive(voiceBarState.isVoiceActive);
           animationFrameId = window.requestAnimationFrame(updateLevels);
@@ -286,6 +310,7 @@ function useVoiceBars(isListening: boolean): {
 
         stopAudioStream(stream);
         stream = undefined;
+        voiceLevelHistoryRef.current = [];
         setLevels(getStillVoiceBarLevels());
         setIsAudioResponsive(false);
         setIsVoiceActive(false);
