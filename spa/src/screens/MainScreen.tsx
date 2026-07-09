@@ -170,10 +170,18 @@ function getVoiceBarState(
   const audioVolume = getAudioVolume(timeDomainData);
 
   if (timeDomainData.length === 0 || audioVolume < voiceActivityThreshold) {
+    const trailingHistory = history.filter(
+      (point) => currentTime - point.time <= voiceBarHistoryWindowMs,
+    );
+    const trailingLevels =
+      trailingHistory.length > 0
+        ? smoothVoiceBarLevels(getVoiceHistoryLevels(trailingHistory, currentTime))
+        : getStillVoiceBarLevels();
+
     return {
-      history: [],
+      history: trailingHistory,
       isVoiceActive: false,
-      levels: getStillVoiceBarLevels(),
+      levels: trailingLevels,
     };
   }
 

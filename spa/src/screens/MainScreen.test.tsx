@@ -287,6 +287,80 @@ describe("MainScreen", () => {
     expect(cancelAnimationFrameSpy).toHaveBeenCalledWith(88);
   });
 
+  it("lets recording bars trail across the graph after speech stops", async () => {
+    const user = userEvent.setup();
+    const mediaStream = {
+      getTracks: () => [{ stop: vi.fn() }],
+    } as unknown as MediaStream;
+    const getUserMedia = vi
+      .fn<(constraints: MediaStreamConstraints) => Promise<MediaStream>>()
+      .mockResolvedValue(mediaStream);
+    let frameIndex = 0;
+    const analyser = {
+      fftSize: 0,
+      getByteTimeDomainData: vi.fn((data: Uint8Array) => {
+        if (frameIndex === 0) {
+          data.forEach((_, index) => {
+            data[index] = Math.round(128 + Math.sin(index / 9) * 4);
+          });
+        } else {
+          data.fill(128);
+        }
+
+        frameIndex += 1;
+      }),
+      smoothingTimeConstant: 0,
+    } as unknown as AnalyserNode;
+    const audioContext = {
+      close: vi.fn().mockResolvedValue(undefined),
+      createAnalyser: vi.fn(() => analyser),
+      createMediaStreamSource: vi.fn(() => ({
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+      resume: vi.fn().mockResolvedValue(undefined),
+      state: "running",
+    } as unknown as AudioContext;
+    const AudioContextConstructor = vi.fn(function MockAudioContext() {
+      return audioContext;
+    });
+    let currentTime = 1000;
+    let animationFrameHandler: FrameRequestCallback | undefined;
+
+    vi.spyOn(window.performance, "now").mockImplementation(() => currentTime);
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((handler) => {
+      animationFrameHandler = handler;
+      return 90;
+    });
+    Object.defineProperty(window.navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal("AudioContext", AudioContextConstructor);
+
+    renderMainScreen();
+
+    await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
+
+    const voiceBars = screen.getByRole("img", { name: voiceBarsName });
+    await waitFor(() => {
+      expect(voiceBars).toHaveAttribute("data-voice-active", "true");
+    });
+
+    currentTime = 1100;
+    act(() => {
+      animationFrameHandler?.(currentTime);
+    });
+
+    const trailingLevels = Array.from(voiceBars.querySelectorAll("span")).map(
+      (bar) => Number(bar.style.getPropertyValue("--voice-level")),
+    );
+
+    expect(analyser.getByteTimeDomainData).toHaveBeenCalledTimes(2);
+    expect(voiceBars).toHaveAttribute("data-voice-active", "false");
+    expect(trailingLevels.some((level) => level > 0.2)).toBe(true);
+  });
+
   it("keeps the recording bars still while microphone input is silent", async () => {
     const user = userEvent.setup();
     const mediaStream = {
