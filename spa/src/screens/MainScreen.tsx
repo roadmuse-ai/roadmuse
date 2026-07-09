@@ -1,4 +1,10 @@
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   CircleDot,
   Clock3,
@@ -31,6 +37,7 @@ type VoiceHomeMode = "initial" | "listening" | "review" | "manual";
 
 const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
+const equalizerBarCount = 11;
 const kilometersPerMile = 1.609344;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
@@ -71,6 +78,14 @@ const starterTripPrompts = [
   "Say it, and we'll route it!",
 ] as const;
 const starterTripPromptRotationMs = 4000;
+const fallbackVoiceLevels = [
+  0.28, 0.44, 0.32, 0.68, 0.5, 0.88, 0.54, 0.74, 0.36, 0.58, 0.3,
+] as const;
+
+type AudioEnabledWindow = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext;
+  };
 
 function getRandomStarterTripPrompt(currentPrompt?: string): string {
   const promptOptions =
@@ -80,6 +95,161 @@ function getRandomStarterTripPrompt(currentPrompt?: string): string {
   const promptIndex = Math.floor(Math.random() * promptOptions.length);
 
   return promptOptions[promptIndex] ?? starterTripPrompts[0];
+}
+
+function getFallbackVoiceLevels(): number[] {
+  return [...fallbackVoiceLevels];
+}
+
+function clampLevel(level: number): number {
+  return Math.max(0.16, Math.min(1, level));
+}
+
+function getEqualizerLevels(
+  frequencyData: Uint8Array,
+  barCount = equalizerBarCount,
+): number[] {
+  if (frequencyData.length === 0) {
+    return getFallbackVoiceLevels();
+  }
+
+  return Array.from({ length: barCount }, (_, barIndex) => {
+    const lowBand = Math.pow(barIndex / barCount, 1.6);
+    const highBand = Math.pow((barIndex + 1) / barCount, 1.6);
+    const start = Math.floor(lowBand * frequencyData.length);
+    const end = Math.min(
+      frequencyData.length,
+      Math.max(start + 1, Math.floor(highBand * frequencyData.length)),
+    );
+    let total = 0;
+
+    for (let index = start; index < end; index += 1) {
+      total += frequencyData[index] ?? 0;
+    }
+
+    const average = total / (end - start) / 255;
+    return clampLevel(0.18 + average * 3.1);
+  });
+}
+
+function stopAudioStream(stream?: MediaStream): void {
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
+function getAudioContextConstructor(): typeof AudioContext | undefined {
+  return window.AudioContext ?? (window as AudioEnabledWindow).webkitAudioContext;
+}
+
+function useVoiceEqualizerLevels(isListening: boolean): {
+  isAudioResponsive: boolean;
+  levels: number[];
+} {
+  const [levels, setLevels] = useState(getFallbackVoiceLevels);
+  const [isAudioResponsive, setIsAudioResponsive] = useState(false);
+
+  useEffect(() => {
+    if (!isListening) {
+      setLevels(getFallbackVoiceLevels());
+      setIsAudioResponsive(false);
+      return undefined;
+    }
+
+    let isActive = true;
+    let animationFrameId: number | undefined;
+    let audioContext: AudioContext | undefined;
+    let audioSource: MediaStreamAudioSourceNode | undefined;
+    let stream: MediaStream | undefined;
+
+    const stopAudioAnalysis = () => {
+      if (animationFrameId !== undefined) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+
+      audioSource?.disconnect();
+      void audioContext?.close();
+      stopAudioStream(stream);
+    };
+
+    const startAudioAnalysis = async () => {
+      const AudioContextConstructor = getAudioContextConstructor();
+
+      if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
+        setLevels(getFallbackVoiceLevels());
+        setIsAudioResponsive(false);
+        return;
+      }
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+          },
+        });
+
+        if (!isActive) {
+          stopAudioStream(stream);
+          return;
+        }
+
+        audioContext = new AudioContextConstructor();
+
+        if (audioContext.state === "suspended") {
+          await audioContext.resume().catch(() => undefined);
+        }
+
+        if (!isActive) {
+          stopAudioAnalysis();
+          return;
+        }
+
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.64;
+        const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        audioSource = audioContext.createMediaStreamSource(stream);
+        audioSource.connect(analyser);
+        setIsAudioResponsive(true);
+
+        const updateLevels = () => {
+          if (!isActive) {
+            return;
+          }
+
+          analyser.getByteFrequencyData(frequencyData);
+          setLevels(getEqualizerLevels(frequencyData));
+          animationFrameId = window.requestAnimationFrame(updateLevels);
+        };
+
+        updateLevels();
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        stopAudioStream(stream);
+        stream = undefined;
+        setLevels(getFallbackVoiceLevels());
+        setIsAudioResponsive(false);
+      }
+    };
+
+    void startAudioAnalysis();
+
+    return () => {
+      isActive = false;
+      stopAudioAnalysis();
+    };
+  }, [isListening]);
+
+  return { isAudioResponsive, levels };
+}
+
+function getEqualizerBarStyle(level: number, index: number): CSSProperties {
+  return {
+    "--voice-level": level.toFixed(3),
+    "--voice-index": index,
+  } as CSSProperties;
 }
 
 function formatWaypoint(waypoint?: RouteWaypoint): string | null {
@@ -308,6 +478,8 @@ export function MainScreen() {
   );
 
   const isListening = mode === "listening";
+  const { isAudioResponsive, levels: voiceLevels } =
+    useVoiceEqualizerLevels(isListening);
   const isReviewing = mode === "review" || mode === "manual";
   const showsPromptEntry = isListening || isReviewing;
   const reviewTitle =
@@ -567,15 +739,21 @@ export function MainScreen() {
             />
             {isListening ? (
               <div
-                className="voice-home__waves"
-                aria-label="Voice waves animation"
+                className={`voice-home__equalizer${
+                  isAudioResponsive
+                    ? " voice-home__equalizer--responsive"
+                    : " voice-home__equalizer--fallback"
+                }`}
+                aria-label="Sound-responsive voice equalizer"
+                data-audio-responsive={isAudioResponsive}
                 role="img"
               >
-                <span />
-                <span />
-                <span />
-                <span />
-                <span />
+                {voiceLevels.map((level, index) => (
+                  <span
+                    key={`${index}-${fallbackVoiceLevels[index] ?? level}`}
+                    style={getEqualizerBarStyle(level, index)}
+                  />
+                ))}
               </div>
             ) : null}
           </div>
