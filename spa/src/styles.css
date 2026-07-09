@@ -906,11 +906,6 @@ section {
     transform 80ms linear;
 }
 
-.voice-home__equalizer--fallback span {
-  animation: voice-equalizer-fallback 1.08s ease-in-out infinite;
-  animation-delay: calc(var(--voice-index) * 0.075s);
-}
-
 .voice-home__review {
   min-height: calc(100dvh - var(--bottom-nav-height) - 11rem);
   display: flex;
@@ -1059,19 +1054,6 @@ section {
   78% {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes voice-equalizer-fallback {
-  0%,
-  100% {
-    transform: scaleY(max(0.22, calc(var(--voice-level) * 0.72)));
-    opacity: 0.58;
-  }
-
-  50% {
-    transform: scaleY(min(1, calc(var(--voice-level) * 1.32)));
-    opacity: 1;
   }
 }
 

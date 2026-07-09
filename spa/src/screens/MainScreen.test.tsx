@@ -216,6 +216,9 @@ describe("MainScreen", () => {
       getByteFrequencyData: vi.fn((data: Uint8Array) => {
         data.set([240, 48, 18, 172, 32, 92, 12, 120]);
       }),
+      getByteTimeDomainData: vi.fn((data: Uint8Array) => {
+        data.set([230, 38, 210, 52, 128, 244, 24, 196]);
+      }),
       smoothingTimeConstant: 0,
     } as unknown as AnalyserNode;
     const audioSource = {
@@ -283,6 +286,63 @@ describe("MainScreen", () => {
     expect(audioSource.disconnect).toHaveBeenCalled();
     expect(closeAudioContext).toHaveBeenCalled();
     expect(cancelAnimationFrameSpy).toHaveBeenCalledWith(88);
+  });
+
+  it("keeps the recording equalizer still while microphone input is silent", async () => {
+    const user = userEvent.setup();
+    const mediaStream = {
+      getTracks: () => [{ stop: vi.fn() }],
+    } as unknown as MediaStream;
+    const getUserMedia = vi
+      .fn<(constraints: MediaStreamConstraints) => Promise<MediaStream>>()
+      .mockResolvedValue(mediaStream);
+    const analyser = {
+      fftSize: 0,
+      frequencyBinCount: 8,
+      getByteFrequencyData: vi.fn((data: Uint8Array) => {
+        data.set([240, 210, 180, 172, 150, 132, 120, 108]);
+      }),
+      getByteTimeDomainData: vi.fn((data: Uint8Array) => {
+        data.fill(128);
+      }),
+      smoothingTimeConstant: 0,
+    } as unknown as AnalyserNode;
+    const audioContext = {
+      close: vi.fn().mockResolvedValue(undefined),
+      createAnalyser: vi.fn(() => analyser),
+      createMediaStreamSource: vi.fn(() => ({
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+      resume: vi.fn().mockResolvedValue(undefined),
+      state: "running",
+    } as unknown as AudioContext;
+    const AudioContextConstructor = vi.fn(function MockAudioContext() {
+      return audioContext;
+    });
+
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 89);
+    Object.defineProperty(window.navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal("AudioContext", AudioContextConstructor);
+
+    renderMainScreen();
+
+    await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
+
+    const equalizer = screen.getByRole("img", { name: equalizerName });
+    await waitFor(() => {
+      expect(equalizer).toHaveAttribute("data-audio-responsive", "true");
+    });
+    const barLevels = Array.from(equalizer.querySelectorAll("span")).map((bar) =>
+      (bar as HTMLElement).style.getPropertyValue("--voice-level"),
+    );
+
+    expect(analyser.getByteFrequencyData).toHaveBeenCalled();
+    expect(analyser.getByteTimeDomainData).toHaveBeenCalled();
+    expect(new Set(barLevels)).toEqual(new Set(["0.160"]));
   });
 
   it("opens the preferred navigator deep link and saves after Next from listening", async () => {

@@ -39,6 +39,8 @@ const defaultRouteDurationMinutes = 55;
 const defaultRouteDistanceMiles = 14;
 const equalizerBarCount = 11;
 const kilometersPerMile = 1.609344;
+const stillVoiceLevel = 0.16;
+const voiceActivityThreshold = 0.045;
 const defaultRouteTargetAddress = "National Mall, Washington, DC";
 const defaultRouteWaypoints: RouteWaypoint[] = [
   {
@@ -78,9 +80,6 @@ const starterTripPrompts = [
   "Say it, and we'll route it!",
 ] as const;
 const starterTripPromptRotationMs = 4000;
-const fallbackVoiceLevels = [
-  0.28, 0.44, 0.32, 0.68, 0.5, 0.88, 0.54, 0.74, 0.36, 0.58, 0.3,
-] as const;
 
 type AudioEnabledWindow = Window &
   typeof globalThis & {
@@ -97,20 +96,36 @@ function getRandomStarterTripPrompt(currentPrompt?: string): string {
   return promptOptions[promptIndex] ?? starterTripPrompts[0];
 }
 
-function getFallbackVoiceLevels(): number[] {
-  return [...fallbackVoiceLevels];
+function getStillVoiceLevels(barCount = equalizerBarCount): number[] {
+  return Array.from({ length: barCount }, () => stillVoiceLevel);
 }
 
 function clampLevel(level: number): number {
   return Math.max(0.16, Math.min(1, level));
 }
 
+function getAudioVolume(timeDomainData: Uint8Array): number {
+  if (timeDomainData.length === 0) {
+    return 0;
+  }
+
+  let totalSquares = 0;
+
+  for (const byte of timeDomainData) {
+    const normalizedSample = (byte - 128) / 128;
+    totalSquares += normalizedSample * normalizedSample;
+  }
+
+  return Math.sqrt(totalSquares / timeDomainData.length);
+}
+
 function getEqualizerLevels(
   frequencyData: Uint8Array,
+  audioVolume: number,
   barCount = equalizerBarCount,
 ): number[] {
-  if (frequencyData.length === 0) {
-    return getFallbackVoiceLevels();
+  if (frequencyData.length === 0 || audioVolume < voiceActivityThreshold) {
+    return getStillVoiceLevels(barCount);
   }
 
   return Array.from({ length: barCount }, (_, barIndex) => {
@@ -144,12 +159,12 @@ function useVoiceEqualizerLevels(isListening: boolean): {
   isAudioResponsive: boolean;
   levels: number[];
 } {
-  const [levels, setLevels] = useState(getFallbackVoiceLevels);
+  const [levels, setLevels] = useState(getStillVoiceLevels);
   const [isAudioResponsive, setIsAudioResponsive] = useState(false);
 
   useEffect(() => {
     if (!isListening) {
-      setLevels(getFallbackVoiceLevels());
+      setLevels(getStillVoiceLevels());
       setIsAudioResponsive(false);
       return undefined;
     }
@@ -174,7 +189,7 @@ function useVoiceEqualizerLevels(isListening: boolean): {
       const AudioContextConstructor = getAudioContextConstructor();
 
       if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
-        setLevels(getFallbackVoiceLevels());
+        setLevels(getStillVoiceLevels());
         setIsAudioResponsive(false);
         return;
       }
@@ -207,6 +222,7 @@ function useVoiceEqualizerLevels(isListening: boolean): {
         analyser.fftSize = 256;
         analyser.smoothingTimeConstant = 0.64;
         const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        const timeDomainData = new Uint8Array(analyser.fftSize);
         audioSource = audioContext.createMediaStreamSource(stream);
         audioSource.connect(analyser);
         setIsAudioResponsive(true);
@@ -217,7 +233,10 @@ function useVoiceEqualizerLevels(isListening: boolean): {
           }
 
           analyser.getByteFrequencyData(frequencyData);
-          setLevels(getEqualizerLevels(frequencyData));
+          analyser.getByteTimeDomainData(timeDomainData);
+          setLevels(
+            getEqualizerLevels(frequencyData, getAudioVolume(timeDomainData)),
+          );
           animationFrameId = window.requestAnimationFrame(updateLevels);
         };
 
@@ -229,7 +248,7 @@ function useVoiceEqualizerLevels(isListening: boolean): {
 
         stopAudioStream(stream);
         stream = undefined;
-        setLevels(getFallbackVoiceLevels());
+        setLevels(getStillVoiceLevels());
         setIsAudioResponsive(false);
       }
     };
@@ -750,7 +769,7 @@ export function MainScreen() {
               >
                 {voiceLevels.map((level, index) => (
                   <span
-                    key={`${index}-${fallbackVoiceLevels[index] ?? level}`}
+                    key={index}
                     style={getEqualizerBarStyle(level, index)}
                   />
                 ))}
