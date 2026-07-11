@@ -29,14 +29,14 @@ describe("recordingSpectrum", () => {
     expect(isSpectrumActive(loudLevels)).toBe(true);
   });
 
-  it("emphasizes the bands that carry energy", () => {
+  it("puts low-frequency energy at the center and mirrors symmetrically", () => {
     const frame = new Uint8Array(binCount);
     frame.fill(220, 1, 8);
     const levels = getSpectrumLevels(frame);
+    const center = Math.floor((levels.length - 1) / 2);
 
-    expect(Math.max(...levels.slice(0, 6))).toBeGreaterThan(
-      Math.max(...levels.slice(-6)),
-    );
+    expect(levels[center]).toBeGreaterThan(levels[0]);
+    expect(levels[0]).toBe(levels[levels.length - 1]);
   });
 
   it("rises faster than it falls", () => {

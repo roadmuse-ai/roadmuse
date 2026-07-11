@@ -274,7 +274,7 @@ describe("MainScreen", () => {
       ...bars.map((bar) => Number(bar.style.getPropertyValue("--level"))),
     );
 
-    expect(bars).toHaveLength(28);
+    expect(bars).toHaveLength(20);
     expect(maxLevel).toBeGreaterThan(0);
     expect(analyser.getByteFrequencyData).toHaveBeenCalled();
     expect(requestAnimationFrameSpy).toHaveBeenCalled();
@@ -413,9 +413,9 @@ describe("MainScreen", () => {
     );
 
     expect(analyser.getByteFrequencyData).toHaveBeenCalled();
-    expect(bars).toHaveLength(28);
+    expect(bars).toHaveLength(20);
     expect(spectrum).toHaveAttribute("data-voice-active", "false");
-    expect(levels).toEqual(Array.from({ length: 28 }, () => 0));
+    expect(levels).toEqual(Array.from({ length: 20 }, () => 0));
   });
 
   it("opens the preferred navigator deep link and saves after Next from listening", async () => {

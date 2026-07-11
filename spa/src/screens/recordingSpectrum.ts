@@ -1,6 +1,9 @@
-const spectrumBarCount = 28;
+const spectrumBarCount = 20;
+const spectrumBandCount = Math.ceil(spectrumBarCount / 2);
 const spectrumUsableBins = 256;
-const spectrumGain = 1.7;
+const spectrumGain = 1.15;
+const spectrumCurve = 0.6;
+const spectrumTilt = 1;
 const spectrumActivityLevel = 0.08;
 const spectrumAttack = 0.6;
 const spectrumRelease = 0.2;
@@ -16,22 +19,14 @@ export function getStillSpectrumLevels(): number[] {
   return Array.from({ length: spectrumBarCount }, () => stillSpectrumLevel);
 }
 
-/**
- * Group frequency bins into bar levels on a log scale, so low (voice) bands get
- * fine resolution and high bands are coarse. Each level is a 0..1 magnitude.
- */
-export function getSpectrumLevels(frequencyData: Uint8Array): number[] {
-  if (frequencyData.length === 0) {
-    return getStillSpectrumLevels();
-  }
-
+function getBandLevels(frequencyData: Uint8Array): number[] {
   const binCount = Math.min(spectrumUsableBins, frequencyData.length);
 
-  return Array.from({ length: spectrumBarCount }, (_, barIndex) => {
-    const startBin = Math.floor(binCount ** (barIndex / spectrumBarCount));
+  return Array.from({ length: spectrumBandCount }, (_, band) => {
+    const startBin = Math.floor(binCount ** (band / spectrumBandCount));
     const endBin = Math.max(
       startBin + 1,
-      Math.floor(binCount ** ((barIndex + 1) / spectrumBarCount)),
+      Math.floor(binCount ** ((band + 1) / spectrumBandCount)),
     );
 
     let total = 0;
@@ -40,9 +35,39 @@ export function getSpectrumLevels(frequencyData: Uint8Array): number[] {
       total += frequencyData[bin];
     }
 
-    const average = total / (endBin - startBin) / 255;
+    const magnitude = total / (endBin - startBin) / 255;
+    // Boost higher bands, which are naturally quieter for voice, so the outer
+    // bars still show life instead of sitting flat.
+    const tilt =
+      spectrumBandCount > 1
+        ? 1 + spectrumTilt * (band / (spectrumBandCount - 1))
+        : 1;
+    const level = magnitude ** spectrumCurve * spectrumGain * tilt;
 
-    return Math.max(0, Math.min(1, average * spectrumGain));
+    return Math.max(0, Math.min(1, level));
+  });
+}
+
+/**
+ * Turn a frequency frame into mirrored, center-peaked bar levels: the loudest
+ * (low) bands sit at the center and higher bands fan out symmetrically to both
+ * edges. A soft curve plus a high-frequency tilt keep bars from saturating.
+ */
+export function getSpectrumLevels(frequencyData: Uint8Array): number[] {
+  if (frequencyData.length === 0) {
+    return getStillSpectrumLevels();
+  }
+
+  const bands = getBandLevels(frequencyData);
+  const center = (spectrumBarCount - 1) / 2;
+
+  return Array.from({ length: spectrumBarCount }, (_, barIndex) => {
+    const band = Math.min(
+      spectrumBandCount - 1,
+      Math.floor(Math.abs(barIndex - center)),
+    );
+
+    return bands[band];
   });
 }
 
