@@ -24,12 +24,12 @@ import {
   type RouteWaypoint,
 } from "../data/settings";
 import {
-  dampVoiceBarLevels,
-  getStillVoiceBarLevels,
-  getVoiceBarState,
-  type VoiceLevelHistoryPoint,
-  voiceBarAnalyserConfig,
-} from "./recordingVoiceBars";
+  getSpectrumLevels,
+  getStillSpectrumLevels,
+  isSpectrumActive,
+  smoothSpectrumLevels,
+  spectrumAnalyserConfig,
+} from "./recordingSpectrum";
 
 const stubPrompt =
   "Route Rockville to National Mall via Bethesda Row and Georgetown Waterfront Park. Find kid-friendly lunch with easy parking; avoid the Beltway unless it saves 15+ min.";
@@ -94,10 +94,9 @@ function getRandomStarterTripPrompt(currentPrompt?: string): string {
   return promptOptions[promptIndex] ?? starterTripPrompts[0];
 }
 
-function getVoiceBarStyle(level: number, index: number): CSSProperties {
+function getSpectrumBarStyle(level: number): CSSProperties {
   return {
-    "--voice-index": index.toString(),
-    "--voice-level": level.toFixed(3),
+    "--level": level.toFixed(3),
   } as CSSProperties;
 }
 
@@ -109,24 +108,26 @@ function getAudioContextConstructor(): typeof AudioContext | undefined {
   return window.AudioContext ?? (window as AudioEnabledWindow).webkitAudioContext;
 }
 
-function useVoiceBars(isListening: boolean): {
+function useRecordingSpectrum(isListening: boolean): {
   isAudioResponsive: boolean;
   isVoiceActive: boolean;
   levels: number[];
 } {
-  const [levels, setLevels] = useState(getStillVoiceBarLevels);
+  const [levels, setLevels] = useState(getStillSpectrumLevels);
   const [isAudioResponsive, setIsAudioResponsive] = useState(false);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const voiceLevelHistoryRef = useRef<VoiceLevelHistoryPoint[]>([]);
-  const renderedVoiceLevelsRef = useRef(getStillVoiceBarLevels());
+  const renderedLevelsRef = useRef(getStillSpectrumLevels());
 
   useEffect(() => {
-    if (!isListening) {
-      voiceLevelHistoryRef.current = [];
-      renderedVoiceLevelsRef.current = getStillVoiceBarLevels();
-      setLevels(getStillVoiceBarLevels());
+    const resetSpectrum = () => {
+      renderedLevelsRef.current = getStillSpectrumLevels();
+      setLevels(getStillSpectrumLevels());
       setIsAudioResponsive(false);
       setIsVoiceActive(false);
+    };
+
+    if (!isListening) {
+      resetSpectrum();
       return undefined;
     }
 
@@ -150,11 +151,7 @@ function useVoiceBars(isListening: boolean): {
       const AudioContextConstructor = getAudioContextConstructor();
 
       if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
-        voiceLevelHistoryRef.current = [];
-        renderedVoiceLevelsRef.current = getStillVoiceBarLevels();
-        setLevels(getStillVoiceBarLevels());
-        setIsAudioResponsive(false);
-        setIsVoiceActive(false);
+        resetSpectrum();
         return;
       }
 
@@ -183,52 +180,39 @@ function useVoiceBars(isListening: boolean): {
         }
 
         const analyser = audioContext.createAnalyser();
-        analyser.fftSize = voiceBarAnalyserConfig.fftSize;
+        analyser.fftSize = spectrumAnalyserConfig.fftSize;
         analyser.smoothingTimeConstant =
-          voiceBarAnalyserConfig.smoothingTimeConstant;
-        const timeDomainData = new Uint8Array(analyser.fftSize);
+          spectrumAnalyserConfig.smoothingTimeConstant;
+        const frequencyData = new Uint8Array(analyser.frequencyBinCount);
         audioSource = audioContext.createMediaStreamSource(stream);
         audioSource.connect(analyser);
         setIsAudioResponsive(true);
 
-        const updateLevels = () => {
+        const updateSpectrum = () => {
           if (!isActive) {
             return;
           }
 
-          analyser.getByteTimeDomainData(timeDomainData);
-          const voiceBarState = getVoiceBarState(
-            timeDomainData,
-            voiceLevelHistoryRef.current,
-            window.performance.now(),
+          analyser.getByteFrequencyData(frequencyData);
+          const nextLevels = smoothSpectrumLevels(
+            renderedLevelsRef.current,
+            getSpectrumLevels(frequencyData),
           );
-          const hadVoiceHistory = voiceLevelHistoryRef.current.length > 0;
-          voiceLevelHistoryRef.current = voiceBarState.history;
-          renderedVoiceLevelsRef.current =
-            !hadVoiceHistory && voiceBarState.history.length > 0
-              ? voiceBarState.levels
-              : dampVoiceBarLevels(
-                  renderedVoiceLevelsRef.current,
-                  voiceBarState.levels,
-                );
-          setLevels(renderedVoiceLevelsRef.current);
-          setIsVoiceActive(voiceBarState.isVoiceActive);
-          animationFrameId = window.requestAnimationFrame(updateLevels);
+          renderedLevelsRef.current = nextLevels;
+          setLevels(nextLevels);
+          setIsVoiceActive(isSpectrumActive(nextLevels));
+          animationFrameId = window.requestAnimationFrame(updateSpectrum);
         };
 
-        updateLevels();
+        updateSpectrum();
       } catch {
         if (!isActive) {
           return;
         }
 
-        stopAudioStream(stream);
+        stopAudioAnalysis();
         stream = undefined;
-        voiceLevelHistoryRef.current = [];
-        renderedVoiceLevelsRef.current = getStillVoiceBarLevels();
-        setLevels(getStillVoiceBarLevels());
-        setIsAudioResponsive(false);
-        setIsVoiceActive(false);
+        resetSpectrum();
       }
     };
 
@@ -472,8 +456,8 @@ export function MainScreen() {
   const {
     isAudioResponsive,
     isVoiceActive,
-    levels: voiceBarLevels,
-  } = useVoiceBars(isListening);
+    levels: spectrumLevels,
+  } = useRecordingSpectrum(isListening);
   const isReviewing = mode === "review" || mode === "manual";
   const showsPromptEntry = isListening || isReviewing;
   const reviewTitle =
@@ -733,18 +717,20 @@ export function MainScreen() {
             />
             {isListening ? (
               <div
-                className={`voice-home__voice-bars${
-                  isAudioResponsive
-                    ? " voice-home__voice-bars--responsive"
-                    : " voice-home__voice-bars--fallback"
-                }`}
-                aria-label="Sound-responsive voice bars"
+                className="voice-home__spectrum"
+                aria-label="Microphone sound spectrum"
                 data-audio-responsive={isAudioResponsive}
                 data-voice-active={isVoiceActive}
                 role="img"
               >
-                {voiceBarLevels.map((level, index) => (
-                  <span key={index} style={getVoiceBarStyle(level, index)} />
+                {spectrumLevels.map((level, index) => (
+                  <span
+                    key={index}
+                    className="voice-home__spectrum-bar"
+                    style={getSpectrumBarStyle(level)}
+                  >
+                    <span className="voice-home__spectrum-bar-fill" />
+                  </span>
                 ))}
               </div>
             ) : null}
