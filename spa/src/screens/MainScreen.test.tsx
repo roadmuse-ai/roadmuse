@@ -9,6 +9,8 @@ import { MainScreen } from "./MainScreen";
 const routeCreatedAt = Date.UTC(2026, 6, 4, 13, 0);
 const routePrompt =
   "Route Rockville to National Mall via Bethesda Row and Georgetown Waterfront Park. Find kid-friendly lunch with easy parking; avoid the Beltway unless it saves 15+ min.";
+const spectrumName = "Microphone sound spectrum";
+let mediaDevicesDescriptor: PropertyDescriptor | undefined;
 
 function renderMainScreen() {
   return render(
@@ -22,6 +24,10 @@ function renderMainScreen() {
 
 describe("MainScreen", () => {
   beforeEach(() => {
+    mediaDevicesDescriptor = Object.getOwnPropertyDescriptor(
+      window.navigator,
+      "mediaDevices",
+    );
     window.localStorage.clear();
     vi.spyOn(window, "open").mockImplementation(() => null);
     vi.spyOn(Date, "now").mockReturnValue(routeCreatedAt);
@@ -29,6 +35,19 @@ describe("MainScreen", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    if (mediaDevicesDescriptor) {
+      Object.defineProperty(
+        window.navigator,
+        "mediaDevices",
+        mediaDevicesDescriptor,
+      );
+    } else {
+      Object.defineProperty(window.navigator, "mediaDevices", {
+        configurable: true,
+        value: undefined,
+      });
+    }
     window.localStorage.clear();
   });
 
@@ -74,7 +93,7 @@ describe("MainScreen", () => {
       .toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Review Your Route" }))
       .not.toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Voice waves animation" }))
+    expect(screen.queryByRole("img", { name: spectrumName }))
       .not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Start Voice Request" }))
       .not.toBeInTheDocument();
@@ -128,7 +147,7 @@ describe("MainScreen", () => {
     );
     expect(screen.queryByRole("button", { name: "Start Voice Request" }))
       .not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Voice waves animation" }))
+    expect(screen.getByRole("img", { name: spectrumName }))
       .toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Enter Your Route" }))
       .toBeInTheDocument();
@@ -151,7 +170,7 @@ describe("MainScreen", () => {
 
     const prompt = screen.getByLabelText("Driving Request");
     expect(prompt).toHaveValue(routePrompt);
-    expect(screen.queryByRole("img", { name: "Voice waves animation" }))
+    expect(screen.queryByRole("img", { name: spectrumName }))
       .not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Review Your Route" }))
       .toBeInTheDocument();
@@ -167,7 +186,7 @@ describe("MainScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "Rerecord" }));
 
-    expect(screen.getByRole("img", { name: "Voice waves animation" }))
+    expect(screen.getByRole("img", { name: spectrumName }))
       .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Enter Your Route" }))
@@ -180,6 +199,223 @@ describe("MainScreen", () => {
     expect(
       screen.getByRole("button", { name: "Start Voice Request" }),
     ).toBeInTheDocument();
+  });
+
+  it("drives the spectrum from microphone audio and stops the stream", async () => {
+    const user = userEvent.setup();
+    const stopTrack = vi.fn();
+    const mediaStream = {
+      getTracks: () => [{ stop: stopTrack }],
+    } as unknown as MediaStream;
+    const getUserMedia = vi
+      .fn<(constraints: MediaStreamConstraints) => Promise<MediaStream>>()
+      .mockResolvedValue(mediaStream);
+    const analyser = {
+      fftSize: 0,
+      frequencyBinCount: 512,
+      getByteFrequencyData: vi.fn((data: Uint8Array) => {
+        data.forEach((_, index) => {
+          data[index] = index < 40 ? 200 : 0;
+        });
+      }),
+      smoothingTimeConstant: 0,
+    } as unknown as AnalyserNode;
+    const audioSource = {
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    } as unknown as MediaStreamAudioSourceNode;
+    const closeAudioContext = vi.fn().mockResolvedValue(undefined);
+    const audioContext = {
+      close: closeAudioContext,
+      createAnalyser: vi.fn(() => analyser),
+      createMediaStreamSource: vi.fn(() => audioSource),
+      resume: vi.fn().mockResolvedValue(undefined),
+      state: "running",
+    } as unknown as AudioContext;
+    const AudioContextConstructor = vi.fn(function MockAudioContext() {
+      return audioContext;
+    });
+    const requestAnimationFrameSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation(() => 88);
+    const cancelAnimationFrameSpy = vi
+      .spyOn(window, "cancelAnimationFrame")
+      .mockImplementation(() => undefined);
+
+    Object.defineProperty(window.navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal("AudioContext", AudioContextConstructor);
+
+    renderMainScreen();
+
+    await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
+
+    await waitFor(() => {
+      expect(getUserMedia).toHaveBeenCalledWith({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
+    });
+    const spectrum = screen.getByRole("img", { name: spectrumName });
+    await waitFor(() => {
+      expect(spectrum).toHaveAttribute("data-audio-responsive", "true");
+    });
+    await waitFor(() => {
+      expect(spectrum).toHaveAttribute("data-voice-active", "true");
+    });
+    const bars = Array.from(
+      spectrum.querySelectorAll<HTMLElement>(".voice-home__spectrum-bar"),
+    );
+    const maxLevel = Math.max(
+      ...bars.map((bar) => Number(bar.style.getPropertyValue("--level"))),
+    );
+
+    expect(bars).toHaveLength(20);
+    expect(maxLevel).toBeGreaterThan(0);
+    expect(analyser.getByteFrequencyData).toHaveBeenCalled();
+    expect(requestAnimationFrameSpy).toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Stop" }));
+
+    await waitFor(() => {
+      expect(stopTrack).toHaveBeenCalled();
+    });
+    expect(audioSource.disconnect).toHaveBeenCalled();
+    expect(closeAudioContext).toHaveBeenCalled();
+    expect(cancelAnimationFrameSpy).toHaveBeenCalledWith(88);
+  });
+
+  it("scales the spectrum with microphone volume", async () => {
+    const user = userEvent.setup();
+    const mediaStream = {
+      getTracks: () => [{ stop: vi.fn() }],
+    } as unknown as MediaStream;
+    const getUserMedia = vi
+      .fn<(constraints: MediaStreamConstraints) => Promise<MediaStream>>()
+      .mockResolvedValue(mediaStream);
+    let microphoneMagnitude = 40;
+    const analyser = {
+      fftSize: 0,
+      frequencyBinCount: 512,
+      getByteFrequencyData: vi.fn((data: Uint8Array) => {
+        data.forEach((_, index) => {
+          data[index] = index < 40 ? microphoneMagnitude : 0;
+        });
+      }),
+      smoothingTimeConstant: 0,
+    } as unknown as AnalyserNode;
+    const audioContext = {
+      close: vi.fn().mockResolvedValue(undefined),
+      createAnalyser: vi.fn(() => analyser),
+      createMediaStreamSource: vi.fn(() => ({
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+      resume: vi.fn().mockResolvedValue(undefined),
+      state: "running",
+    } as unknown as AudioContext;
+    const AudioContextConstructor = vi.fn(function MockAudioContext() {
+      return audioContext;
+    });
+    let animationFrameHandler: FrameRequestCallback | undefined;
+    const getMaxLevel = (spectrum: HTMLElement) =>
+      Math.max(
+        ...Array.from(
+          spectrum.querySelectorAll<HTMLElement>(".voice-home__spectrum-bar"),
+        ).map((bar) => Number(bar.style.getPropertyValue("--level"))),
+      );
+
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((handler) => {
+      animationFrameHandler = handler;
+      return 91;
+    });
+    Object.defineProperty(window.navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal("AudioContext", AudioContextConstructor);
+
+    renderMainScreen();
+
+    await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
+
+    const spectrum = screen.getByRole("img", { name: spectrumName });
+    await waitFor(() => {
+      expect(spectrum).toHaveAttribute("data-voice-active", "true");
+    });
+
+    const quietMaxLevel = getMaxLevel(spectrum);
+    microphoneMagnitude = 230;
+
+    for (let frame = 0; frame < 4; frame += 1) {
+      act(() => {
+        animationFrameHandler?.(0);
+      });
+    }
+
+    expect(getMaxLevel(spectrum)).toBeGreaterThan(quietMaxLevel + 0.2);
+  });
+
+  it("keeps the spectrum at rest while microphone input is silent", async () => {
+    const user = userEvent.setup();
+    const mediaStream = {
+      getTracks: () => [{ stop: vi.fn() }],
+    } as unknown as MediaStream;
+    const getUserMedia = vi
+      .fn<(constraints: MediaStreamConstraints) => Promise<MediaStream>>()
+      .mockResolvedValue(mediaStream);
+    const analyser = {
+      fftSize: 0,
+      frequencyBinCount: 512,
+      getByteFrequencyData: vi.fn((data: Uint8Array) => {
+        data.fill(0);
+      }),
+      smoothingTimeConstant: 0,
+    } as unknown as AnalyserNode;
+    const audioContext = {
+      close: vi.fn().mockResolvedValue(undefined),
+      createAnalyser: vi.fn(() => analyser),
+      createMediaStreamSource: vi.fn(() => ({
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+      })),
+      resume: vi.fn().mockResolvedValue(undefined),
+      state: "running",
+    } as unknown as AudioContext;
+    const AudioContextConstructor = vi.fn(function MockAudioContext() {
+      return audioContext;
+    });
+
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 89);
+    Object.defineProperty(window.navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal("AudioContext", AudioContextConstructor);
+
+    renderMainScreen();
+
+    await user.click(screen.getByRole("button", { name: "Start Voice Request" }));
+
+    const spectrum = screen.getByRole("img", { name: spectrumName });
+    await waitFor(() => {
+      expect(spectrum).toHaveAttribute("data-audio-responsive", "true");
+    });
+    const bars = Array.from(
+      spectrum.querySelectorAll<HTMLElement>(".voice-home__spectrum-bar"),
+    );
+    const levels = bars.map((bar) =>
+      Number(bar.style.getPropertyValue("--level")),
+    );
+
+    expect(analyser.getByteFrequencyData).toHaveBeenCalled();
+    expect(bars).toHaveLength(20);
+    expect(spectrum).toHaveAttribute("data-voice-active", "false");
+    expect(levels).toEqual(Array.from({ length: 20 }, () => 0));
   });
 
   it("opens the preferred navigator deep link and saves after Next from listening", async () => {

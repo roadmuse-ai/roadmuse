@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import {
   CircleDot,
   Clock3,
@@ -23,6 +23,13 @@ import {
   type PreviousTrip,
   type RouteWaypoint,
 } from "../data/settings";
+import {
+  getSpectrumLevels,
+  getStillSpectrumLevels,
+  isSpectrumActive,
+  smoothSpectrumLevels,
+  spectrumAnalyserConfig,
+} from "./recordingSpectrum";
 
 const stubPrompt =
   "Route Rockville to National Mall via Bethesda Row and Georgetown Waterfront Park. Find kid-friendly lunch with easy parking; avoid the Beltway unless it saves 15+ min.";
@@ -72,6 +79,11 @@ const starterTripPrompts = [
 ] as const;
 const starterTripPromptRotationMs = 4000;
 
+type AudioEnabledWindow = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext;
+  };
+
 function getRandomStarterTripPrompt(currentPrompt?: string): string {
   const promptOptions =
     currentPrompt && starterTripPrompts.length > 1
@@ -80,6 +92,139 @@ function getRandomStarterTripPrompt(currentPrompt?: string): string {
   const promptIndex = Math.floor(Math.random() * promptOptions.length);
 
   return promptOptions[promptIndex] ?? starterTripPrompts[0];
+}
+
+function getSpectrumBarStyle(level: number): CSSProperties {
+  return {
+    "--level": level.toFixed(3),
+  } as CSSProperties;
+}
+
+function stopAudioStream(stream?: MediaStream): void {
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
+function getAudioContextConstructor(): typeof AudioContext | undefined {
+  return window.AudioContext ?? (window as AudioEnabledWindow).webkitAudioContext;
+}
+
+function useRecordingSpectrum(isListening: boolean): {
+  isAudioResponsive: boolean;
+  isVoiceActive: boolean;
+  levels: number[];
+} {
+  const [levels, setLevels] = useState(getStillSpectrumLevels);
+  const [isAudioResponsive, setIsAudioResponsive] = useState(false);
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const renderedLevelsRef = useRef(getStillSpectrumLevels());
+
+  useEffect(() => {
+    const resetSpectrum = () => {
+      renderedLevelsRef.current = getStillSpectrumLevels();
+      setLevels(getStillSpectrumLevels());
+      setIsAudioResponsive(false);
+      setIsVoiceActive(false);
+    };
+
+    if (!isListening) {
+      resetSpectrum();
+      return undefined;
+    }
+
+    let isActive = true;
+    let animationFrameId: number | undefined;
+    let audioContext: AudioContext | undefined;
+    let audioSource: MediaStreamAudioSourceNode | undefined;
+    let stream: MediaStream | undefined;
+
+    const stopAudioAnalysis = () => {
+      if (animationFrameId !== undefined) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+
+      audioSource?.disconnect();
+      void audioContext?.close();
+      stopAudioStream(stream);
+    };
+
+    const startAudioAnalysis = async () => {
+      const AudioContextConstructor = getAudioContextConstructor();
+
+      if (!navigator.mediaDevices?.getUserMedia || !AudioContextConstructor) {
+        resetSpectrum();
+        return;
+      }
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+          },
+        });
+
+        if (!isActive) {
+          stopAudioStream(stream);
+          return;
+        }
+
+        audioContext = new AudioContextConstructor();
+
+        if (audioContext.state === "suspended") {
+          await audioContext.resume().catch(() => undefined);
+        }
+
+        if (!isActive) {
+          stopAudioAnalysis();
+          return;
+        }
+
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = spectrumAnalyserConfig.fftSize;
+        analyser.smoothingTimeConstant =
+          spectrumAnalyserConfig.smoothingTimeConstant;
+        const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+        audioSource = audioContext.createMediaStreamSource(stream);
+        audioSource.connect(analyser);
+        setIsAudioResponsive(true);
+
+        const updateSpectrum = () => {
+          if (!isActive) {
+            return;
+          }
+
+          analyser.getByteFrequencyData(frequencyData);
+          const nextLevels = smoothSpectrumLevels(
+            renderedLevelsRef.current,
+            getSpectrumLevels(frequencyData),
+          );
+          renderedLevelsRef.current = nextLevels;
+          setLevels(nextLevels);
+          setIsVoiceActive(isSpectrumActive(nextLevels));
+          animationFrameId = window.requestAnimationFrame(updateSpectrum);
+        };
+
+        updateSpectrum();
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        stopAudioAnalysis();
+        stream = undefined;
+        resetSpectrum();
+      }
+    };
+
+    void startAudioAnalysis();
+
+    return () => {
+      isActive = false;
+      stopAudioAnalysis();
+    };
+  }, [isListening]);
+
+  return { isAudioResponsive, isVoiceActive, levels };
 }
 
 function formatWaypoint(waypoint?: RouteWaypoint): string | null {
@@ -308,6 +453,11 @@ export function MainScreen() {
   );
 
   const isListening = mode === "listening";
+  const {
+    isAudioResponsive,
+    isVoiceActive,
+    levels: spectrumLevels,
+  } = useRecordingSpectrum(isListening);
   const isReviewing = mode === "review" || mode === "manual";
   const showsPromptEntry = isListening || isReviewing;
   const reviewTitle =
@@ -567,15 +717,21 @@ export function MainScreen() {
             />
             {isListening ? (
               <div
-                className="voice-home__waves"
-                aria-label="Voice waves animation"
+                className="voice-home__spectrum"
+                aria-label="Microphone sound spectrum"
+                data-audio-responsive={isAudioResponsive}
+                data-voice-active={isVoiceActive}
                 role="img"
               >
-                <span />
-                <span />
-                <span />
-                <span />
-                <span />
+                {spectrumLevels.map((level, index) => (
+                  <span
+                    key={index}
+                    className="voice-home__spectrum-bar"
+                    style={getSpectrumBarStyle(level)}
+                  >
+                    <span className="voice-home__spectrum-bar-fill" />
+                  </span>
+                ))}
               </div>
             ) : null}
           </div>
