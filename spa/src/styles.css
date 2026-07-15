@@ -460,7 +460,7 @@ html {
   width: 4rem;
   height: 4rem;
   align-self: stretch;
-  border-radius: var(--radius-panel);
+  border-radius: 22%;
   object-fit: contain;
 }
 
