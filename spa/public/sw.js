@@ -1,4 +1,4 @@
-const CACHE_NAME = "roadmuse-shell-v1";
+const CACHE_NAME = "roadmuse-shell-v2";
 const PRECACHE_URLS = [
   "./",
   "./index.html",
@@ -30,6 +30,12 @@ const STATIC_EXTENSIONS = [
 
 const isApiRequest = (request) => request.url.includes("/api/");
 const isStaticAsset = (url) => STATIC_EXTENSIONS.some((ext) => url.endsWith(ext));
+
+const fetchAndCache = (cache, request) =>
+  fetch(request).then((response) => {
+    cache.put(request, response.clone());
+    return response;
+  });
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -78,16 +84,14 @@ self.addEventListener("fetch", (event) => {
   if (isStaticAsset(url.pathname)) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) =>
-        cache.match(request).then((cached) => {
-          if (cached) {
-            return cached;
-          }
-
-          return fetch(request).then((response) => {
-            cache.put(request, response.clone());
-            return response;
-          });
-        }),
+        fetchAndCache(cache, request).catch((error) =>
+          cache.match(request).then((cached) => {
+            if (cached) {
+              return cached;
+            }
+            throw error;
+          }),
+        ),
       ),
     );
     return;
