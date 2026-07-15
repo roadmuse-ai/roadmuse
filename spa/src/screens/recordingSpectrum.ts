@@ -1,7 +1,7 @@
 const spectrumBarCount = 20;
 const spectrumBandCount = Math.ceil(spectrumBarCount / 2);
 const spectrumUsableBins = 256;
-const spectrumGain = 1.15;
+const spectrumGain = 0.8625;
 const spectrumCurve = 0.6;
 const spectrumTilt = 1;
 const spectrumActivityLevel = 0.08;

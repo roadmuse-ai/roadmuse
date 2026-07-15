@@ -898,7 +898,7 @@ section {
   height: 100%;
   overflow: hidden;
   border-radius: 999px;
-  background: rgb(0 0 0 / 6%);
+  background: transparent;
 }
 
 .voice-home__spectrum-bar-fill {
@@ -911,7 +911,10 @@ section {
     #e0b83c 72%,
     #e5574d 100%
   );
-  clip-path: inset(calc((1 - var(--level)) * 100%) 0 0 0 round 999px);
+  clip-path: inset(
+    calc((1 - var(--level)) * 50%) 0 calc((1 - var(--level)) * 50%) 0
+      round 999px
+  );
   transition: clip-path 80ms ease-out;
 }
 
