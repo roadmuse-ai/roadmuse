@@ -337,11 +337,11 @@ describe("settings persistence", () => {
       JSON.stringify({ themeMode: "sepia", accentTheme: "forest" }),
     );
     expect(loadSettings().themeMode).toBe("auto");
-    expect(loadSettings().accentTheme).toBe("ground");
+    expect(loadSettings().accentTheme).toBe("patriotic");
 
     window.localStorage.setItem(storageKey, JSON.stringify({}));
     expect(loadSettings().themeMode).toBe("auto");
-    expect(loadSettings().accentTheme).toBe("ground");
+    expect(loadSettings().accentTheme).toBe("patriotic");
   });
 
   it("saves settings to local storage", () => {

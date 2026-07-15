@@ -63,7 +63,7 @@ export const defaultSettings: RoadMuseSettings = {
   previousTrips: [],
   preferences: [],
   themeMode: "auto",
-  accentTheme: "ground",
+  accentTheme: "patriotic",
   routeSettings: defaultRouteSettings,
 };
 

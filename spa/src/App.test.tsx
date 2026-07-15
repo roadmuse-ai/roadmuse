@@ -117,8 +117,8 @@ describe("App", () => {
     renderApp("/config");
 
     expect(screen.getByRole("radio", { name: "System" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Ground" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "7/4" })).toBeChecked();
     expect(document.documentElement.dataset.theme).toBe("light");
-    expect(document.documentElement.dataset.accentTheme).toBe("ground");
+    expect(document.documentElement.dataset.accentTheme).toBe("patriotic");
   });
 });
