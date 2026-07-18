@@ -19,7 +19,10 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     environment: str = "development"
     cors_origins: list[str] = ["http://localhost:5173"]
-    route_agent_model: str = "claude-opus-4-8"
+    # Pydantic AI model identifier in "provider:model" form, e.g.
+    # "anthropic:claude-opus-4-8", "openai:gpt-5", "google-gla:gemini-2.5-pro".
+    # The provider's own API key is read from its standard env var.
+    route_agent_model: str = "anthropic:claude-opus-4-8"
 
 
 @lru_cache

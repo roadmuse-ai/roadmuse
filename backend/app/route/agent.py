@@ -53,6 +53,6 @@ async def parse_route_intent(prompt: str, saved_place_labels: list[str]) -> Rout
     settings = get_settings()
     result = await route_intent_agent.run(
         _build_input(prompt, saved_place_labels),
-        model=f"anthropic:{settings.route_agent_model}",
+        model=settings.route_agent_model,
     )
     return result.output
