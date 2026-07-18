@@ -30,8 +30,10 @@ For each place, set `label` to the exact phrase the user used (e.g. "home",
 - address for a street address, exit for a highway exit, coordinate only if the
   user gave raw lat/lon.
 
-Do NOT invent coordinates — leave `coordinate` null. Deterministic code resolves
-locations afterward. Set `raw_prompt` to the user's original text.
+Do NOT include the same place twice.
+
+Use real, existing places, but do NOT invent coordinates — leave `coordinate` null.
+Deterministic code resolves locations afterward. Set `raw_prompt` to the user's original text.
 """
 
 route_intent_agent: Agent[None, RouteIntent] = Agent(
