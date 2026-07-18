@@ -1,8 +1,7 @@
 # MVP Roadmap: v0 -> MVP
 
-Incremental path from the barest end-to-end slice (v0) to the full MVP defined in
-the design docs (with Valhalla and the rest of the backend services). Each version
-is independently shippable and demoable.
+The v0 makes frontend and backend work together. We build on top of that to add
+features required for the user-facing MVP.
 
 Related docs: [backend-api-structure.md](./backend-api-structure.md) and the model
 docs under [docs/backend/](./backend/).
@@ -10,18 +9,21 @@ docs under [docs/backend/](./backend/).
 ## TL;DR
 
 The SPA already contains a complete, working route-entry shell running on stub
-data (input, navigator deep-linking for all six providers, trip history). The only
-stubbed piece is the route itself. So the first milestone (v0) is tiny:
+data (input, navigator deep-linking for all six providers, trip history).
+
+The main missing piece is the `/route/plan` backend API.
+So the first milestone (v0) is small:
 
 1. One backend endpoint that turns a free-text prompt into a real route
    (origin, destination, waypoints) using a single LLM call.
-2. One change in the SPA `drive()` handler: call that endpoint and feed the result
-   into the navigator deep-link builder that already exists.
+2. One change in the SPA `drive()` handler: call that endpoint and use the result
+   for the navigator deep-link builder that already exists.
 
-Everything after v0 enriches the same response the SPA already renders, so the
-frontend barely changes as the backend grows.
+After v0 we iterate on the backend to improve the routing.
 
-## Version ladder
+See the [./backend-api-structure.md#high-level-backend-logic] for the backend pipeline structure.
+
+## Milestones
 
 ```
 Ver    Goal / new capability                         Backend issues        Demo you get
