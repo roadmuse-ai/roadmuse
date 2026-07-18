@@ -5,9 +5,11 @@ prompt into place labels and a travel mode; it does not produce coordinates.
 Deterministic code (``app.route.logic``) fills coordinates afterward.
 """
 
+import os
+
 from pydantic_ai import Agent
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.route.models import RouteIntent
 
 SYSTEM_PROMPT = """\
@@ -47,12 +49,32 @@ def _build_input(prompt: str, saved_place_labels: list[str]) -> str:
     return f"Known saved places: {known}\n\nRequest: {prompt}"
 
 
+def set_env_from_settings(settings: Settings) -> None:
+    """Set the provider API keys in the process environment from Settings.
+
+    Pydantic AI reads the provider keys from the standard env vars, so we set them
+    here from our Settings.
+
+    Each model has its own key, see pydantic AI docs for details:
+    - https://pydantic.dev/docs/ai/models/openai/
+    - https://pydantic.dev/docs/ai/models/anthropic/
+    - https://pydantic.dev/docs/ai/models/google/
+    """
+
+    if settings.anthropic_api_key:
+        os.environ["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
+    if settings.openai_api_key:
+        os.environ["OPENAI_API_KEY"] = settings.openai_api_key
+    if settings.google_api_key:
+        os.environ["GOOGLE_API_KEY"] = settings.google_api_key
+
+
 async def parse_route_intent(prompt: str, saved_place_labels: list[str]) -> RouteIntent:
     """Run the agent to parse a prompt into a RouteIntent."""
 
     settings = get_settings()
+    set_env_from_settings(settings)
     result = await route_intent_agent.run(
-        _build_input(prompt, saved_place_labels),
-        model=settings.route_agent_model,
+        _build_input(prompt, saved_place_labels), model=settings.route_agent_model
     )
     return result.output

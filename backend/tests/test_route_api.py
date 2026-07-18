@@ -16,9 +16,7 @@ client = TestClient(create_app(Settings(environment="test")))
 
 
 def test_plan_route_resolves_origin_from_current_location() -> None:
-    intent = RouteIntent(
-        destination=LocationRef(kind=LocationKind.poi, label="National Mall")
-    )
+    intent = RouteIntent(destination=LocationRef(kind=LocationKind.poi, label="National Mall"))
     with route_intent_agent.override(model=TestModel(custom_output_args=intent)):
         response = client.post(
             "/api/route/plan",

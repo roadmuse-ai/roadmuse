@@ -9,9 +9,7 @@ from app.route.models import Coordinate, LocationKind, LocationRef, RouteIntent
 from app.route.schemas import RoutePlanRequest, SavedPlaceInput
 
 
-def _resolve_location(
-    location: LocationRef, saved_by_label: dict[str, SavedPlaceInput]
-) -> None:
+def _resolve_location(location: LocationRef, saved_by_label: dict[str, SavedPlaceInput]) -> None:
     """Fill a location's coordinate from a matching saved place, in place."""
 
     if location.coordinate is not None:
@@ -25,25 +23,19 @@ def _resolve_location(
     location.saved_place_id = saved.id
     location.kind = LocationKind.saved_place
     if saved.latitude is not None and saved.longitude is not None:
-        location.coordinate = Coordinate(
-            latitude=saved.latitude, longitude=saved.longitude
-        )
+        location.coordinate = Coordinate(latitude=saved.latitude, longitude=saved.longitude)
         location.is_resolved = True
     elif saved.address:
         location.label = saved.address
 
 
-def resolve(
-    intent: RouteIntent, request: RoutePlanRequest
-) -> tuple[RouteIntent, list[str]]:
+def resolve(intent: RouteIntent, request: RoutePlanRequest) -> tuple[RouteIntent, list[str]]:
     """Resolve origin/destination/waypoints; return the filled intent + warnings."""
 
     resolved = intent.model_copy(deep=True)
     warnings: list[str] = []
     saved_by_label = {
-        place.label.strip().lower(): place
-        for place in request.settings.saved_places
-        if place.label
+        place.label.strip().lower(): place for place in request.settings.saved_places if place.label
     }
 
     if resolved.origin is None:

@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     # The provider's own API key is read from its standard env var.
     route_agent_model: str = "anthropic:claude-opus-4-8"
 
+    # API keys for the providers we support.
+    anthropic_api_key: str | None = None
+    openai_api_key: str | None = None
+    google_api_key: str | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:
