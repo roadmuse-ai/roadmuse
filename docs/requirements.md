@@ -68,6 +68,7 @@ Examples:
 - Location resolver adapter.
 - POI/search adapter.
 - External navigator URL builders.
+  - Note: navigator deep links currently live on the frontend (`spa/src/data/navigationLinks.ts`), which needs client-side platform detection. Moving this responsibility to the backend is a possible future shift; we can decide later if it is needed. GPX export stays on the backend (it uses the Valhalla route geometry).
 
 ### Valhalla Routing
 

@@ -2,7 +2,7 @@
 
 The LLM produces place labels; this fills coordinates from data already in the
 request (current GPS for the origin, saved-place labels for known places). No
-geocoding — any unmatched place stays label-only and the navigator resolves it.
+geocoding yet: any unmatched place stays label-only and the navigator resolves it.
 """
 
 from app.route.models import Coordinate, LocationKind, LocationRef, RouteIntent

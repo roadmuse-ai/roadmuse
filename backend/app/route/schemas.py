@@ -8,8 +8,8 @@ from app.route.models import ApiModel, Coordinate, RouteIntent
 class SavedPlaceInput(ApiModel):
     """A saved place from the SPA, used to resolve labels like "home"/"work".
 
-    A v0 subset of the SPA ``SavedPlace`` (``spa/src/data/settings.ts``) — only
-    the fields needed to resolve a label to coordinates.
+    Note: a v0 subset of the SPA ``SavedPlace`` (``spa/src/data/settings.ts``),
+    we only have the fields needed to resolve a label to coordinates.
     """
 
     id: str
@@ -36,8 +36,9 @@ class RoutePlanRequest(ApiModel):
 class RoutePlanResponse(ApiModel):
     """Response of POST /api/route/plan.
 
-    A thin v0 shape: the parsed intent plus any warnings. Later versions extend
-    this with scored options (see ``docs/backend/RoutePlanResponse.md``).
+    Note: a thin v0 version: the parsed intent plus any warnings.
+    Later versions extend this with scored options
+    (see ``docs/backend/RoutePlanResponse.md``).
     """
 
     interpreted_intent: RouteIntent

@@ -95,14 +95,15 @@ HTTP JSON in            (API input)
   → business logic
       → agent call = prompt + dependencies (RunContext)
       → RouteIntentAgent     (AI logic)
-      → RouteIntent          (AI output schema)
-      → LocationResolver → ValhallaCompiler → Valhalla  (routing logic...)
-        → CandidateGen/Scorer → NavigatorUrlBuilder     (...routing logic)
+      → RouteIntent candidate(s)  (AI output schema)
+      → for each candidate: LocationResolver → ValhallaCompiler → Valhalla
+        (validate + measure: ETA, cost, geometry)             (routing logic...)
+      → RouteScorer → best candidate → shaping (add "through" waypoints)  (...routing logic)
   → RoutePlanResponse    (API output schema)
   → HTTP JSON out         (API output)
 ```
 
-Business logic flow: prompt -> plan with candidates, navigator links, warnings.
+Business logic flow: prompt -> plan with candidates and warnings. Navigator deep links are built client-side; GPX export is produced by the backend.
 
 **Request** `RoutePlanRequest`:
 
