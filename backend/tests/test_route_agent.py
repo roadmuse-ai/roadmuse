@@ -1,12 +1,13 @@
 """Tests for RouteIntentAgent wiring (no live LLM call)."""
 
 import asyncio
+import os
 
 import pytest
 
 from app.config import Settings
 from app.route import agent as agent_module
-from app.route.agent import parse_route_intent
+from app.route.agent import parse_route_intent, set_env_from_settings
 from app.route.models import LocationKind, LocationRef, RouteIntent
 
 
@@ -38,3 +39,19 @@ def test_parse_route_intent_passes_configured_provider_model(
 
     assert result is intent
     assert captured["model"] == "openai:gpt-5"
+
+
+def test_set_env_from_settings_maps_provider_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Each provider key is exported under the env var name its SDK reads."""
+
+    for var in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY"):
+        monkeypatch.delenv(var, raising=False)
+    settings = Settings(
+        anthropic_api_key="a-key", openai_api_key="o-key", google_api_key="g-key"
+    )
+
+    set_env_from_settings(settings)
+
+    assert os.environ["ANTHROPIC_API_KEY"] == "a-key"
+    assert os.environ["OPENAI_API_KEY"] == "o-key"
+    assert os.environ["GOOGLE_API_KEY"] == "g-key"
