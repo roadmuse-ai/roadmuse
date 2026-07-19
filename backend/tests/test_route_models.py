@@ -15,6 +15,8 @@ from app.route.models import (
 
 
 def test_route_intent_defaults() -> None:
+    """A RouteIntent needs only a destination; origin, waypoints, and mode take defaults."""
+
     intent = RouteIntent(destination=LocationRef(kind=LocationKind.poi, label="Mall"))
     assert intent.origin is None
     assert intent.waypoints == []
@@ -22,6 +24,8 @@ def test_route_intent_defaults() -> None:
 
 
 def test_full_route_intent_round_trips_through_json() -> None:
+    """A populated RouteIntent round-trips through JSON unchanged (lossless wire contract)."""
+
     intent = RouteIntent(
         origin=LocationRef(kind=LocationKind.saved_place, label="home"),
         destination=LocationRef(
@@ -41,6 +45,8 @@ def test_full_route_intent_round_trips_through_json() -> None:
 
 
 def test_coordinate_rejects_out_of_range() -> None:
+    """Coordinate rejects latitude/longitude outside the +/-90 / +/-180 ranges."""
+
     with pytest.raises(ValidationError):
         Coordinate(latitude=91.0, longitude=0.0)
     with pytest.raises(ValidationError):
@@ -48,11 +54,15 @@ def test_coordinate_rejects_out_of_range() -> None:
 
 
 def test_models_forbid_unknown_fields() -> None:
+    """Unknown fields are rejected (extra=forbid), so a stray key fails fast."""
+
     with pytest.raises(ValidationError):
         LocationRef(kind=LocationKind.poi, label="x", surprise="nope")  # type: ignore[call-arg]
 
 
 def test_waypoint_kind_serializes_break_value() -> None:
+    """Waypoint defaults to the break kind and serializes it as the wire value "break"."""
+
     waypoint = Waypoint(location=LocationRef(kind=LocationKind.exit, label="Exit 26"))
     assert waypoint.kind is WaypointKind.break_
     assert waypoint.model_dump()["kind"] == "break"

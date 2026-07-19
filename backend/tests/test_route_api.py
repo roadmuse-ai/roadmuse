@@ -16,6 +16,8 @@ client = TestClient(create_app(Settings(environment="test")))
 
 
 def test_plan_route_resolves_origin_from_current_location() -> None:
+    """With no stated origin, the endpoint fills it from the request's current_location."""
+
     intent = RouteIntent(destination=LocationRef(kind=LocationKind.poi, label="National Mall"))
     with route_intent_agent.override(model=TestModel(custom_output_args=intent)):
         response = client.post(
@@ -36,6 +38,8 @@ def test_plan_route_resolves_origin_from_current_location() -> None:
 
 
 def test_plan_route_resolves_saved_place() -> None:
+    """A saved-place label resolves to that place's id and coordinate in the response."""
+
     intent = RouteIntent(
         origin=LocationRef(kind=LocationKind.saved_place, label="home"),
         destination=LocationRef(kind=LocationKind.poi, label="Mall"),
@@ -60,10 +64,14 @@ def test_plan_route_resolves_saved_place() -> None:
 
 
 def test_plan_route_rejects_malformed_body() -> None:
+    """A body missing the required prompt is rejected with 422 before any agent call."""
+
     assert client.post("/api/route/plan", json={"nope": 1}).status_code == 422
 
 
 def test_plan_route_defaults_settings() -> None:
+    """`settings` is optional: a prompt-only body still plans a route."""
+
     intent = RouteIntent(
         origin=LocationRef(
             kind=LocationKind.coordinate,

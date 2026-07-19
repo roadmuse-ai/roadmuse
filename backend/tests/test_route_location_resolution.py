@@ -18,6 +18,8 @@ def _request(
 
 
 def test_origin_filled_from_current_location() -> None:
+    """A missing origin is filled from the request's current location, with no warning."""
+
     intent = RouteIntent(destination=LocationRef(kind=LocationKind.poi, label="Mall"))
     here = Coordinate(latitude=39.0, longitude=-77.1)
 
@@ -31,6 +33,8 @@ def test_origin_filled_from_current_location() -> None:
 
 
 def test_saved_place_label_is_resolved_to_coordinate() -> None:
+    """A saved-place label match (case-insensitive) fills its id, kind, and coordinate."""
+
     intent = RouteIntent(
         origin=LocationRef(kind=LocationKind.saved_place, label="Home"),
         destination=LocationRef(kind=LocationKind.poi, label="Mall"),
@@ -47,6 +51,8 @@ def test_saved_place_label_is_resolved_to_coordinate() -> None:
 
 
 def test_saved_place_without_coordinates_falls_back_to_address() -> None:
+    """A saved place with an address but no coordinate resolves to its address text."""
+
     intent = RouteIntent(
         origin=LocationRef(kind=LocationKind.saved_place, label="work"),
         destination=LocationRef(kind=LocationKind.poi, label="Mall"),
@@ -62,6 +68,8 @@ def test_saved_place_without_coordinates_falls_back_to_address() -> None:
 
 
 def test_unmatched_label_stays_label_only() -> None:
+    """An unmatched label stays unresolved and label-only, for the navigator to resolve."""
+
     intent = RouteIntent(
         origin=LocationRef(
             kind=LocationKind.coordinate,
@@ -79,6 +87,8 @@ def test_unmatched_label_stays_label_only() -> None:
 
 
 def test_missing_origin_and_location_produces_warning() -> None:
+    """With no origin and no current location, origin stays None and a warning is returned."""
+
     intent = RouteIntent(destination=LocationRef(kind=LocationKind.poi, label="Mall"))
 
     resolved, warnings = resolve(intent, _request())
@@ -89,6 +99,8 @@ def test_missing_origin_and_location_produces_warning() -> None:
 
 
 def test_resolve_does_not_mutate_the_input_intent() -> None:
+    """resolve() works on a copy: the caller's intent is left unchanged."""
+
     intent = RouteIntent(destination=LocationRef(kind=LocationKind.poi, label="Mall"))
     here = Coordinate(latitude=39.0, longitude=-77.1)
 
