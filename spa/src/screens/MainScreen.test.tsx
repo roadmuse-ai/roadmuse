@@ -255,7 +255,9 @@ describe("MainScreen", () => {
     await user.click(screen.getByRole("button", { name: "Next" }));
 
     await waitFor(() => {
-      expect(window.open).toHaveBeenCalledTimes(2);
+      // Each drive opens twice: a synchronous placeholder tab, then the deep link
+      // (the placeholder returns null under the mock, so the fallback open runs).
+      expect(window.open).toHaveBeenCalledTimes(4);
     });
     await waitFor(() => {
       expect(

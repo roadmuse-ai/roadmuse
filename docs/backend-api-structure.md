@@ -4,6 +4,45 @@ Defines the backend API endpoints and the per-endpoint data and code flow.
 
 Related high-level flow is in the [architecture.md](./architecture.md) (see the "Main Flow") and the [ai-agent-build-guide.md](./ai-agent-build-guide.md) (describes the split of responsibility between the LLM and deterministic logic).
 
+## High-level backend logic
+
+The backend pipeline is:
+
+```
+user input ->
+-> LLM prompt
+-> agent.py           CANDIDATES: parse text -> RouteIntent (labels, mode)
+                      - generate a candidate route for the user request
+                      - later we extend it to generate multiple candidate routes which
+                        we will pass to the Valhalla/scoring/shaping steps (see below)
+-> candidate routes, for each:
+   | -> resolution   LOCATION RESOLUTION: labels -> coordinates and warnings
+   |                  - logic in `app/route/location_resolution.py`
+   |                  - from the request: `request.current_location` for the origin
+   |                  - from settings: known coordinates for saved places
+   |                  - using geocoding service: the LocationResolver
+   |                    (address/POI -> coordinates) to be added later.
+   |                  - return warnings for any unresolved places (currently only for
+   |                    the origin)
+   | -> Valhalla      VALIDATE AND MEASURE: validate and measure LLM candidates
+   |    |             - `RouteIntent`s -> route(s), ETA, cost, geometry.
+   |    | -> routing  ROUTING: [RouteIntent]s -> route(s), ETA, geometry
+-> scoring            SCORING: candidates -> scoring -> best candidate
+                      - score based on ETA, cost, geometry (Valhalla data) and
+                        user preferences (avoid tolls, avoid highways, etc.)
+-> shaping            SHAPING: add "through" waypoints -> final route
+                      - based on Valhalla data for the best route, add "through"
+                        waypoints to the list of waypoints
+-> response
+```
+
+Notes on Valhalla role:
+* In the app we send the resolved coordinates to external routing apps (Google Maps, Apple Maps, Waze) that do the actual routing and the only case now where we use the Valhalla route directly is for GPX export.
+  * In the future, we may also use Valhalla to have our own route in the app.
+* Valhalla role is to validate each candidate route and calculate the cost, ETA and geometry for scoring.
+  * The scoring step then selects the best candidate route based on the cost, ETA, geometry, and user preferences.
+  * Using Valhalla data, we add extra "through" waypoints to the best scored route to shape the final route according to the best candidate.
+
 ## Conventions
 
 - Base path: `/api`.
@@ -57,14 +96,15 @@ HTTP JSON in            (API input)
   → business logic
       → agent call = prompt + dependencies (RunContext)
       → RouteIntentAgent     (AI logic)
-      → RouteIntent          (AI output schema)
-      → LocationResolver → ValhallaCompiler → Valhalla  (routing logic...)
-        → CandidateGen/Scorer → NavigatorUrlBuilder     (...routing logic)
+      → RouteIntent candidate(s)  (AI output schema)
+      → for each candidate: LocationResolver → ValhallaCompiler → Valhalla
+        (validate + measure: ETA, cost, geometry)             (routing logic...)
+      → RouteScorer → best candidate → shaping (add "through" waypoints)  (...routing logic)
   → RoutePlanResponse    (API output schema)
   → HTTP JSON out         (API output)
 ```
 
-Business logic flow: prompt -> plan with candidates, navigator links, warnings.
+Business logic flow: prompt -> plan with candidates and warnings. Navigator deep links are built client-side; GPX export is produced by the backend.
 
 **Request** `RoutePlanRequest`:
 

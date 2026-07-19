@@ -14,7 +14,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
+import { planRoute } from "../api/routePlan";
 import {
+  type AddressRoute,
   buildAddressNavigatorDeepLink,
   stubVoiceRoute,
 } from "../data/navigationLinks";
@@ -71,6 +73,12 @@ const starterTripPrompts = [
   "Say it, and we'll route it!",
 ] as const;
 const starterTripPromptRotationMs = 4000;
+
+// Minimal self-contained page shown in the handoff tab while the backend plans
+// the route, so the pre-opened tab isn't a confusing blank page.
+const routeLoadingPage = `<!doctype html><meta charset="utf-8"><title>RoadMuse</title>
+<style>html,body{height:100%;margin:0}body{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:#fdf6e3;color:#4a2c12;gap:1rem}.spinner{width:2.5rem;height:2.5rem;border:4px solid #e8d9b0;border-top-color:#e0a800;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
+<div class="spinner"></div><p>Planning your route...</p>`;
 
 function getRandomStarterTripPrompt(currentPrompt?: string): string {
   const promptOptions =
@@ -302,6 +310,7 @@ export function MainScreen() {
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<VoiceHomeMode>("initial");
   const [prompt, setPrompt] = useState(stubPrompt);
+  const [isPlanning, setIsPlanning] = useState(false);
   const [tripSearch, setTripSearch] = useState("");
   const [starterTripPrompt, setStarterTripPrompt] = useState(
     getRandomStarterTripPrompt,
@@ -368,28 +377,57 @@ export function MainScreen() {
     setMode("initial");
   };
 
-  const drive = () => {
-    const drivePrompt = prompt.trim() || stubPrompt;
-    const deepLink = buildAddressNavigatorDeepLink(settings.preferredNavigator, {
-      startAddress: defaultRouteWaypoints[0]?.address ?? stubVoiceRoute.startLabel,
-      destinationAddress:
-        defaultRouteWaypoints[defaultRouteWaypoints.length - 1]?.address ??
-        defaultRouteTargetAddress,
-      waypoints: defaultRouteWaypoints,
-    });
+  const fallbackRoute: AddressRoute = {
+    startAddress: defaultRouteWaypoints[0]?.address ?? stubVoiceRoute.startLabel,
+    destinationAddress:
+      defaultRouteWaypoints[defaultRouteWaypoints.length - 1]?.address ??
+      defaultRouteTargetAddress,
+    waypoints: defaultRouteWaypoints,
+  };
 
+  const drive = async () => {
+    if (isPlanning) {
+      return;
+    }
+    const drivePrompt = prompt.trim() || stubPrompt;
+    // Open the tab synchronously (inside the click) so it isn't popup-blocked,
+    // show a loading page in it, then fill its URL once the backend returns.
+    // A slower backend (e.g. a non-default model) can take a few seconds; the
+    // loading page avoids a confusing blank tab. See the PR notes for a "confirm
+    // and open" alternative that opens the tab only after the response.
+    const pendingTab = window.open("about:blank", "_blank");
+    if (pendingTab) {
+      pendingTab.document.write(routeLoadingPage);
+      pendingTab.document.close();
+    }
+
+    setIsPlanning(true);
+    const planned = await planRoute(
+      drivePrompt,
+      undefined,
+      settings.savedPlaces,
+    ).finally(() => setIsPlanning(false));
+    const route = planned?.route ?? fallbackRoute;
+    const deepLink = buildAddressNavigatorDeepLink(settings.preferredNavigator, route);
+
+    if (pendingTab) {
+      pendingTab.location.href = deepLink;
+    } else {
+      window.open(deepLink, "_blank", "noopener,noreferrer");
+    }
+
+    const waypoints = route.waypoints ?? defaultRouteWaypoints;
     addPreviousTrip(drivePrompt, {
-      route: defaultRouteWaypoints,
-      startAddress: stubVoiceRoute.startLabel,
-      endAddress: defaultRouteTargetAddress,
+      route: waypoints,
+      startAddress: route.startAddress,
+      endAddress: route.destinationAddress,
       durationMinutes: defaultRouteDurationMinutes,
       distanceMiles: defaultRouteDistanceMiles,
-      stopCount: 2,
+      stopCount: Math.max(0, waypoints.length - 2),
     });
 
     setPrompt(stubPrompt);
     setMode("initial");
-    window.open(deepLink, "_blank", "noopener,noreferrer");
   };
 
   const playPreviousTrip = (trip: PreviousTrip) => {
@@ -409,6 +447,12 @@ export function MainScreen() {
       className={`voice-home${showsPromptEntry ? " voice-home--prompt-entry" : ""}`}
       aria-label="Voice route request"
     >
+      {isPlanning && (
+        <div className="planning-overlay" role="status" aria-live="polite">
+          <div className="planning-overlay__spinner" aria-hidden="true" />
+          <p className="planning-overlay__label">Planning your route...</p>
+        </div>
+      )}
       {mode === "initial" && settings.previousTrips.length > 0 ? (
         <div className="previous-trips" aria-labelledby="previous-trips-title">
           <h2 className="previous-trips__title" id="previous-trips-title">
@@ -633,7 +677,9 @@ export function MainScreen() {
             className="voice-home__action voice-home__action--primary voice-home__action--right"
             aria-label={primaryActionLabel}
             title="Drive"
-            onClick={drive}
+            aria-busy={isPlanning}
+            disabled={isPlanning}
+            onClick={() => void drive()}
           >
             <Play aria-hidden="true" />
           </button>

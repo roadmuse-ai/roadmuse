@@ -23,7 +23,7 @@ user prompt (free text)          "Drive me from work to daycare, avoid the
    ▼
 RouteIntent (#11)  ◄── this model
    │
-   │ deterministic code (resolver → Valhalla compiler → scorer)
+   │ deterministic code (resolver → Valhalla validate/measure → scorer → shaping)
    ▼
 RoutePlanResponse (api output)
 ```

@@ -10,7 +10,7 @@
 
 It's the payload that powers the main result screen in the app and, ultimately, the "Open in your navigator" buttons.
 
-It is built by deterministic code: candidate generation -> scoring -> URL/warning building (see the [main flow in the architecture.md](../architecture.md#main-flow)) and never by the LLM directly (the LLM only contributes the *explanation text*, per the parse/explain split).
+The LLM proposes candidate routes and contributes the *explanation text*; deterministic code does the rest -- validate and measure via Valhalla, score, shape (add `through` waypoints), and build warnings (see the [main flow in the architecture.md](../architecture.md#main-flow)). Navigator deep links for the map apps are built client-side; only GPX export is produced by the backend.
 
 ## Model structure
 
@@ -25,7 +25,7 @@ The main flow (see [architecture.md](../architecture.md#main-flow)):
 > 4. Backend resolves **locations and preferences.**
 > ...
 > 6. Backend **scores candidates.**
-> 7. Backend **builds navigator URLs and warnings.**
+> 7. Backend **shapes the best route and returns warnings** (navigator deep links are built client-side; GPX by the backend).
 > 8. PWA shows result and opens selected provider.
 > ...
 
@@ -34,9 +34,9 @@ The core backend services description (see [architecture.md](../architecture.md#
 > ## Core Backend Services
 >
 > - `LocationResolver`: **resolves saved places, addresses, POIs, exits, and route features.**
-> - `RouteCandidateGenerator`: creates **baseline and preference-shaped candidates.**
+> - `RouteCandidateGenerator`: expands the agent's candidates into **route variants (per-leg alternates, costing variations)** for Valhalla to measure.
 > - `RouteScorer`: picks the **best route according to time, preference satisfaction, and provider support.**
-> - `NavigatorUrlBuilder`: creates **links for Google Maps, Waze, Apple Maps, HERE WeGo, Organic Maps, or GPX.**
+> - Navigator deep links (Google Maps, Waze, Apple Maps, HERE WeGo, Organic Maps) are **built client-side in the SPA**; **GPX export** is produced by the backend from the Valhalla route.
 
 The result-screen requirements (see [requirements.md](../requirements.md#main-screen)):
 
@@ -90,7 +90,7 @@ The list of options is represented by `RouteOption`, each option contains:
 
 - **`legs`** — `RouteLeg[]`. Multi-leg plans are explicit: park-then-walk (use-case 12), park-and-ride (use-case 13). Each leg has its own **mode** (drive leg + walk leg).
 - **`eta` / `distance`** and **`eta_delta_vs_baseline`** — the result screen and explanation card compare against the baseline ("this saves/costs you N minutes" — use-case 9).
-- **`navigator_links`** — per-provider deep links + GPX. A primary "open in preferred navigator" action plus secondary alternatives. Waze `q=/ll=`, HERE slash-waypoints, Organic Maps v2, etc. (see [external-navigator-support.md](../external-navigator-support.md))
+- **`navigator_links`** — GPX export, produced by the backend from the Valhalla route. The five map-app deep links (Google Maps, Waze, Apple Maps, HERE WeGo, Organic Maps) are built client-side in the SPA (`navigationLinks.ts`), so the backend does not populate them (see [external-navigator-support.md](../external-navigator-support.md)).
 - **`stops` / POIs** — for smart-stop plans, the candidate stops added along the route, scored by detour/category/hours/ratings (use-case 14, 15).
 - **`kind`** — baseline vs preference-shaped vs alternative, so the UI can label them.
 
@@ -160,7 +160,7 @@ class RouteOption(BaseModel):
     eta_delta_vs_baseline: float | None = None   # "saves/costs N min" (uc 9)
     distance_km: float | None = None
     # deferred detail (later tickets) — optional for now:
-    navigator_links: dict[NavigatorProvider, str] = Field(default_factory=dict)  # #20-25
+    navigator_links: dict[NavigatorProvider, str] = Field(default_factory=dict)  # GPX only; map-app links built client-side
     stops: list[LocationRef] = Field(default_factory=list)         # #14-15
 
 
