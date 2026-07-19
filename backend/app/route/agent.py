@@ -9,7 +9,7 @@ import os
 
 from pydantic_ai import Agent
 
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.route.models import RouteIntent
 
 SYSTEM_PROMPT = """\
@@ -71,10 +71,11 @@ def set_env_from_settings(settings: Settings) -> None:
         os.environ["GOOGLE_API_KEY"] = settings.google_api_key
 
 
-async def parse_route_intent(prompt: str, saved_place_labels: list[str]) -> RouteIntent:
+async def parse_route_intent(
+    prompt: str, saved_place_labels: list[str], settings: Settings
+) -> RouteIntent:
     """Run the agent to parse a prompt into a RouteIntent."""
 
-    settings = get_settings()
     set_env_from_settings(settings)
     result = await route_intent_agent.run(
         _build_input(prompt, saved_place_labels), model=settings.route_agent_model

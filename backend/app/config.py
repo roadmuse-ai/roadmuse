@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from fastapi import Request
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,3 +36,14 @@ def get_settings() -> Settings:
     """Return a cached Settings instance."""
 
     return Settings()
+
+
+def app_settings(request: Request) -> Settings:
+    """FastAPI dependency: the Settings stored on the app by `create_app`.
+
+    Tests inject their own Settings via `create_app(Settings(...))`; overriding
+    this dependency (`app.dependency_overrides[app_settings]`) also works.
+    """
+
+    settings: Settings = request.app.state.settings
+    return settings

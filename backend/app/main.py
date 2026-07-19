@@ -14,6 +14,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
 
     app = FastAPI(title=settings.app_name, version=settings.app_version)
+    app.state.settings = settings
 
     app.add_middleware(
         CORSMiddleware,
