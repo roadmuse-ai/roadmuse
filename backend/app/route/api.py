@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from app.config import Settings, app_settings
 from app.route.agent import parse_route_intent
-from app.route.logic import resolve
+from app.route.location_resolution import resolve
 from app.route.schemas import RoutePlanRequest, RoutePlanResponse
 
 router = APIRouter(prefix="/api", tags=["route"])
@@ -28,7 +28,8 @@ async def plan_route(
                             - later we extend it to generate multiple candidate routes which
                               we will pass to the Valhalla/scoring/shaping steps (see below)
       -> candidate routes, for each:
-         | -> logic.py      RESOLUTION: labels -> coordinates and warnings
+         | -> resolution    LOCATION RESOLUTION: labels -> coordinates and warnings
+         |                  - logic in `app/route/location_resolution.py`
          |                  - from the request: `request.current_location` for the origin
          |                  - from settings: known coordinates for saved places
          |                  - using geocoding service: the LocationResolver

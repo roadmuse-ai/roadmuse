@@ -2,7 +2,7 @@
 
 Per the design principle (``docs/ai-agent-build-guide.md``): the LLM parses the
 prompt into place labels and a travel mode; it does not produce coordinates.
-Deterministic code (``app.route.logic``) fills coordinates afterward.
+Deterministic code (``app.route.location_resolution``) fills coordinates afterward.
 """
 
 import os

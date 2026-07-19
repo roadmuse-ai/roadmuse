@@ -1,6 +1,6 @@
 """Tests for deterministic route resolution."""
 
-from app.route.logic import resolve
+from app.route.location_resolution import resolve
 from app.route.models import Coordinate, LocationKind, LocationRef, RouteIntent, Waypoint
 from app.route.schemas import RoutePlanRequest, RoutePlanSettings, SavedPlaceInput
 
