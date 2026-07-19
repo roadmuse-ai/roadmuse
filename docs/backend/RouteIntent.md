@@ -71,7 +71,6 @@ Notes:
 - **`origin`** is optional on purpose. In the main flow PWA sends "prompt + current location" separately ([../architecture.md](../architecture.md#main-flow)), so a missing origin means "start from where I am" and the resolver fills it in later. The schema shouldn't force it.
 - **`waypoints`** list has two types of items: `break` and `through`. These are different and `break` represents a real stop where you get out while `through` is a point to route through, but without a stop.
 - **`RouteIntent` contains *parsed* preferences, not the *validated* ones.** The AI extracts intent; `PreferenceValidationAgent` (#13) later marks each preference with a support level (supported, partially supported, etc). So in #11, `RouteIntent.preferences` is the "what the user wants" list; the "can we actually do it" decision is a separate concern layered on top.
-- **v0 ships a thin slice.** The current `route/models.py` `RouteIntent` has `origin`, `destination`, `waypoints`, `mode`, and `raw_prompt` only. This doc describes the full #11 model; `preferences` and `optimize` are deferred (`preferences` arrive with the Valhalla/scoring track, `optimize` with multi-stop reordering).
 
 ## The model in code (draft)
 
