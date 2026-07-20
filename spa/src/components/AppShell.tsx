@@ -7,6 +7,8 @@ interface AppShellProps {
   children: ReactNode;
 }
 
+const logoUrl = `${import.meta.env.BASE_URL}roadmuse-logo.png?v=2026-07-blue`;
+
 export function AppShell({ children }: AppShellProps) {
   const { settings } = useSettings();
   const effectiveTheme = useEffectiveTheme(settings.themeMode);
@@ -30,7 +32,7 @@ export function AppShell({ children }: AppShellProps) {
           </div>
           <img
             className="app-shell__logo"
-            src={`${import.meta.env.BASE_URL}roadmuse-logo.png`}
+            src={logoUrl}
             alt="RoadMuse logo"
           />
         </div>
